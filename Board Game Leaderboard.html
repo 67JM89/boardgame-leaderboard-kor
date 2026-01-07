@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보드게임 리더보드</title>
+    <script src="https://unpkg.com/xlsx@latest/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --color-white: rgba(255, 255, 255, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-teal-700: rgba(26, 104, 115, 1);
+            --color-red-400: rgba(255, 84, 89, 1);
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-orange-400: rgba(230, 129, 97, 1);
+            --color-orange-500: rgba(168, 75, 47, 1);
+
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-primary-hover: var(--color-teal-600);
+            --color-primary-active: var(--color-teal-700);
+            --color-border: rgba(94, 82, 64, 0.2);
+            --color-card-border: rgba(94, 82, 64, 0.12);
+            --color-btn-primary-text: var(--color-cream-50);
+            --color-success: var(--color-teal-500);
+            --color-warning: var(--color-orange-500);
+            --color-error: var(--color-red-500);
+
+            --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-family-mono: ui-monospace, monospace;
+            --font-size-sm: 12px;
+            --font-size-base: 14px;
+            --font-size-md: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 20px;
+            --font-size-3xl: 24px;
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 550;
+            --font-weight-bold: 600;
+
+            --space-4: 4px;
+            --space-8: 8px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-20: 20px;
+            --space-24: 24px;
+            --space-32: 32px;
+
+            --radius-base: 8px;
+            --radius-lg: 12px;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-family: var(--font-family-base);
+            color: var(--color-text);
+            background-color: var(--color-background);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-20);
+        }
+
+        header {
+            margin-bottom: var(--space-32);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: var(--space-20);
+        }
+
+        h1 {
+            margin: 0 0 var(--space-8) 0;
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            margin-top: var(--space-24);
+            margin-bottom: var(--space-16);
+        }
+
+        h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: var(--space-8) var(--space-16);
+            border-radius: var(--radius-base);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 150ms ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-gray-200);
+        }
+
+        .btn-sm {
+            padding: var(--space-4) var(--space-12);
+            font-size: var(--font-size-sm);
+        }
+
+        .file-input-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .filters {
+            display: flex;
+            gap: var(--space-12);
+            margin-bottom: var(--space-24);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        select {
+            padding: var(--space-8) var(--space-12);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            font-size: var(--font-size-base);
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-16);
+            margin-bottom: var(--space-32);
+        }
+
+        .stat-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-16);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-card-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card-value {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: var(--space-8);
+            margin-bottom: var(--space-20);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .tab-button {
+            padding: var(--space-12) var(--space-16);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            transition: all 150ms ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-button.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .leaderboard-table thead {
+            background: var(--color-gray-200);
+        }
+
+        .leaderboard-table th {
+            padding: var(--space-12) var(--space-16);
+            text-align: left;
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+            border-bottom: 1px solid var(--color-border);
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .leaderboard-table td {
+            padding: var(--space-12) var(--space-16);
+            border-bottom: 1px solid var(--color-card-border);
+        }
+
+        .leaderboard-table tbody tr {
+            transition: background-color 150ms ease;
+        }
+
+        .leaderboard-table tbody tr:hover {
+            background-color: rgba(33, 128, 141, 0.05);
+        }
+
+        .leaderboard-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+            font-weight: var(--font-weight-bold);
+            font-size: var(--font-size-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(135deg, #FFD700, #FFC700);
+            color: #333;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(135deg, #E8E8E8, #C0C0C0);
+            color: #333;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(135deg, #CD7F32, #B87333);
+            color: white;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+        }
+
+        .rank-badge.red-last {
+            background: linear-gradient(135deg, #FF6B6B, #E53E3E);
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(255, 75, 75, 0.4);
+        }
+
+        .rank-badge.red-second-last {
+            background: linear-gradient(135deg, #FF9999, #F08080);
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 153, 153, 0.3);
+        }
+
+        .player-name {
+            cursor: pointer;
+            color: var(--color-primary);
+            font-weight: var(--font-weight-medium);
+            transition: color 150ms ease;
+        }
+
+        .player-name:hover {
+            color: var(--color-primary-hover);
+            text-decoration: underline;
+        }
+
+        .points-positive {
+            color: var(--color-success);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .points-negative {
+            color: var(--color-error);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .points-neutral {
+            color: var(--color-text-secondary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 150ms ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--color-surface);
+            padding: var(--space-24);
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideUp 250ms ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-20);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: var(--space-16);
+        }
+
+        .modal-title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            transition: color 150ms ease;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: var(--color-text);
+        }
+
+        .game-stats {
+            margin-bottom: var(--space-24);
+        }
+
+        .stats-section {
+            background: var(--color-background);
+            border-radius: var(--radius-base);
+            padding: var(--space-16);
+            margin-bottom: var(--space-16);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-8) 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-row:last-child {
+            border-bottom: none;
+        }
+
+        .stats-label {
+            color: var(--color-text-secondary);
+        }
+
+        .stats-value {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-primary);
+        }
+
+        .game-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-12);
+            margin-bottom: var(--space-8);
+            background: var(--color-background);
+            border-radius: var(--radius-base);
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .game-stat-item.best {
+            border-left-color: var(--color-success);
+        }
+
+        .game-stat-item.worst {
+            border-left-color: var(--color-error);
+        }
+
+        .game-stat-label {
+            font-weight: var(--font-weight-medium);
+        }
+
+        .game-stat-value {
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--space-32);
+            color: var(--color-text-secondary);
+        }
+
+        .chart-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-16);
+            margin: var(--space-24) 0;
+            position: relative;
+            height: 400px;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        .player-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-8);
+        }
+
+        .player-checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .player-checkbox-item label {
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            color: var(--color-text);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎲 보드게임 리더보드</h1>
+            <p style="margin: var(--space-8) 0 0 0; color: var(--color-text-secondary);">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
+        </header>
+
+        <div class="filters">
+            <div class="file-input-wrapper">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📁 파일 업로드 (XLSX)</button>
+                <input type="file" id="fileInput" accept=".xlsx" onchange="handleFileUpload(event)">
+            </div>
+            <select id="monthFilter" onchange="updateDashboard()">
+                <option value="">📅 모든 달</option>
+            </select>
+            <select id="gameFilter" onchange="updateDashboard()">
+                <option value="">🎮 모든 게임</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: var(--space-24); padding: var(--space-16); background: var(--color-surface); border-radius: var(--radius-base); border: 1px solid var(--color-card-border);">
+            <div style="display: flex; gap: var(--space-24); flex-wrap: wrap; font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalPlayers">0</span> 플레이어</div>
+                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalGames">0</span> 게임</div>
+                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalRecords">0</span> 기록</div>
+                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalPlayDates">0</span> 플레이 날짜</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-label" id="overallWinnerLabel">👑 모든 게임 1위</div>
+                <div class="stat-card-value" id="overallWinner" style="font-size: var(--font-size-lg);">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">📈 가장 많이 플레이</div>
+                <div class="stat-card-value" id="mostActivPlayer" style="font-size: var(--font-size-lg);">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">⬆️ 최고 승점</div>
+                <div class="stat-card-value" id="maxWinPlayer" style="font-size: var(--font-size-lg);">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">⬇️ 최고 감점</div>
+                <div class="stat-card-value" id="maxLossPlayer" style="font-size: var(--font-size-lg);">-</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('overall')">전체 리더보드</button>
+            <button class="tab-button" onclick="switchTab('byGame')">게임별 리더보드</button>
+            <button class="tab-button" onclick="switchTab('byMonth')">월별 리더보드</button>
+            <button class="tab-button" onclick="switchTab('history')">플레이 히스토리</button>
+        </div>
+
+        <div id="overall" class="tab-content active">
+            <table class="leaderboard-table" id="overallTable">
+                <thead>
+                    <tr>
+                        <th>순위</th>
+                        <th>플레이어</th>
+                        <th>현재 포인트</th>
+                        <th>총 승점</th>
+                        <th>게임 수</th>
+                        <th>총 감점</th>
+                        <th>승리</th>
+                        <th>평균 포인트</th>
+                    </tr>
+                </thead>
+                <tbody id="overallTableBody">
+                </tbody>
+            </table>
+            <div style="margin-top: var(--space-20); padding: var(--space-16); background: rgba(33, 128, 141, 0.08); border-radius: var(--radius-base); border-left: 3px solid var(--color-primary); font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.6;">
+                <strong style="color: var(--color-primary);">📋 리더보드 정렬 기준</strong><br>
+                <div style="margin-top: var(--space-8);">
+                    <div>1순위: <strong>현재 포인트</strong> - 최종 누적 포인트</div>
+                    <div>2순위: <strong>총 승점</strong> ⭐ (높을수록 유리) - 1/2등 등 상위권 성적이 많을수록 높음. 게임에서의 실력을 반영</div>
+                    <div>3순위: <strong>게임 수</strong> ⭐⭐ (높을수록 유리) - 플레이 참여도가 높을수록 유리. <strong>꼴찌를 해도 괜찮으니 게임 참여를 열심히 하세요!</strong></div>
+                    <div>4순위: <strong>총 감점</strong> (낮을수록 유리) - 손실을 최소화한 플레이어</div>
+                    <div>5순위: <strong>승리</strong> (높을수록 유리) - 1등 횟수</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="byGame" class="tab-content">
+            <div id="gameLeaderboards"></div>
+        </div>
+
+        <div id="byMonth" class="tab-content">
+            <div id="monthLeaderboards"></div>
+        </div>
+
+        <div id="history" class="tab-content">
+            <table class="leaderboard-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>게임</th>
+                        <th>플레이어</th>
+                        <th>순위</th>
+                        <th>승점</th>
+                        <th>감점</th>
+                        <th>현재 포인트</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalPlayerName"></h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let gameData = [];
+        let filteredData = [];
+
+        function excelDateToJSDate(excelDate) {
+            // 먼저 문자열 형식 처리 (날짜 밀림 없음)
+            if (typeof excelDate === 'string') {
+                const parts = excelDate.split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const day = parseInt(parts[2]);
+                    return new Date(year, month - 1, day, 0, 0, 0, 0);
+                }
+                return new Date(excelDate);
+            }
+            
+            // 숫자 형식: Excel의 시리얼 번호
+            // Excel은 1900-01-01을 1로 설정하고 윤년 버그 존재
+            if (typeof excelDate === 'number') {
+                if (excelDate < 60) {
+                    // 1900-03-01 이전: 그대로 사용 (윤년 버그 영향)
+                    const baseDate = new Date(1900, 0, 1);
+                    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+                    const date = new Date(baseDate.getTime() + (excelDate - 1) * millisecondsPerDay);
+                    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+                } else {
+                    // 1900-03-01 이후: -1 조정 (윤년 버그 보정)
+                    const baseDate = new Date(1900, 0, 1);
+                    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+                    const adjustedDate = excelDate - 2; // Excel 버그 보정
+                    const date = new Date(baseDate.getTime() + adjustedDate * millisecondsPerDay);
+                    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+                }
+            }
+            return new Date(excelDate);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (typeof XLSX === 'undefined') {
+                alert('⏳ XLSX 라이브러리를 로드 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+
+                    gameData = rows.map((row, idx) => ({
+                        id: idx,
+                        date: excelDateToJSDate(row['플레이 날짜']),
+                        game: row['게임 이름'] || '',
+                        player: row['플레이어 이름'] || '',
+                        win: parseFloat(row['승점']) || 0,
+                        loss: parseFloat(row['감점']) || 0
+                    })).sort((a, b) => a.date - b.date);
+
+                    const sessionMap = {};
+                    gameData.forEach(record => {
+                        const sessionKey = `${record.date.toISOString().split('T')[0]}_${record.game}`;
+                        if (!sessionMap[sessionKey]) {
+                            sessionMap[sessionKey] = [];
+                        }
+                        sessionMap[sessionKey].push(record);
+                    });
+
+                    let sessionId = 0;
+                    Object.keys(sessionMap).sort().forEach(key => {
+                        const session = sessionMap[key];
+                        const rankings = session.map(p => ({ player: p.player, points: p.win + p.loss }))
+                            .sort((a, b) => b.points - a.points);
+                        
+                        session.forEach(record => {
+                            record.sessionId = sessionId;
+                            record.rank = rankings.findIndex(r => r.player === record.player) + 1;
+                        });
+                        sessionId++;
+                    });
+
+                    populateFilters();
+                    updateDashboard();
+                    alert('✅ 파일이 성공적으로 업로드되었습니다! (총 ' + gameData.length + '개 기록)');
+                } catch (error) {
+                    alert('❌ 파일 처리 중 오류가 발생했습니다: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function populateFilters() {
+            const months = new Set();
+            gameData.forEach(record => {
+                const month = record.date.toISOString().slice(0, 7);
+                months.add(month);
+            });
+
+            const monthSelect = document.getElementById('monthFilter');
+            Array.from(months).sort().reverse().forEach(month => {
+                if (!Array.from(monthSelect.options).some(o => o.value === month)) {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    const [year, monthNum] = month.split('-');
+                    const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1, 0, 0, 0, 0);
+                    option.textContent = monthDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+                    monthSelect.appendChild(option);
+                }
+            });
+
+            const games = new Set();
+            gameData.forEach(record => games.add(record.game));
+
+            const gameSelect = document.getElementById('gameFilter');
+            Array.from(games).sort().forEach(game => {
+                if (!Array.from(gameSelect.options).some(o => o.value === game)) {
+                    const option = document.createElement('option');
+                    option.value = game;
+                    option.textContent = game;
+                    gameSelect.appendChild(option);
+                }
+            });
+        }
+
+        function updateDashboard() {
+            const monthFilter = document.getElementById('monthFilter').value;
+            const gameFilter = document.getElementById('gameFilter').value;
+
+            filteredData = gameData.filter(record => {
+                const recordMonth = record.date.toISOString().slice(0, 7);
+                const monthMatch = !monthFilter || recordMonth === monthFilter;
+                const gameMatch = !gameFilter || record.game === gameFilter;
+                return monthMatch && gameMatch;
+            });
+
+            updateStats();
+            updateOverallLeaderboard();
+            updateGameLeaderboards();
+            updateMonthLeaderboards();
+            updateHistory();
+        }
+
+        function updateStats() {
+            const players = new Set(filteredData.map(r => r.player));
+            const games = new Set(filteredData.map(r => r.game));
+            const playDates = new Set(filteredData.map(r => r.date.toISOString().split('T')[0]));
+            const gameFilter = document.getElementById('gameFilter').value;
+
+            document.getElementById('totalPlayers').textContent = players.size;
+            document.getElementById('totalGames').textContent = games.size;
+            document.getElementById('totalRecords').textContent = filteredData.length;
+            document.getElementById('totalPlayDates').textContent = playDates.size;
+
+            // 모든 게임 1위 (전체 포인트 1위) - 필터에 따라 라벨 변경
+            const playerPoints = calculatePlayerPoints(filteredData);
+            const sorted = Object.entries(playerPoints)
+                .sort((a, b) => b[1].total - a[1].total);
+            document.getElementById('overallWinner').textContent = sorted.length > 0 ? sorted[0][0] : '-';
+            
+            // 게임 필터에 따라 라벨 업데이트
+            const label = gameFilter ? `👑 ${gameFilter} 1위` : '👑 모든 게임 1위';
+            document.getElementById('overallWinnerLabel').textContent = label;
+
+            // 가장 많이 플레이한 플레이어
+            const playerGameCount = {};
+            filteredData.forEach(record => {
+                playerGameCount[record.player] = (playerGameCount[record.player] || 0) + 1;
+            });
+            const mostActivePlayer = Object.entries(playerGameCount)
+                .sort((a, b) => b[1] - a[1])[0];
+            document.getElementById('mostActivPlayer').textContent = mostActivePlayer ? mostActivePlayer[0] : '-';
+
+            // 최고 승점
+            let maxWin = -Infinity;
+            let maxWinPlayer = '-';
+            Object.entries(playerPoints).forEach(([player, data]) => {
+                if (data.total > maxWin) {
+                    maxWin = data.total;
+                    maxWinPlayer = player;
+                }
+            });
+            document.getElementById('maxWinPlayer').textContent = maxWinPlayer;
+
+            // 최고 감점 (음수 값이 최소인 플레이어)
+            let minTotal = Infinity;
+            let maxLossPlayer = '-';
+            Object.entries(playerPoints).forEach(([player, data]) => {
+                if (data.total < minTotal) {
+                    minTotal = data.total;
+                    maxLossPlayer = player;
+                }
+            });
+            document.getElementById('maxLossPlayer').textContent = maxLossPlayer;
+        }
+
+        function calculatePlayerPoints(records) {
+            const playerPoints = {};
+            records.forEach(record => {
+                if (!playerPoints[record.player]) {
+                    playerPoints[record.player] = { total: 0, games: 0, wins: 0, history: [] };
+                }
+                const change = record.win + record.loss;
+                playerPoints[record.player].total = Math.max(0, playerPoints[record.player].total + change);
+                playerPoints[record.player].games++;
+                if (record.win > 0) playerPoints[record.player].wins++;
+                playerPoints[record.player].history.push({ 
+                    date: record.date, 
+                    game: record.game, 
+                    change,
+                    rank: record.rank || null,
+                    win: record.win,
+                    loss: record.loss
+                });
+            });
+            return playerPoints;
+        }
+
+        function updateOverallLeaderboard() {
+            const playerPoints = calculatePlayerPoints(filteredData);
+            const sorted = Object.entries(playerPoints)                    .map(([name, data]) => {
+                        const totalWins = data.history.reduce((sum, h) => sum + (h.win || 0), 0);
+                        const totalLosses = data.history.reduce((sum, h) => sum + (h.loss || 0), 0);
+                        return {
+                            name,
+                            ...data,
+                            avg: (data.total / data.games).toFixed(1),
+                            totalWins: totalWins,
+                            totalLosses: Math.abs(totalLosses)
+                        };
+                    })
+                .sort((a, b) => {
+                    // 1순위: 현재 포인트 (높을수록 좋음)
+                    if (b.total !== a.total) return b.total - a.total;
+                    // 2순위: 총 승점이 가장 많음
+                    if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+                    // 3순위: 게임 수 (높을수록 좋음 - 참여도)
+                    if (b.games !== a.games) return b.games - a.games;
+                    // 4순위: 총 감점이 가장 낮음 (손실이 적을수록 유리)
+                    if (a.totalLosses !== b.totalLosses) return a.totalLosses - b.totalLosses;
+                    // 5순위: 승리 (높을수록 좋음)
+                    return b.wins - a.wins;
+                });
+
+            const tbody = document.getElementById('overallTableBody');
+            tbody.innerHTML = sorted.map((player, idx) => `
+                <tr>
+                    <td><span class="rank-badge ${idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : ''}">${idx + 1}</span></td>
+                    <td><span class="player-name" onclick="openPlayerModal('${player.name}')">${player.name}</span></td>
+                    <td><span class="points-positive">${player.total}</span></td>
+                    <td><span class="points-positive">${player.totalWins.toFixed(1)}</span></td>
+                    <td>${player.games}</td>
+                    <td><span class="points-negative">${player.totalLosses.toFixed(1)}</span></td>
+                    <td>${player.wins}</td>
+                    <td>${player.avg}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateGameLeaderboards() {
+            const games = new Set(filteredData.map(r => r.game));
+            const container = document.getElementById('gameLeaderboards');
+            container.innerHTML = '';
+
+            Array.from(games).sort().forEach(game => {
+                const gameRecords = filteredData.filter(r => r.game === game);
+                const playerPoints = calculatePlayerPoints(gameRecords);
+                const sorted = Object.entries(playerPoints)
+                    .map(([name, data]) => {
+                        const totalWins = data.history.reduce((sum, h) => sum + (h.win || 0), 0);
+                        const totalLosses = data.history.reduce((sum, h) => sum + (h.loss || 0), 0);
+                        return {
+                            name,
+                            ...data,
+                            avg: data.total / data.games,
+                            totalWins: totalWins,
+                            totalLosses: Math.abs(totalLosses)
+                        };
+                    })
+                    .sort((a, b) => {
+                        // 1순위: 현재 포인트 (높을수록 좋음)
+                        if (b.total !== a.total) return b.total - a.total;
+                        // 2순위: 총 승점이 가장 많음
+                        if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+                        // 3순위: 게임 수 (높을수록 좋음)
+                        if (b.games !== a.games) return b.games - a.games;
+                        // 4순위: 총 감점이 가장 낮음
+                        if (a.totalLosses !== b.totalLosses) return a.totalLosses - b.totalLosses;
+                        // 5순위: 승리
+                        return b.wins - a.wins;
+                    });
+
+                const html = `
+                    <h2>${game}</h2>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>플레이어</th>
+                                <th>현재 포인트</th>
+                                <th>총 승점</th>
+                                <th>게임 수</th>
+                                <th>총 감점</th>
+                                <th>승리</th>
+                                <th>게임당 평균</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sorted.map((player, idx) => {
+                                const rankClass = getRankBadgeClass(idx + 1, sorted.length);
+                                return `
+                                <tr>
+                                    <td><span class="rank-badge ${rankClass}">${idx + 1}</span></td>
+                                    <td>${player.name}</td>
+                                    <td><span class="points-positive">${player.total.toFixed(1)}</span></td>
+                                    <td><span class="points-positive">${player.totalWins.toFixed(1)}</span></td>
+                                    <td>${player.games}</td>
+                                    <td><span class="points-negative">${player.totalLosses.toFixed(1)}</span></td>
+                                    <td>${player.wins}</td>
+                                    <td><span class="points-positive">${player.avg.toFixed(1)}</span></td>
+                                </tr>
+                            `}).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function updateMonthLeaderboards() {
+            const months = new Set();
+            filteredData.forEach(r => months.add(r.date.toISOString().slice(0, 7)));
+            
+            const container = document.getElementById('monthLeaderboards');
+            container.innerHTML = '';
+
+            Array.from(months).sort().reverse().forEach(month => {
+                const monthRecords = filteredData.filter(r => r.date.toISOString().slice(0, 7) === month);
+                const playerPoints = calculatePlayerPoints(monthRecords);
+                const sorted = Object.entries(playerPoints)
+                    .map(([name, data]) => ({
+                        name,
+                        ...data,
+                        avg: data.total / data.games,
+                        totalWins: data.history.reduce((sum, h) => sum + h.win, 0),
+                        totalLosses: Math.abs(data.history.reduce((sum, h) => sum + h.loss, 0))
+                    }))
+                    .sort((a, b) => {
+                        // 1순위: 현재 포인트 (높을수록 좋음)
+                        if (b.total !== a.total) return b.total - a.total;
+                        // 2순위: 총 승점이 가장 많음
+                        if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+                        // 3순위: 게임 수 (높을수록 좋음)
+                        if (b.games !== a.games) return b.games - a.games;
+                        // 4순위: 총 감점이 가장 낮음
+                        if (a.totalLosses !== b.totalLosses) return a.totalLosses - b.totalLosses;
+                        // 5순위: 승리
+                        return b.wins - a.wins;
+                    });
+                const [year, monthNum] = month.split('-');
+                const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1, 0, 0, 0, 0);
+                const monthName = monthDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+                const html = `
+                    <h2>${monthName}</h2>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>플레이어</th>
+                                <th>현재 포인트</th>
+                                <th>총 승점</th>
+                                <th>게임 수</th>
+                                <th>총 감점</th>
+                                <th>승리</th>
+                                <th>게임당 평균</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sorted.map((player, idx) => {
+                                const rankClass = getRankBadgeClass(idx + 1, sorted.length);
+                                return `
+                                <tr>
+                                    <td><span class="rank-badge ${rankClass}">${idx + 1}</span></td>
+                                    <td>${player.name}</td>
+                                    <td><span class="points-positive">${player.total.toFixed(1)}</span></td>
+                                    <td><span class="points-positive">${player.totalWins.toFixed(1)}</span></td>
+                                    <td>${player.games}</td>
+                                    <td><span class="points-negative">${player.totalLosses.toFixed(1)}</span></td>
+                                    <td>${player.wins}</td>
+                                    <td><span class="points-positive">${player.avg.toFixed(1)}</span></td>
+                                </tr>
+                            `}).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function getRankBadgeClass(rank, totalPlayers) {
+            if (rank === 1) return 'gold';
+            if (rank === 2) return 'silver';
+            if (rank === 3) return 'bronze';
+            if (rank === totalPlayers) return 'red-last';
+            if (rank === totalPlayers - 1) return 'red-second-last';
+            return '';
+        }
+
+        function updateHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            let currentPointByPlayer = {};
+            
+            tbody.innerHTML = filteredData.map(record => {
+                if (!currentPointByPlayer[record.player]) {
+                    currentPointByPlayer[record.player] = 0;
+                }
+                
+                const change = record.win + record.loss;
+                currentPointByPlayer[record.player] = Math.max(0, currentPointByPlayer[record.player] + change);
+                const currentPoint = currentPointByPlayer[record.player];
+                const currentPointClass = currentPoint < 0 ? 'points-negative' : currentPoint > 0 ? 'points-positive' : 'points-neutral';
+                
+                const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
+                const totalPlayers = sessionRecords.length;
+                
+                const rankClass = record.rank ? getRankBadgeClass(record.rank, totalPlayers) : '';
+                const rankBadge = record.rank ? `<span class="rank-badge ${rankClass}" style="width: 24px; height: 24px; font-size: 11px; font-weight: bold;">${record.rank}</span>` : '-';
+                
+                const gainDisplay = record.win === 0 ? `<span class="points-neutral">+0.0</span>` : `<span class="points-positive">+${record.win.toFixed(1)}</span>`;
+                const lossDisplay = record.loss === 0 ? `<span class="points-neutral">-0.0</span>` : `<span class="points-negative">${record.loss.toFixed(1)}</span>`;
+                
+                return `
+                    <tr>
+                        <td>${record.date.toLocaleDateString('ko-KR')}</td>
+                        <td>${record.game}</td>
+                        <td>${record.player}</td>
+                        <td style="text-align: center;">${rankBadge}</td>
+                        <td>${gainDisplay}</td>
+                        <td>${lossDisplay}</td>
+                        <td><span class="${currentPointClass}">${currentPoint.toFixed(1)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function openPlayerModal(playerName) {
+            const allPlayerRecords = gameData.filter(r => r.player === playerName);
+            const filteredPlayerRecords = filteredData.filter(r => r.player === playerName);
+            const playerPoints = calculatePlayerPoints(filteredPlayerRecords);
+            const player = playerPoints[playerName];
+
+            let totalWin = 0, totalLoss = 0;
+            const monthlyStats = {};
+            allPlayerRecords.forEach(record => {
+                totalWin += record.win;
+                totalLoss += record.loss;
+                const month = record.date.toISOString().slice(0, 7);
+                if (!monthlyStats[month]) {
+                    monthlyStats[month] = { win: 0, loss: 0 };
+                }
+                monthlyStats[month].win += record.win;
+                monthlyStats[month].loss += record.loss;
+            });
+
+            const gameStats = {};
+            filteredPlayerRecords.forEach(record => {
+                if (!gameStats[record.game]) {
+                    gameStats[record.game] = { total: 0, games: 0, records: [] };
+                }
+                gameStats[record.game].total += record.win + record.loss;
+                gameStats[record.game].games++;
+                gameStats[record.game].records.push(record);
+            });
+
+            const sortedGames = Object.entries(gameStats)
+                .map(([game, stats]) => ({ 
+                    game, 
+                    ...stats,
+                    avgPerGame: stats.total / stats.games 
+                }))
+                .sort((a, b) => {
+                    if (b.avgPerGame !== a.avgPerGame) return b.avgPerGame - a.avgPerGame;
+                    return b.total - a.total;
+                });
+
+            const best = sortedGames[0];
+            const worst = sortedGames[sortedGames.length - 1];
+            
+            const totalAvgPerGame = filteredPlayerRecords.length > 0 
+                ? (filteredPlayerRecords.reduce((sum, r) => sum + r.win + r.loss, 0) / filteredPlayerRecords.length)
+                : 0;
+
+            const monthlyStatsHtml = Object.entries(monthlyStats)
+                .sort((a, b) => b[0].localeCompare(a[0]))
+                .map(([month, stats]) => {
+                    const [year, monthNum] = month.split('-');
+                    const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1, 0, 0, 0, 0);
+                    const monthName = monthDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+                    const winClass = stats.win === 0 ? 'points-neutral' : 'points-positive';
+                    const lossClass = stats.loss === 0 ? 'points-neutral' : 'points-negative';
+                    return `
+                        <div class="stats-row">
+                            <span class="stats-label">${monthName}</span>
+                            <span class="stats-value"><span class="${winClass}">승: +${stats.win.toFixed(1)}</span> / <span class="${lossClass}">감: ${Math.abs(stats.loss).toFixed(1)}</span></span>
+                        </div>
+                    `;
+                }).join('');
+
+            const html = `
+                <div class="game-stats">
+                    <h3>🏆 전체 누적 통계</h3>
+                    <div class="stats-section">
+                        <div class="stats-row">
+                            <span class="stats-label">누적 승점</span>
+                            <span class="stats-value points-positive">+${totalWin.toFixed(1)}</span>
+                        </div>                    <div class="stats-row">
+                        <span class="stats-label">누적 감점</span>
+                        <span class="stats-value ${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${Math.abs(totalLoss).toFixed(1)}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">순 포인트</span>
+                        <span class="stats-value ${(totalWin + totalLoss) < 0 ? 'points-negative' : (totalWin + totalLoss) > 0 ? 'points-positive' : 'points-neutral'}">${(totalWin + totalLoss).toFixed(1)}</span>
+                    </div>
+                        <div class="stats-row">
+                            <span class="stats-label">게임당 평균 포인트</span>
+                            <span class="stats-value">${totalAvgPerGame.toFixed(1)}</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: var(--space-20);">📅 월별 누적 통계</h3>
+                    <div class="stats-section">
+                        ${monthlyStatsHtml}
+                    </div>
+
+                    <h3 style="margin-top: var(--space-20);">📊 게임별 성적</h3>
+                    ${best ? `<div class="game-stat-item best">
+                        <span class="game-stat-label">✨ 가장 잘하는 게임</span>
+                        <span><strong>${best.game}</strong> (<span class="${best.avgPerGame < 0 ? 'points-negative' : 'points-positive'}">게임당 ${best.avgPerGame.toFixed(1)}점</span>)</span>
+                    </div>` : ''}
+                    ${worst ? `<div class="game-stat-item worst">
+                        <span class="game-stat-label">⚠️ 가장 못하는 게임</span>
+                        <span><strong>${worst.game}</strong> (<span class="${worst.avgPerGame < 0 ? 'points-negative' : 'points-positive'}">게임당 ${worst.avgPerGame.toFixed(1)}점</span>)</span>
+                    </div>` : ''}
+                </div>                    <h3>🎮 모든 게임별 포인트</h3>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>게임</th>
+                                <th>포인트</th>
+                                <th>플레이 수</th>
+                                <th>평균</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedGames.map(g => {
+                                const totalClass = g.total < 0 ? 'points-negative' : g.total > 0 ? 'points-positive' : 'points-neutral';
+                                const avgClass = g.avgPerGame < 0 ? 'points-negative' : g.avgPerGame > 0 ? 'points-positive' : 'points-neutral';
+                                return `
+                            <tr>
+                                <td>${g.game}</td>
+                                <td><span class="${totalClass}">${g.total.toFixed(1)}</span></td>
+                                <td>${g.games}</td>
+                                <td><span class="${avgClass}">${g.avgPerGame.toFixed(1)}</span></td>
+                            </tr>
+                        `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                <h3 style="margin-top: var(--space-24);">📈 플레이 히스토리</h3>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>게임</th>
+                            <th>순위</th>
+                            <th>승점</th>
+                            <th>감점</th>
+                            <th>현재 포인트</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${(() => {
+                            let currentPoint = 0;
+                            return filteredPlayerRecords.map(record => {
+                                const change = record.win + record.loss;
+                                currentPoint = Math.max(0, currentPoint + change);
+                                const currentPointClass = currentPoint < 0 ? 'points-negative' : currentPoint > 0 ? 'points-positive' : 'points-neutral';
+                                const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
+                                const totalPlayers = sessionRecords.length;
+                                const rankClass = record.rank ? getRankBadgeClass(record.rank, totalPlayers) : '';
+                                const rankDisplay = record.rank ? `<span class="rank-badge ${rankClass}" style="width: 24px; height: 24px; font-size: 12px;">${record.rank}</span>` : '-';
+                                const gainDisplay = record.win === 0 ? `<span class="points-neutral">+0.0</span>` : `<span class="points-positive">+${record.win.toFixed(1)}</span>`;
+                                const lossDisplay = record.loss === 0 ? `<span class="points-neutral">-0.0</span>` : `<span class="points-negative">${record.loss.toFixed(1)}</span>`;
+                                return `
+                                    <tr>
+                                        <td>${record.date.toLocaleDateString('ko-KR')}</td>
+                                        <td>${record.game}</td>
+                                        <td>${rankDisplay}</td>
+                                        <td>${gainDisplay}</td>
+                                        <td>${lossDisplay}</td>
+                                        <td><span class="${currentPointClass}">${currentPoint.toFixed(1)}</span></td>
+                                    </tr>
+                                `;
+                            }).join('');
+                        })()}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('modalPlayerName').textContent = playerName;
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('playerModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('playerModal').classList.remove('active');
+        }
+
+        document.getElementById('playerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        let monthlyTrendChart = null;
+        let monthlyPlayerData = {};
+        let selectedPlayers = new Set();
+        let allMonths = [];
+
+        function initializeChartPlayers() {
+            // 모든 데이터로부터 플레이어 목록과 월별 데이터 계산
+            if (gameData.length === 0) return;
+
+            monthlyPlayerData = {};
+            selectedPlayers.clear();
+            
+            gameData.forEach(record => {
+                const month = record.date.toISOString().slice(0, 7);
+                const player = record.player;
+                const points = record.win + record.loss;
+                
+                if (!monthlyPlayerData[player]) {
+                    monthlyPlayerData[player] = {};
+                }
+                if (!monthlyPlayerData[player][month]) {
+                    monthlyPlayerData[player][month] = 0;
+                }
+                monthlyPlayerData[player][month] += points;
+            });
+
+            // 모든 월 수집
+            const monthSet = new Set();
+            Object.values(monthlyPlayerData).forEach(playerMonths => {
+                Object.keys(playerMonths).forEach(month => monthSet.add(month));
+            });
+            allMonths = Array.from(monthSet).sort();
+
+            // 체크박스 생성
+            const checkboxContainer = document.getElementById('playerCheckboxes');
+            if (!checkboxContainer) {
+                console.error('playerCheckboxes container not found');
+                return;
+            }
+
+            checkboxContainer.innerHTML = '';
+            let playerIndex = 0;
+            Object.keys(monthlyPlayerData).sort().forEach((player) => {
+                const isChecked = playerIndex < 3; // 기본적으로 처음 3명 선택
+                
+                if (isChecked) {
+                    selectedPlayers.add(player);
+                }
+                
+                const div = document.createElement('div');
+                div.className = 'player-checkbox-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `player-checkbox-${playerIndex}`;
+                checkbox.value = player;
+                checkbox.checked = isChecked;
+                checkbox.onchange = updateChartWithSelectedPlayers;
+                
+                const label = document.createElement('label');
+                label.htmlFor = `player-checkbox-${playerIndex}`;
+                label.textContent = player;
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                checkboxContainer.appendChild(div);
+                
+                playerIndex++;
+            });
+        }
+
+        function updateChartWithSelectedPlayers() {
+            // 체크박스로부터 선택된 플레이어 수집
+            selectedPlayers.clear();
+            const checkboxes = document.querySelectorAll('#playerCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    selectedPlayers.add(cb.value);
+                }
+            });
+
+            // 최소 1명은 선택되어야 함
+            if (selectedPlayers.size === 0 && checkboxes.length > 0) {
+                checkboxes[0].checked = true;
+                selectedPlayers.add(checkboxes[0].value);
+            }
+
+            updateMonthlyTrendChart();
+        }
+
+        function updateMonthlyTrendChart() {
+            if (allMonths.length === 0 || typeof Chart === 'undefined') return;
+            
+            const datasets = [];
+            const colors = ['#2180A0', '#FFD700', '#CD7F32', '#FF6B6B', '#9B59B6', '#1ABC9C', '#F39C12', '#E74C3C'];
+            let colorIndex = 0;
+
+            selectedPlayers.forEach(player => {
+                const monthData = monthlyPlayerData[player];
+                let cumulative = 0;
+                const cumulativeData = allMonths.map(month => {
+                    cumulative += monthData[month] || 0;
+                    return cumulative;
+                });
+
+                datasets.push({
+                    label: player,
+                    data: cumulativeData,
+                    borderColor: colors[colorIndex % colors.length],
+                    backgroundColor: colors[colorIndex % colors.length].replace(')', ', 0.1)'),
+                    fill: false,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: colors[colorIndex % colors.length]
+                });
+                colorIndex++;
+            });
+
+            const monthLabels = allMonths.map(month => {
+                const [year, monthNum] = month.split('-');
+                const date = new Date(parseInt(year), parseInt(monthNum) - 1, 1, 0, 0, 0, 0);
+                return date.toLocaleDateString('ko-KR', { year: '2-digit', month: 'short' });
+            });
+
+            const ctx = document.getElementById('monthlyTrendChart');
+            if (!ctx) return;
+
+            if (monthlyTrendChart) {
+                monthlyTrendChart.destroy();
+            }
+
+            monthlyTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '누적 포인트'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '월별'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDashboardWithChart() {
+            const monthFilter = document.getElementById('monthFilter').value;
+            const gameFilter = document.getElementById('gameFilter').value;
+
+            filteredData = gameData.filter(record => {
+                const recordMonth = record.date.toISOString().slice(0, 7);
+                const monthMatch = !monthFilter || recordMonth === monthFilter;
+                const gameMatch = !gameFilter || record.game === gameFilter;
+                return monthMatch && gameMatch;
+            });
+
+            updateStats();
+            updateOverallLeaderboard();
+            updateGameLeaderboards();
+            updateMonthLeaderboards();
+            updateHistory();
+            // 차트는 탭 클릭 시에만 생성하므로 여기서 호출하지 않음
+        }
+
+        // updateDashboard 함수를 updateDashboardWithChart로 교체
+        window.updateDashboard = updateDashboardWithChart;
+    
+        // GitHub에서 데이터 자동 로드
+        async function loadFromGitHub() {
+            try {
+                if (typeof XLSX === 'undefined') {
+                    console.log('XLSX 라이브러리 로딩 대기 중...');
+                    setTimeout(loadFromGitHub, 500);
+                    return;
+                }
+
+                const GITHUB_DATA_URL = 'https://sung-jungmin.github.io/boardgame-leaderboard-kor/data/board.xlsx';
+                console.log('GitHub에서 데이터 로드 시작:', GITHUB_DATA_URL);
+
+                const response = await fetch(GITHUB_DATA_URL);
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ' + response.status);
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet);
+
+                gameData = rows.map((row, idx) => ({
+                    id: idx,
+                    date: excelDateToJSDate(row['플레이 날짜']),
+                    game: row['게임 이름'] || '',
+                    player: row['플레이어 이름'] || '',
+                    win: parseFloat(row['승점']) || 0,
+                    loss: parseFloat(row['감점']) || 0
+                })).sort((a, b) => a.date - b.date);
+
+                const sessionMap = {};
+                gameData.forEach(record => {
+                    const sessionKey = `${record.date.toISOString().split('T')[0]}_${record.game}`;
+                    if (!sessionMap[sessionKey]) {
+                        sessionMap[sessionKey] = [];
+                    }
+                    sessionMap[sessionKey].push(record);
+                });
+
+                let sessionId = 0;
+                Object.keys(sessionMap).sort().forEach(key => {
+                    const session = sessionMap[key];
+                    const rankings = session.map(p => ({ player: p.player, points: p.win + p.loss }))
+                        .sort((a, b) => b.points - a.points);
+
+                    session.forEach(record => {
+                        record.sessionId = sessionId;
+                        record.rank = rankings.findIndex(r => r.player === record.player) + 1;
+                    });
+                    sessionId++;
+                });
+
+                populateFilters();
+                updateDashboard();
+                console.log('✅ GitHub에서 데이터 로드 완료 (총 ' + gameData.length + '개 기록)');
+            } catch (error) {
+                console.error('❌ GitHub 데이터 로드 실패:', error);
+            }
+        }
+
+        // 페이지 로드 시 GitHub에서 자동으로 데이터 불러오기
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(loadFromGitHub, 500);
+            });
+        } else {
+            setTimeout(loadFromGitHub, 500);
+        }
+
+        </script>
+</body>
+</html>
