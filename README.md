@@ -15,9 +15,7 @@
 
 1. 이 리포지토리를 로컬 PC에 클론 또는 ZIP 다운로드 합니다.
 2. 로컬 폴더에서 `Board Game Leaderboard.html`을 더블클릭하여 브라우저(Chrome 등)로 엽니다.
-3. 화면 상단의 **파일 업로드(XLSX)** 버튼을 사용하거나,  
-   `loadFromGithub()` / `서버에서 불러오기` 버튼이 있다면 그 버튼을 눌러 최신 데이터를 불러옵니다.
-
+3. 대시보드는 항상 서버의 최신 데이터를 불러오지만, 화면 상단의 **파일 업로드(XLSX)** 버튼을 사용하여 다른 파일을 업로드하여 활용 할수도 있습니다.
 > 이 HTML 파일은 로컬에서만 사용하며, 별도의 서버 없이 브라우저에서 바로 실행됩니다.
 
 ---
@@ -37,10 +35,6 @@ git add data/board.xlsx
 git commit -m "Update board results"
 git push origin main
 ```
-
-3. 브라우저에서 `Board Game Leaderboard.html`을 새로고침 한 뒤,  
-   "GitHub에서 불러오기 / 서버에서 불러오기" 버튼을 눌러 최신 리더보드를 갱신합니다.
-
 ---
 
 ### 3. 주요 기능
