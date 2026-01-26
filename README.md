@@ -1,10 +1,12 @@
 # Boardgame Leaderboard Dashboard
 
+https://sung-jungmin.github.io/boardgame-leaderboard-kor/
+
 개인/소규모 모임 보드게임 결과를 기록하고, 리더보드·월별 성적·게임별 통계를 확인하기 위한 대시보드입니다.
 
 이 리포지토리는 다음 두 가지를 포함합니다.
 
-- `Board Game Leaderboard.html` : 브라우저에서 여는 보드게임 리더보드 대시보드
+- `index.html` : 브라우저에서 여는 보드게임 리더보드 대시보드
 - `data/board.xlsx` : 보드게임 플레이 기록(플레이 날짜, 게임 이름, 플레이어, 승점, 감점)
 
 ---
@@ -14,7 +16,7 @@
 ### 1. 대시보드 열기
 
 1. 이 리포지토리를 로컬 PC에 클론 또는 ZIP 다운로드 합니다.
-2. 로컬 폴더에서 `Board Game Leaderboard.html`을 더블클릭하여 브라우저(Chrome 등)로 엽니다.
+2. 로컬 폴더에서 `index.html`을 더블클릭하여 브라우저(Chrome 등)로 엽니다.
 3. 대시보드는 항상 서버의 최신 데이터를 불러오지만, 화면 상단의 **파일 업로드(XLSX)** 버튼을 사용하여 다른 파일을 업로드하여 활용 할수도 있습니다.
 > 이 HTML 파일은 로컬에서만 사용하며, 별도의 서버 없이 브라우저에서 바로 실행됩니다.
 
@@ -103,7 +105,7 @@ git push origin main
 
 - 이 리포지토리는 **공개(Public)** 로 설정되어 있으므로,  
   `data/board.xlsx`의 플레이어 이름·점수는 외부에서 열람 가능하다는 점을 전제로 사용합니다.
-- 리더보드 로직(정렬 기준, 포인트 계산 방식)을 수정할 경우, `Board Game Leaderboard.html`의 JavaScript 코드를 함께 업데이트해야 합니다.
+- 리더보드 로직(정렬 기준, 포인트 계산 방식)을 수정할 경우, `index.html`의 JavaScript 코드를 함께 업데이트해야 합니다.
 
 ---
 
@@ -111,7 +113,7 @@ git push origin main
 
 ```
 boardgame-leaderboard/
-├── Board Game Leaderboard.html          # 리더보드 대시보드 (로컬에서 실행)
+├── index.html          # 리더보드 대시보드 (로컬에서 실행)
 ├── data/
 │   └── board.xlsx      # 게임 기록 데이터 (정기적으로 업데이트)
 └── README.md           # 이 문서
