@@ -567,7 +567,7 @@
                 <div class="stat-card-value" id="overallWinner" style="font-size: var(--font-size-lg);">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-label">📈 가장 많이 출석</div>
+                <div class="stat-card-label">📈 가장 많이 플레이</div>
                 <div class="stat-card-value" id="mostActivPlayer" style="font-size: var(--font-size-lg);">-</div>
             </div>
             <div class="stat-card">
@@ -608,8 +608,8 @@
                 <strong style="color: var(--color-primary);">📋 리더보드 정렬 기준</strong><br>
                 <div style="margin-top: var(--space-8);">
                     <div>1순위: <strong>현재 포인트</strong> - 최종 누적 포인트</div>
-                    <div>2순위: <strong>총 승점</strong> ⭐ (높을수록 유리) - 상위권 성적이 많을수록 높음</div>
-                    <div>3순위: <strong>게임 수</strong> ⭐⭐ (높을수록 유리) - 플레이 참여도가 높을수록 유리</div>
+                    <div>2순위: <strong>총 승점</strong> ⭐ (높을수록 유리) - 1/2등 등 상위권 성적이 많을수록 높음. 게임에서의 실력을 반영</div>
+                    <div>3순위: <strong>게임 수</strong> ⭐⭐ (높을수록 유리) - 플레이 참여도가 높을수록 유리. <strong>꼴찌를 해도 괜찮으니 게임 참여를 열심히 하세요!</strong></div>
                     <div>4순위: <strong>총 감점</strong> (낮을수록 유리) - 손실을 최소화한 플레이어</div>
                     <div>5순위: <strong>승리</strong> (높을수록 유리) - 1등 횟수</div>
                 </div>
@@ -658,6 +658,7 @@
         let filteredData = [];
 
         function excelDateToJSDate(excelDate) {
+            // 먼저 문자열 형식 처리 (날짜 밀림 없음)
             if (typeof excelDate === 'string') {
                 const parts = excelDate.split('-');
                 if (parts.length === 3) {
@@ -668,17 +669,21 @@
                 }
                 return new Date(excelDate);
             }
-
+            
+            // 숫자 형식: Excel의 시리얼 번호
+            // Excel은 1900-01-01을 1로 설정하고 윤년 버그 존재
             if (typeof excelDate === 'number') {
                 if (excelDate < 60) {
+                    // 1900-03-01 이전: 그대로 사용 (윤년 버그 영향)
                     const baseDate = new Date(1900, 0, 1);
                     const millisecondsPerDay = 24 * 60 * 60 * 1000;
                     const date = new Date(baseDate.getTime() + (excelDate - 1) * millisecondsPerDay);
                     return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
                 } else {
+                    // 1900-03-01 이후: -1 조정 (윤년 버그 보정)
                     const baseDate = new Date(1900, 0, 1);
                     const millisecondsPerDay = 24 * 60 * 60 * 1000;
-                    const adjustedDate = excelDate - 2;
+                    const adjustedDate = excelDate - 2; // Excel 버그 보정
                     const date = new Date(baseDate.getTime() + adjustedDate * millisecondsPerDay);
                     return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
                 }
@@ -726,7 +731,7 @@
                         const session = sessionMap[key];
                         const rankings = session.map(p => ({ player: p.player, points: p.win + p.loss }))
                             .sort((a, b) => b.points - a.points);
-
+                        
                         session.forEach(record => {
                             record.sessionId = sessionId;
                             record.rank = rankings.findIndex(r => r.player === record.player) + 1;
@@ -797,11 +802,7 @@
 
         function updateStats() {
             const players = new Set(filteredData.map(r => r.player));
-            const games = new Set(
-                filteredData
-                    .map(r => r.game)
-                    .filter(g => g && g.trim() !== '')
-            );
+            const games = new Set(filteredData.map(r => r.game));
             const playDates = new Set(filteredData.map(r => r.date.toISOString().split('T')[0]));
             const gameFilter = document.getElementById('gameFilter').value;
 
@@ -810,30 +811,26 @@
             document.getElementById('totalRecords').textContent = filteredData.length;
             document.getElementById('totalPlayDates').textContent = playDates.size;
 
+            // 모든 게임 1위 (전체 포인트 1위) - 필터에 따라 라벨 변경
             const playerPoints = calculatePlayerPoints(filteredData);
             const sorted = Object.entries(playerPoints)
                 .sort((a, b) => b[1].total - a[1].total);
             document.getElementById('overallWinner').textContent = sorted.length > 0 ? sorted[0][0] : '-';
-
+            
+            // 게임 필터에 따라 라벨 업데이트
             const label = gameFilter ? `👑 ${gameFilter} 1위` : '👑 모든 게임 1위';
             document.getElementById('overallWinnerLabel').textContent = label;
 
-            const attendanceCountByPlayer = {};
+            // 가장 많이 플레이한 플레이어
+            const playerGameCount = {};
             filteredData.forEach(record => {
-                const isAttendance = !record.game || record.game.trim() === '';
-                if (!isAttendance) return;
-                if (!attendanceCountByPlayer[record.player]) {
-                    attendanceCountByPlayer[record.player] = 0;
-                }
-                attendanceCountByPlayer[record.player] += 1;
+                playerGameCount[record.player] = (playerGameCount[record.player] || 0) + 1;
             });
-
-            const mostAttendance = Object.entries(attendanceCountByPlayer)
+            const mostActivePlayer = Object.entries(playerGameCount)
                 .sort((a, b) => b[1] - a[1])[0];
+            document.getElementById('mostActivPlayer').textContent = mostActivePlayer ? mostActivePlayer[0] : '-';
 
-            document.getElementById('mostActivPlayer').textContent =
-                mostAttendance ? `${mostAttendance[0]} (${mostAttendance[1]}회 출석)` : '-';
-
+            // 최고 승점
             let maxWin = -Infinity;
             let maxWinPlayer = '-';
             Object.entries(playerPoints).forEach(([player, data]) => {
@@ -844,15 +841,12 @@
             });
             document.getElementById('maxWinPlayer').textContent = maxWinPlayer;
 
-            let maxTotalLoss = 0;
+            // 최고 감점 (음수 값이 최소인 플레이어)
+            let minTotal = Infinity;
             let maxLossPlayer = '-';
             Object.entries(playerPoints).forEach(([player, data]) => {
-                const totalLoss = data.history.reduce(
-                    (sum, h) => sum + (h.loss > 0 ? h.loss : 0),
-                    0
-                );
-                if (totalLoss > maxTotalLoss) {
-                    maxTotalLoss = totalLoss;
+                if (data.total < minTotal) {
+                    minTotal = data.total;
                     maxLossPlayer = player;
                 }
             });
@@ -862,38 +856,18 @@
         function calculatePlayerPoints(records) {
             const playerPoints = {};
             records.forEach(record => {
-                const isAttendance = !record.game || record.game.trim() === '';
-                if (isAttendance) {
-                    return;
-                }
-
                 if (!playerPoints[record.player]) {
-                    playerPoints[record.player] = {
-                        total: 0,
-                        games: 0,
-                        wins: 0,
-                        history: []
-                    };
+                    playerPoints[record.player] = { total: 0, games: 0, wins: 0, history: [] };
                 }
-
-                const change = record.win - record.loss;
-
-                playerPoints[record.player].total = Math.max(
-                    0,
-                    playerPoints[record.player].total + change
-                );
-
-                playerPoints[record.player].games += 1;
-
-                if (record.win > 0) {
-                    playerPoints[record.player].wins += 1;
-                }
-
-                playerPoints[record.player].history.push({
-                    date: record.date,
-                    game: record.game,
+                const change = record.win + record.loss;
+                playerPoints[record.player].total = Math.max(0, playerPoints[record.player].total + change);
+                playerPoints[record.player].games++;
+                if (record.win > 0) playerPoints[record.player].wins++;
+                playerPoints[record.player].history.push({ 
+                    date: record.date, 
+                    game: record.game, 
                     change,
-                    rank: record.rank ?? null,
+                    rank: record.rank || null,
                     win: record.win,
                     loss: record.loss
                 });
@@ -903,23 +877,27 @@
 
         function updateOverallLeaderboard() {
             const playerPoints = calculatePlayerPoints(filteredData);
-            const sorted = Object.entries(playerPoints)
-                .map(([name, data]) => {
-                    const totalWins = data.history.reduce((sum, h) => sum + (h.win || 0), 0);
-                    const totalLosses = data.history.reduce((sum, h) => sum + (h.loss || 0), 0);
-                    return {
-                        name,
-                        ...data,
-                        avg: data.games > 0 ? (data.total / data.games).toFixed(1) : '0.0',
-                        totalWins: totalWins,
-                        totalLosses: Math.abs(totalLosses)
-                    };
-                })
+            const sorted = Object.entries(playerPoints)                    .map(([name, data]) => {
+                        const totalWins = data.history.reduce((sum, h) => sum + (h.win || 0), 0);
+                        const totalLosses = data.history.reduce((sum, h) => sum + (h.loss || 0), 0);
+                        return {
+                            name,
+                            ...data,
+                            avg: (data.total / data.games).toFixed(1),
+                            totalWins: totalWins,
+                            totalLosses: Math.abs(totalLosses)
+                        };
+                    })
                 .sort((a, b) => {
+                    // 1순위: 현재 포인트 (높을수록 좋음)
                     if (b.total !== a.total) return b.total - a.total;
+                    // 2순위: 총 승점이 가장 많음
                     if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+                    // 3순위: 게임 수 (높을수록 좋음 - 참여도)
                     if (b.games !== a.games) return b.games - a.games;
+                    // 4순위: 총 감점이 가장 낮음 (손실이 적을수록 유리)
                     if (a.totalLosses !== b.totalLosses) return a.totalLosses - b.totalLosses;
+                    // 5순위: 승리 (높을수록 좋음)
                     return b.wins - a.wins;
                 });
 
@@ -939,11 +917,7 @@
         }
 
         function updateGameLeaderboards() {
-            const games = new Set(
-                filteredData
-                    .map(r => r.game)
-                    .filter(g => g && g.trim() !== '')
-            );
+            const games = new Set(filteredData.map(r => r.game));
             const container = document.getElementById('gameLeaderboards');
             container.innerHTML = '';
 
@@ -957,16 +931,21 @@
                         return {
                             name,
                             ...data,
-                            avg: data.games > 0 ? data.total / data.games : 0,
+                            avg: data.total / data.games,
                             totalWins: totalWins,
                             totalLosses: Math.abs(totalLosses)
                         };
                     })
                     .sort((a, b) => {
+                        // 1순위: 현재 포인트 (높을수록 좋음)
                         if (b.total !== a.total) return b.total - a.total;
+                        // 2순위: 총 승점이 가장 많음
                         if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+                        // 3순위: 게임 수 (높을수록 좋음)
                         if (b.games !== a.games) return b.games - a.games;
+                        // 4순위: 총 감점이 가장 낮음
                         if (a.totalLosses !== b.totalLosses) return a.totalLosses - b.totalLosses;
+                        // 5순위: 승리
                         return b.wins - a.wins;
                     });
 
@@ -999,8 +978,7 @@
                                     <td>${player.wins}</td>
                                     <td><span class="points-positive">${player.avg.toFixed(1)}</span></td>
                                 </tr>
-                            `;
-                            }).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 `;
@@ -1011,7 +989,7 @@
         function updateMonthLeaderboards() {
             const months = new Set();
             filteredData.forEach(r => months.add(r.date.toISOString().slice(0, 7)));
-
+            
             const container = document.getElementById('monthLeaderboards');
             container.innerHTML = '';
 
@@ -1022,15 +1000,20 @@
                     .map(([name, data]) => ({
                         name,
                         ...data,
-                        avg: data.games > 0 ? data.total / data.games : 0,
+                        avg: data.total / data.games,
                         totalWins: data.history.reduce((sum, h) => sum + h.win, 0),
                         totalLosses: Math.abs(data.history.reduce((sum, h) => sum + h.loss, 0))
                     }))
                     .sort((a, b) => {
+                        // 1순위: 현재 포인트 (높을수록 좋음)
                         if (b.total !== a.total) return b.total - a.total;
+                        // 2순위: 총 승점이 가장 많음
                         if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+                        // 3순위: 게임 수 (높을수록 좋음)
                         if (b.games !== a.games) return b.games - a.games;
+                        // 4순위: 총 감점이 가장 낮음
                         if (a.totalLosses !== b.totalLosses) return a.totalLosses - b.totalLosses;
+                        // 5순위: 승리
                         return b.wins - a.wins;
                     });
                 const [year, monthNum] = month.split('-');
@@ -1065,8 +1048,7 @@
                                     <td>${player.wins}</td>
                                     <td><span class="points-positive">${player.avg.toFixed(1)}</span></td>
                                 </tr>
-                            `;
-                            }).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 `;
@@ -1086,26 +1068,26 @@
         function updateHistory() {
             const tbody = document.getElementById('historyTableBody');
             let currentPointByPlayer = {};
-
+            
             tbody.innerHTML = filteredData.map(record => {
                 if (!currentPointByPlayer[record.player]) {
                     currentPointByPlayer[record.player] = 0;
                 }
-
-                const change = record.win - record.loss;
+                
+                const change = record.win + record.loss;
                 currentPointByPlayer[record.player] = Math.max(0, currentPointByPlayer[record.player] + change);
                 const currentPoint = currentPointByPlayer[record.player];
                 const currentPointClass = currentPoint < 0 ? 'points-negative' : currentPoint > 0 ? 'points-positive' : 'points-neutral';
-
+                
                 const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
                 const totalPlayers = sessionRecords.length;
-
+                
                 const rankClass = record.rank ? getRankBadgeClass(record.rank, totalPlayers) : '';
                 const rankBadge = record.rank ? `<span class="rank-badge ${rankClass}" style="width: 24px; height: 24px; font-size: 11px; font-weight: bold;">${record.rank}</span>` : '-';
-
+                
                 const gainDisplay = record.win === 0 ? `<span class="points-neutral">+0.0</span>` : `<span class="points-positive">+${record.win.toFixed(1)}</span>`;
                 const lossDisplay = record.loss === 0 ? `<span class="points-neutral">-0.0</span>` : `<span class="points-negative">${record.loss.toFixed(1)}</span>`;
-
+                
                 return `
                     <tr>
                         <td>${record.date.toLocaleDateString('ko-KR')}</td>
@@ -1123,7 +1105,7 @@
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-
+            
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
         }
@@ -1149,22 +1131,19 @@
 
             const gameStats = {};
             filteredPlayerRecords.forEach(record => {
-                const isAttendance = !record.game || record.game.trim() === '';
-                if (isAttendance) return;
-
                 if (!gameStats[record.game]) {
                     gameStats[record.game] = { total: 0, games: 0, records: [] };
                 }
-                gameStats[record.game].total += (record.win - record.loss);
+                gameStats[record.game].total += record.win + record.loss;
                 gameStats[record.game].games++;
                 gameStats[record.game].records.push(record);
             });
 
             const sortedGames = Object.entries(gameStats)
-                .map(([game, stats]) => ({
-                    game,
+                .map(([game, stats]) => ({ 
+                    game, 
                     ...stats,
-                    avgPerGame: stats.games > 0 ? stats.total / stats.games : 0
+                    avgPerGame: stats.total / stats.games 
                 }))
                 .sort((a, b) => {
                     if (b.avgPerGame !== a.avgPerGame) return b.avgPerGame - a.avgPerGame;
@@ -1173,9 +1152,9 @@
 
             const best = sortedGames[0];
             const worst = sortedGames[sortedGames.length - 1];
-
-            const totalAvgPerGame = filteredPlayerRecords.length > 0
-                ? (filteredPlayerRecords.reduce((sum, r) => sum + (r.win - r.loss), 0) / filteredPlayerRecords.length)
+            
+            const totalAvgPerGame = filteredPlayerRecords.length > 0 
+                ? (filteredPlayerRecords.reduce((sum, r) => sum + r.win + r.loss, 0) / filteredPlayerRecords.length)
                 : 0;
 
             const monthlyStatsHtml = Object.entries(monthlyStats)
@@ -1201,15 +1180,14 @@
                         <div class="stats-row">
                             <span class="stats-label">누적 승점</span>
                             <span class="stats-value points-positive">+${totalWin.toFixed(1)}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">누적 감점</span>
-                            <span class="stats-value ${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${Math.abs(totalLoss).toFixed(1)}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">순 포인트</span>
-                            <span class="stats-value ${(totalWin - totalLoss) < 0 ? 'points-negative' : (totalWin - totalLoss) > 0 ? 'points-positive' : 'points-neutral'}">${(totalWin - totalLoss).toFixed(1)}</span>
-                        </div>
+                        </div>                    <div class="stats-row">
+                        <span class="stats-label">누적 감점</span>
+                        <span class="stats-value ${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${Math.abs(totalLoss).toFixed(1)}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">순 포인트</span>
+                        <span class="stats-value ${(totalWin + totalLoss) < 0 ? 'points-negative' : (totalWin + totalLoss) > 0 ? 'points-positive' : 'points-neutral'}">${(totalWin + totalLoss).toFixed(1)}</span>
+                    </div>
                         <div class="stats-row">
                             <span class="stats-label">게임당 평균 포인트</span>
                             <span class="stats-value">${totalAvgPerGame.toFixed(1)}</span>
@@ -1230,22 +1208,21 @@
                         <span class="game-stat-label">⚠️ 가장 못하는 게임</span>
                         <span><strong>${worst.game}</strong> (<span class="${worst.avgPerGame < 0 ? 'points-negative' : 'points-positive'}">게임당 ${worst.avgPerGame.toFixed(1)}점</span>)</span>
                     </div>` : ''}
-                </div>
-                <h3>🎮 모든 게임별 포인트</h3>
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>게임</th>
-                            <th>포인트</th>
-                            <th>플레이 수</th>
-                            <th>평균</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sortedGames.map(g => {
-                            const totalClass = g.total < 0 ? 'points-negative' : g.total > 0 ? 'points-positive' : 'points-neutral';
-                            const avgClass = g.avgPerGame < 0 ? 'points-negative' : g.avgPerGame > 0 ? 'points-positive' : 'points-neutral';
-                            return `
+                </div>                    <h3>🎮 모든 게임별 포인트</h3>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>게임</th>
+                                <th>포인트</th>
+                                <th>플레이 수</th>
+                                <th>평균</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedGames.map(g => {
+                                const totalClass = g.total < 0 ? 'points-negative' : g.total > 0 ? 'points-positive' : 'points-neutral';
+                                const avgClass = g.avgPerGame < 0 ? 'points-negative' : g.avgPerGame > 0 ? 'points-positive' : 'points-neutral';
+                                return `
                             <tr>
                                 <td>${g.game}</td>
                                 <td><span class="${totalClass}">${g.total.toFixed(1)}</span></td>
@@ -1253,9 +1230,10 @@
                                 <td><span class="${avgClass}">${g.avgPerGame.toFixed(1)}</span></td>
                             </tr>
                         `;
-                        }).join('')}
-                    </tbody>
-                </table>
+                            }).join('')}
+                        </tbody>
+                    </table>
+
                 <h3 style="margin-top: var(--space-24);">📈 플레이 히스토리</h3>
                 <table class="leaderboard-table">
                     <thead>
@@ -1272,7 +1250,7 @@
                         ${(() => {
                             let currentPoint = 0;
                             return filteredPlayerRecords.map(record => {
-                                const change = record.win - record.loss;
+                                const change = record.win + record.loss;
                                 currentPoint = Math.max(0, currentPoint + change);
                                 const currentPointClass = currentPoint < 0 ? 'points-negative' : currentPoint > 0 ? 'points-positive' : 'points-neutral';
                                 const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
@@ -1318,16 +1296,17 @@
         let allMonths = [];
 
         function initializeChartPlayers() {
+            // 모든 데이터로부터 플레이어 목록과 월별 데이터 계산
             if (gameData.length === 0) return;
 
             monthlyPlayerData = {};
             selectedPlayers.clear();
-
+            
             gameData.forEach(record => {
                 const month = record.date.toISOString().slice(0, 7);
                 const player = record.player;
-                const points = record.win - record.loss;
-
+                const points = record.win + record.loss;
+                
                 if (!monthlyPlayerData[player]) {
                     monthlyPlayerData[player] = {};
                 }
@@ -1337,12 +1316,14 @@
                 monthlyPlayerData[player][month] += points;
             });
 
+            // 모든 월 수집
             const monthSet = new Set();
             Object.values(monthlyPlayerData).forEach(playerMonths => {
                 Object.keys(playerMonths).forEach(month => monthSet.add(month));
             });
             allMonths = Array.from(monthSet).sort();
 
+            // 체크박스 생성
             const checkboxContainer = document.getElementById('playerCheckboxes');
             if (!checkboxContainer) {
                 console.error('playerCheckboxes container not found');
@@ -1352,35 +1333,36 @@
             checkboxContainer.innerHTML = '';
             let playerIndex = 0;
             Object.keys(monthlyPlayerData).sort().forEach((player) => {
-                const isChecked = playerIndex < 3;
-
+                const isChecked = playerIndex < 3; // 기본적으로 처음 3명 선택
+                
                 if (isChecked) {
                     selectedPlayers.add(player);
                 }
-
+                
                 const div = document.createElement('div');
                 div.className = 'player-checkbox-item';
-
+                
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = `player-checkbox-${playerIndex}`;
                 checkbox.value = player;
                 checkbox.checked = isChecked;
                 checkbox.onchange = updateChartWithSelectedPlayers;
-
+                
                 const label = document.createElement('label');
                 label.htmlFor = `player-checkbox-${playerIndex}`;
                 label.textContent = player;
-
+                
                 div.appendChild(checkbox);
                 div.appendChild(label);
                 checkboxContainer.appendChild(div);
-
+                
                 playerIndex++;
             });
         }
 
         function updateChartWithSelectedPlayers() {
+            // 체크박스로부터 선택된 플레이어 수집
             selectedPlayers.clear();
             const checkboxes = document.querySelectorAll('#playerCheckboxes input[type="checkbox"]');
             checkboxes.forEach(cb => {
@@ -1389,6 +1371,7 @@
                 }
             });
 
+            // 최소 1명은 선택되어야 함
             if (selectedPlayers.size === 0 && checkboxes.length > 0) {
                 checkboxes[0].checked = true;
                 selectedPlayers.add(checkboxes[0].value);
@@ -1399,7 +1382,7 @@
 
         function updateMonthlyTrendChart() {
             if (allMonths.length === 0 || typeof Chart === 'undefined') return;
-
+            
             const datasets = [];
             const colors = ['#2180A0', '#FFD700', '#CD7F32', '#FF6B6B', '#9B59B6', '#1ABC9C', '#F39C12', '#E74C3C'];
             let colorIndex = 0;
@@ -1493,10 +1476,13 @@
             updateGameLeaderboards();
             updateMonthLeaderboards();
             updateHistory();
+            // 차트는 탭 클릭 시에만 생성하므로 여기서 호출하지 않음
         }
 
+        // updateDashboard 함수를 updateDashboardWithChart로 교체
         window.updateDashboard = updateDashboardWithChart;
-
+    
+        // GitHub에서 데이터 자동 로드
         async function loadFromGitHub() {
             try {
                 if (typeof XLSX === 'undefined') {
@@ -1558,6 +1544,7 @@
             }
         }
 
+        // 페이지 로드 시 GitHub에서 자동으로 데이터 불러오기
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(loadFromGitHub, 500);
@@ -1565,6 +1552,7 @@
         } else {
             setTimeout(loadFromGitHub, 500);
         }
-    </script>
+
+        </script>
 </body>
 </html>
