@@ -1160,15 +1160,12 @@
                         : '<span class="points-negative">' + record.loss.toFixed(1) + '</span>';
                     gameLabel = escapeHtml(record.game);
                 } else if (record.isAttendance) {
-                    // 출석/참여 보너스
+                    // 출석/참여 보너스 — 게임명과 무관하게 단일 라벨로 표시
                     gainDisplay = record.win === 0
                         ? '<span class="points-neutral">+0.0</span>'
                         : '<span class="points-positive">+' + record.win.toFixed(1) + '</span>';
                     lossDisplay = '<span class="points-neutral">-</span>';
-                    const attendLabel = record.game && record.game !== '출석 체크' && record.game !== '출석체크'
-                        ? '📅 출석 (' + escapeHtml(record.game) + ')'
-                        : '📅 출석 체크';
-                    gameLabel = '<em style="color: var(--color-text-secondary);">' + attendLabel + '</em>';
+                    gameLabel = '<em style="color: var(--color-text-secondary);">📅 출석 체크</em>';
                 } else if (record.isRedeem) {
                     // 사용한 포인트 행
                     gainDisplay = '<span class="points-neutral">-</span>';
