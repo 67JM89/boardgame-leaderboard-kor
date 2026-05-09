@@ -270,21 +270,34 @@
         .leaderboard-table th.sortable {
             cursor: pointer;
             user-select: none;
+            -webkit-tap-highlight-color: rgba(33, 128, 141, 0.18);
+            transition: background-color 0.15s;
         }
 
         .leaderboard-table th.sortable:hover {
             background-color: rgba(33, 128, 141, 0.08);
         }
 
+        .leaderboard-table th.sortable:active {
+            background-color: rgba(33, 128, 141, 0.18);
+        }
+
+        .leaderboard-table th.sortable.active {
+            background-color: rgba(33, 128, 141, 0.12);
+            color: var(--color-primary);
+        }
+
         .leaderboard-table th .sort-arrow {
             display: inline-block;
             margin-left: 4px;
             color: var(--color-text-secondary);
-            font-size: 0.85em;
+            font-size: 1em;
+            font-weight: bold;
         }
 
         .leaderboard-table th.sortable.active .sort-arrow {
             color: var(--color-primary);
+            font-size: 1.1em;
         }
 
         .leaderboard-table td {
