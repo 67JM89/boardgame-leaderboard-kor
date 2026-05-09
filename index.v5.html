@@ -752,15 +752,12 @@
                 const game = (row['게임 이름'] || '').toString().trim();
                 // 행 종류 분류:
                 //   redeem      : "사용한 포인트"가 0이 아닌 경우 (상품 교환)
-                //   attendance  : 출석/참여 보너스 — 게임명이 "출석 체크" 이거나, 게임명은 있으나
-                //                 점수 변동이 0/0 인 행 (그날 그 게임에 참여만 한 출석 기록)
-                //   game        : 위 두 종류가 아니고 점수 변동이 있는 정상 게임 행
+                //   attendance  : 게임 이름이 정확히 "출석 체크" 인 행만 — 모임 출석 보너스(+2)
+                //   game        : 그 외 게임 이름이 있는 모든 행. 승점/감점이 0/0 이어도
+                //                 같은 게임에 참여하고 점수만 못 받은 케이스이므로 게임 수에 포함.
                 const isRedeem = redeem !== 0;
-                const isAttendance = !isRedeem && (
-                    game === '출석 체크' || game === '출석체크' ||
-                    (game.length > 0 && win === 0 && loss === 0)
-                );
-                const isGame = !isRedeem && !isAttendance && game.length > 0 && (win !== 0 || loss !== 0);
+                const isAttendance = !isRedeem && (game === '출석 체크' || game === '출석체크');
+                const isGame = !isRedeem && !isAttendance && game.length > 0;
                 return {
                     id: idx,
                     date: excelDateToJSDate(row['플레이 날짜']),
