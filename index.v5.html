@@ -267,6 +267,26 @@
             letter-spacing: 0.5px;
         }
 
+        .leaderboard-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .leaderboard-table th.sortable:hover {
+            background-color: rgba(33, 128, 141, 0.08);
+        }
+
+        .leaderboard-table th .sort-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            color: var(--color-text-secondary);
+            font-size: 0.85em;
+        }
+
+        .leaderboard-table th.sortable.active .sort-arrow {
+            color: var(--color-primary);
+        }
+
         .leaderboard-table td {
             padding: var(--space-12) var(--space-16);
             border-bottom: 1px solid var(--color-card-border);
@@ -590,21 +610,8 @@
 
         <div id="overall" class="tab-content active">
             <table class="leaderboard-table" id="overallTable">
-                <thead>
-                    <tr>
-                        <th>순위</th>
-                        <th>플레이어</th>
-                        <th>현재 포인트</th>
-                        <th>게임 수</th>
-                        <th>총 승점</th>
-                        <th>총 감점</th>
-                        <th>사용한 포인트</th>
-                        <th>승리</th>
-                        <th>승률</th>
-                    </tr>
-                </thead>
-                <tbody id="overallTableBody">
-                </tbody>
+                <thead id="overallTableHead"></thead>
+                <tbody id="overallTableBody"></tbody>
             </table>
             <div style="margin-top: var(--space-20); padding: var(--space-16); background: rgba(33, 128, 141, 0.08); border-radius: var(--radius-base); border-left: 3px solid var(--color-primary); font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.6;">
                 <strong style="color: var(--color-primary);">📋 리더보드 정렬 기준</strong><br>
@@ -926,8 +933,8 @@
             return Math.max(0, value);
         }
 
-        // 정렬: Reward Points 우선, 그 다음 총 승점, 승리, 게임 수, 적은 감점
-        const playerComparator = (a, b) => {
+        // 기본 정렬: Reward Points 우선, 그 다음 총 승점, 승리, 게임 수, 적은 감점
+        const defaultPlayerComparator = (a, b) => {
             const aReward = displayPoint(a.total);
             const bReward = displayPoint(b.total);
             if (bReward !== aReward) return bReward - aReward;
@@ -937,15 +944,71 @@
             return a.totalLoss - b.totalLoss; // 음수가 큰 쪽(=감점 적은 쪽)이 유리
         };
 
+        // 컬럼 클릭 정렬 상태. 'default'면 위 기본 정렬 그대로.
+        let leaderboardSort = { column: 'default', direction: 'desc' };
+
+        // 감점/사용한 포인트는 절대값 기준으로 정렬하여 desc=많이 깎인 사람이 위로 오도록 함
+        const sortValueByColumn = {
+            name:        p => p.name,
+            reward:      p => displayPoint(p.total),
+            games:       p => p.games,
+            totalWin:    p => p.totalWin,
+            totalLoss:   p => Math.abs(p.totalLoss),
+            totalRedeem: p => Math.abs(p.totalRedeem),
+            wins:        p => p.wins,
+            winRate:     p => p.winRatePct
+        };
+
+        function makeColumnComparator(column, direction) {
+            const getter = sortValueByColumn[column];
+            const sign = direction === 'asc' ? 1 : -1;
+            return (a, b) => {
+                const av = getter(a);
+                const bv = getter(b);
+                if (typeof av === 'string' || typeof bv === 'string') {
+                    return sign * String(av).localeCompare(String(bv));
+                }
+                if (av === bv) {
+                    // 동률은 기본 정렬로 안정화
+                    return defaultPlayerComparator(a, b);
+                }
+                return sign * (av < bv ? -1 : 1);
+            };
+        }
+
         function sortedPlayers(records) {
             const stats = calculatePlayerStats(records);
-            return Object.entries(stats).map(([name, s]) => ({
+            const arr = Object.entries(stats).map(([name, s]) => ({
                 name,
                 ...s,
                 avgWin: s.games > 0 ? s.totalWin / s.games : 0,
                 avgLoss: s.games > 0 ? s.totalLoss / s.games : 0,
                 winRatePct: s.games > 0 ? Math.round((s.wins / s.games) * 100) : 0
-            })).sort(playerComparator);
+            }));
+            if (leaderboardSort.column === 'default' || !sortValueByColumn[leaderboardSort.column]) {
+                return arr.sort(defaultPlayerComparator);
+            }
+            return arr.sort(makeColumnComparator(leaderboardSort.column, leaderboardSort.direction));
+        }
+
+        function setLeaderboardSort(column) {
+            if (leaderboardSort.column === column) {
+                // 같은 컬럼 다시 클릭: desc → asc → default 토글
+                if (leaderboardSort.direction === 'desc') {
+                    leaderboardSort.direction = 'asc';
+                } else {
+                    leaderboardSort = { column: 'default', direction: 'desc' };
+                }
+            } else {
+                // 새 컬럼: 이름은 asc 기본, 나머지는 desc 기본
+                leaderboardSort = {
+                    column,
+                    direction: column === 'name' ? 'asc' : 'desc'
+                };
+            }
+            updateOverallLeaderboard();
+            updateGameLeaderboards();
+            updateMonthLeaderboards();
         }
 
         // ============================================================
@@ -1014,8 +1077,10 @@
                 const rankClass = getRankBadgeClass(idx + 1, sorted.length);
                 const reward = displayPoint(player.total);
                 const rewardClass = reward > 0 ? 'points-positive' : 'points-neutral';
-                const redeemAbs = Math.abs(player.totalRedeem);
-                const redeemClass = redeemAbs > 0 ? 'points-negative' : 'points-neutral';
+                const lossText = player.totalLoss === 0 ? '0.0' : player.totalLoss.toFixed(1);
+                const lossClass = player.totalLoss < 0 ? 'points-negative' : 'points-neutral';
+                const redeemText = player.totalRedeem === 0 ? '0.0' : player.totalRedeem.toFixed(1);
+                const redeemClass = player.totalRedeem < 0 ? 'points-negative' : 'points-neutral';
                 return `
                     <tr>
                         <td><span class="rank-badge ${rankClass}">${idx + 1}</span></td>
@@ -1023,8 +1088,8 @@
                         <td><span class="${rewardClass}">${reward.toFixed(1)}</span></td>
                         <td>${player.games}</td>
                         <td><span class="points-positive">+${player.totalWin.toFixed(1)}</span></td>
-                        <td><span class="points-negative">${Math.abs(player.totalLoss).toFixed(1)}</span></td>
-                        <td><span class="${redeemClass}">${redeemAbs.toFixed(1)}</span></td>
+                        <td><span class="${lossClass}">${lossText}</span></td>
+                        <td><span class="${redeemClass}">${redeemText}</span></td>
                         <td>${player.wins}</td>
                         <td>${player.winRatePct}%</td>
                     </tr>
@@ -1032,22 +1097,33 @@
             }).join('');
         }
 
+        const LEADERBOARD_COLUMNS = [
+            { key: '_rank',     label: '순위',         sortable: false },
+            { key: 'name',      label: '플레이어' },
+            { key: 'reward',    label: '현재 포인트' },
+            { key: 'games',     label: '게임 수' },
+            { key: 'totalWin',  label: '총 승점' },
+            { key: 'totalLoss', label: '총 감점' },
+            { key: 'totalRedeem', label: '사용한 포인트' },
+            { key: 'wins',      label: '승리' },
+            { key: 'winRate',   label: '승률' }
+        ];
+
+        function leaderboardHeadInnerHTML() {
+            const cells = LEADERBOARD_COLUMNS.map(col => {
+                if (col.sortable === false) return `<th>${col.label}</th>`;
+                const isActive = leaderboardSort.column === col.key;
+                const arrow = isActive
+                    ? (leaderboardSort.direction === 'desc' ? '▼' : '▲')
+                    : '↕';
+                const cls = isActive ? 'sortable active' : 'sortable';
+                return `<th class="${cls}" data-sort-key="${col.key}">${col.label}<span class="sort-arrow">${arrow}</span></th>`;
+            }).join('');
+            return `<tr>${cells}</tr>`;
+        }
+
         function leaderboardHeadHTML() {
-            return `
-                <thead>
-                    <tr>
-                        <th>순위</th>
-                        <th>플레이어</th>
-                        <th>현재 포인트</th>
-                        <th>게임 수</th>
-                        <th>총 승점</th>
-                        <th>총 감점</th>
-                        <th>사용한 포인트</th>
-                        <th>승리</th>
-                        <th>승률</th>
-                    </tr>
-                </thead>
-            `;
+            return `<thead>${leaderboardHeadInnerHTML()}</thead>`;
         }
 
         function bindPlayerNameClicks(root) {
@@ -1056,11 +1132,20 @@
             });
         }
 
+        function bindSortClicks(root) {
+            root.querySelectorAll('th[data-sort-key]').forEach(th => {
+                th.addEventListener('click', () => setLeaderboardSort(th.dataset.sortKey));
+            });
+        }
+
         function updateOverallLeaderboard() {
             const sorted = sortedPlayers(filteredData);
+            const head = document.getElementById('overallTableHead');
             const tbody = document.getElementById('overallTableBody');
+            head.innerHTML = leaderboardHeadInnerHTML();
             tbody.innerHTML = renderLeaderboardRows(sorted);
             bindPlayerNameClicks(tbody);
+            bindSortClicks(head);
         }
 
         function updateGameLeaderboards() {
@@ -1081,6 +1166,7 @@
                     </table>
                 `;
                 bindPlayerNameClicks(wrapper);
+                bindSortClicks(wrapper);
                 container.appendChild(wrapper);
             });
         }
@@ -1104,6 +1190,7 @@
                     </table>
                 `;
                 bindPlayerNameClicks(wrapper);
+                bindSortClicks(wrapper);
                 container.appendChild(wrapper);
             });
         }
@@ -1263,18 +1350,16 @@
                     const monthName = formatMonthLabel(month);
                     const winClass = stats.win === 0 ? 'points-neutral' : 'points-positive';
                     const lossClass = stats.loss === 0 ? 'points-neutral' : 'points-negative';
-                    const attendBlock = stats.attendance !== 0
-                        ? ` / <span class="points-positive">출석: +${stats.attendance.toFixed(1)}</span>`
-                        : '';
                     const redeemBlock = stats.redeem !== 0
-                        ? ` / <span class="points-negative">사용: ${Math.abs(stats.redeem).toFixed(1)}</span>`
+                        ? ` / <span class="points-negative">사용: ${stats.redeem.toFixed(1)}</span>`
                         : '';
+                    const lossText = stats.loss === 0 ? '0.0' : stats.loss.toFixed(1);
                     return `
                         <div class="stats-row">
                             <span class="stats-label">${escapeHtml(monthName)}</span>
                             <span class="stats-value">
                                 <span class="${winClass}">승: +${stats.win.toFixed(1)}</span> /
-                                <span class="${lossClass}">감: ${Math.abs(stats.loss).toFixed(1)}</span>${attendBlock}${redeemBlock}
+                                <span class="${lossClass}">감: ${lossText}</span>${redeemBlock}
                             </span>
                         </div>
                     `;
@@ -1289,20 +1374,16 @@
                             <span class="stats-value points-positive">${reward.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
-                            <span class="stats-label">누적 승점 (게임)</span>
+                            <span class="stats-label">누적 승점</span>
                             <span class="stats-value points-positive">+${totalWin.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
-                            <span class="stats-label">누적 감점 (게임)</span>
-                            <span class="stats-value ${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${Math.abs(totalLoss).toFixed(1)}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">📅 출석 보너스 (${attendanceCount}회)</span>
-                            <span class="stats-value ${totalAttendance > 0 ? 'points-positive' : 'points-neutral'}">+${totalAttendance.toFixed(1)}</span>
+                            <span class="stats-label">누적 감점</span>
+                            <span class="stats-value ${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${totalLoss === 0 ? '0.0' : totalLoss.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">🎁 사용한 포인트</span>
-                            <span class="stats-value ${totalRedeem < 0 ? 'points-negative' : 'points-neutral'}">${Math.abs(totalRedeem).toFixed(1)}</span>
+                            <span class="stats-value ${totalRedeem < 0 ? 'points-negative' : 'points-neutral'}">${totalRedeem === 0 ? '0.0' : totalRedeem.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">게임당 평균 포인트</span>
