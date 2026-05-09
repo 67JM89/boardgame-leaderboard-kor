@@ -1548,6 +1548,16 @@
             id: 'endLabelPlugin',
             afterDatasetsDraw(chart) {
                 const ctx = chart.ctx;
+                const fontPx = 12;
+                const padX = 10;
+                const padY = 6;
+                const pillH = fontPx + padY * 2;
+
+                ctx.save();
+                ctx.font = `bold ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", sans-serif`;
+
+                // 1. 그릴 라벨 후보 수집
+                const labels = [];
                 chart.data.datasets.forEach((dataset, i) => {
                     const meta = chart.getDatasetMeta(i);
                     if (meta.hidden) return;
@@ -1555,27 +1565,79 @@
                     if (!points || points.length === 0) return;
                     const last = points[points.length - 1];
                     if (!last || isNaN(last.x) || isNaN(last.y)) return;
+                    const name = dataset.label || '';
+                    const textWidth = ctx.measureText(name).width;
+                    const pillW = Math.max(textWidth + padX * 2, pillH);
+                    labels.push({
+                        name,
+                        color: dataset.borderColor,
+                        anchorX: last.x,
+                        anchorY: last.y,
+                        y: last.y,
+                        pillW
+                    });
+                });
 
-                    const color = dataset.borderColor;
-                    const radius = 18;
-                    ctx.save();
+                // 2. 같은 y에서 겹치지 않게 위/아래로 분산
+                labels.sort((a, b) => a.anchorY - b.anchorY);
+                const chartArea = chart.chartArea;
+                const minY = chartArea.top + pillH / 2;
+                const maxY = chartArea.bottom - pillH / 2;
+                const gap = pillH + 2;
+                for (let i = 1; i < labels.length; i++) {
+                    if (labels[i].y - labels[i - 1].y < gap) {
+                        labels[i].y = labels[i - 1].y + gap;
+                    }
+                }
+                // 아래로 넘치면 위로 끌어올림
+                for (let i = labels.length - 1; i > 0; i--) {
+                    if (labels[i].y > maxY) {
+                        labels[i].y = maxY;
+                        if (labels[i].y - labels[i - 1].y < gap) {
+                            labels[i - 1].y = labels[i].y - gap;
+                        }
+                    }
+                }
+                labels.forEach(l => { l.y = Math.max(minY, Math.min(maxY, l.y)); });
+
+                // 3. 알약 + (필요시) 라인 끝점에서 알약까지 작은 연결선
+                labels.forEach(l => {
+                    const cx = l.anchorX + l.pillW / 2 + 6;
+                    const cy = l.y;
+                    const r = pillH / 2;
+                    const x = cx - l.pillW / 2;
+                    const y = cy - pillH / 2;
+
+                    if (Math.abs(cy - l.anchorY) > 1) {
+                        ctx.beginPath();
+                        ctx.moveTo(l.anchorX, l.anchorY);
+                        ctx.lineTo(x, cy);
+                        ctx.strokeStyle = l.color;
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([3, 3]);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+
                     ctx.beginPath();
-                    ctx.arc(last.x, last.y, radius, 0, Math.PI * 2);
-                    ctx.fillStyle = color;
+                    ctx.moveTo(x + r, y);
+                    ctx.lineTo(x + l.pillW - r, y);
+                    ctx.arc(x + l.pillW - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+                    ctx.lineTo(x + r, y + pillH);
+                    ctx.arc(x + r, y + r, r, Math.PI / 2, -Math.PI / 2);
+                    ctx.closePath();
+                    ctx.fillStyle = l.color;
                     ctx.fill();
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = '#fff';
                     ctx.stroke();
 
                     ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    const name = dataset.label || '';
-                    const display = name.length > 4 ? name.slice(0, 4) : name;
-                    ctx.fillText(display, last.x, last.y);
-                    ctx.restore();
+                    ctx.fillText(l.name, cx, cy);
                 });
+                ctx.restore();
             }
         };
 
@@ -1604,6 +1666,10 @@
                 });
             });
 
+            // 가장 긴 이름 기준으로 끝점 라벨 공간 확보 (대략 글자당 7px + 패딩)
+            const maxNameLen = datasets.reduce((m, d) => Math.max(m, (d.label || '').length), 0);
+            const endLabelPad = Math.min(180, Math.max(56, maxNameLen * 8 + 28));
+
             if (rankingTrendChart) rankingTrendChart.destroy();
             rankingTrendChart = new Chart(ctx, {
                 type: 'line',
@@ -1611,7 +1677,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { right: 36 } },
+                    layout: { padding: { right: endLabelPad } },
                     plugins: {
                         legend: { display: true, position: 'top' },
                         tooltip: {
