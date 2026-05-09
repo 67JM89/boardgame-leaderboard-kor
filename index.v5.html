@@ -629,7 +629,7 @@
             <div style="margin-top: var(--space-20); padding: var(--space-16); background: rgba(33, 128, 141, 0.08); border-radius: var(--radius-base); border-left: 3px solid var(--color-primary); font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.6;">
                 <strong style="color: var(--color-primary);">📋 리더보드 정렬 기준</strong><br>
                 <div style="margin-top: var(--space-8);">
-                    <div>1순위: <strong>현재 포인트</strong> (Reward Points) - 총 승점 + 출석 보너스 − 총 감점 − 사용한 포인트, 최소 0</div>
+                    <div>1순위: <strong>현재 포인트</strong> (Reward Points) - 총 승점 + 출석 보너스 − 총 감점 − 사용한 포인트 − 교환, 최소 0</div>
                     <div>2순위: <strong>총 승점</strong> ⭐ (높을수록 유리) - 게임 실력 반영</div>
                     <div>3순위: <strong>승리</strong> (높을수록 유리) - 승점을 얻은 게임 수</div>
                     <div>4순위: <strong>게임 수</strong> ⭐⭐ (높을수록 유리) - 플레이 참여도</div>
@@ -639,7 +639,7 @@
             <div style="margin-top: var(--space-12); padding: var(--space-12); background: rgba(255, 215, 0, 0.08); border-radius: var(--radius-base); border-left: 3px solid #FFD700; font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.6;">
                 <strong style="color: #B8860B;">🎁 현재 포인트 (Reward Points)</strong><br>
                 <div style="margin-top: var(--space-8);">
-                    상품과 교환할 수 있는 포인트입니다. <code>총 승점 + 출석 보너스 − |총 감점| − |사용한 포인트|</code>로 계산되며, 음수가 되면 0으로 표시합니다.
+                    상품과 교환할 수 있는 포인트입니다. <code>총 승점 + 출석 보너스 − |총 감점| − |사용한 포인트| − |교환|</code>로 계산되며, 음수가 되면 0으로 표시합니다. 출석 체크/HSM Running 행은 게임 수·승률에는 들어가지 않고 Reward Points에만 가산됩니다.
                 </div>
             </div>
         </div>
@@ -761,30 +761,61 @@
 
         // ============================================================
         // 데이터 ingestion
-        // 새 컬럼 "사용한 포인트" 지원 (음수로 기입). 게임 행은 이전과 동일.
+        // 컬럼:
+        //   필수  - 플레이 날짜, 게임 이름, 플레이어 이름, 승점, 감점
+        //   선택  - 사용한 포인트  (음수, 상품 교환)
+        //   선택  - 출첵          (출석 보너스, +2 또는 +5 등). 없으면 출석 게임 행의 "승점"을 fallback.
+        //   선택  - 교환          (음수, 사용한 포인트와 동일하게 Reward Point 차감)
+        //
+        // 행 타입:
+        //   attendance : 게임 이름이 출석/러닝 등 ATTENDANCE_GAMES 에 해당. 게임 통계에서는 제외.
+        //   redemption : 게임 이름 비어있는 행 — 순수 교환/사용 행.
+        //   game       : 그 외 게임 이름이 있는 모든 행. 같은 게임에 참여하고 점수만 못 받은 0/0 도 포함.
         // ============================================================
+
+        const ATTENDANCE_GAMES = new Set([
+            '출석 체크', '출석체크',
+            'HSM Running Club', 'HSM Running'
+        ]);
+
+        function recordRewardDelta(r) {
+            return r.win + r.loss + r.attendBonus + r.redeem + r.exchange;
+        }
 
         function ingestRows(rows) {
             const records = rows.map((row, idx) => {
                 const win = parseFloat(row['승점']) || 0;
                 const loss = parseFloat(row['감점']) || 0;
                 const redeem = parseFloat(row['사용한 포인트']) || 0;
+                const exchange = parseFloat(row['교환']) || 0;
+                const attendCol = parseFloat(row['출첵']) || 0;
                 const game = (row['게임 이름'] || '').toString().trim();
-                // 행 종류 분류:
-                //   redeem      : "사용한 포인트"가 0이 아닌 경우 (상품 교환)
-                //   attendance  : 게임 이름이 정확히 "출석 체크" 인 행만 — 모임 출석 보너스(+2)
-                //   game        : 그 외 게임 이름이 있는 모든 행. 승점/감점이 0/0 이어도
-                //                 같은 게임에 참여하고 점수만 못 받은 케이스이므로 게임 수에 포함.
-                const isRedeem = redeem !== 0;
-                const isAttendance = !isRedeem && (game === '출석 체크' || game === '출석체크');
-                const isGame = !isRedeem && !isAttendance && game.length > 0;
+
+                const isAttendanceGame = ATTENDANCE_GAMES.has(game);
+                // 출첵 컬럼이 있으면 그 값, 없으면(=구 데이터) 출석 게임 행의 승점을 보너스로 fallback
+                const attendBonus = isAttendanceGame
+                    ? (attendCol !== 0 ? attendCol : win)
+                    : attendCol;
+
+                let rowType;
+                if (isAttendanceGame) rowType = 'attendance';
+                else if (game.length === 0) rowType = 'redemption';
+                else rowType = 'game';
+
                 return {
                     id: idx,
                     date: excelDateToJSDate(row['플레이 날짜']),
                     game,
                     player: row['플레이어 이름'] || '',
-                    win, loss, redeem,
-                    isGame, isAttendance, isRedeem
+                    // 게임 점수 — 출석 행에서는 0으로 (게임 통계에 안 들어감)
+                    win: rowType === 'game' ? win : 0,
+                    loss: rowType === 'game' ? loss : 0,
+                    redeem,
+                    exchange,
+                    attendBonus,
+                    isGame: rowType === 'game',
+                    isAttendance: rowType === 'attendance',
+                    isRedeem: rowType === 'redemption'
                 };
             }).sort((a, b) => a.date - b.date);
 
@@ -919,25 +950,26 @@
                     stats[record.player] = {
                         total: 0,
                         totalWin: 0, totalLoss: 0,        // 게임 행에서만 누적
-                        totalRedeem: 0,                   // 사용한 포인트 (음수)
+                        totalRedeem: 0,                   // 사용한 포인트 + 교환 합산 (음수)
                         totalAttendance: 0, attendance: 0,// 출석 보너스 누적/횟수
                         games: 0, wins: 0
                     };
                 }
                 const s = stats[record.player];
-                // Reward Points (= total) 는 모든 행 합산
-                s.total += record.win + record.loss + record.redeem;
+                // Reward Points (= total) 는 모든 신호값 합산
+                s.total += recordRewardDelta(record);
                 if (record.isGame) {
                     s.totalWin += record.win;
                     s.totalLoss += record.loss;
                     s.games++;
                     if (record.win > 0) s.wins++;
-                } else if (record.isAttendance) {
-                    s.totalAttendance += record.win; // 출석에선 보통 win >= 0
-                    s.attendance++;
-                } else if (record.isRedeem) {
-                    s.totalRedeem += record.redeem;
                 }
+                if (record.isAttendance) {
+                    s.totalAttendance += record.attendBonus;
+                    s.attendance++;
+                }
+                // 사용한 포인트 / 교환은 어느 행에든 있을 수 있어 별도 if로 누적
+                s.totalRedeem += record.redeem + record.exchange;
             });
             return stats;
         }
@@ -1222,7 +1254,7 @@
             const rewardByRecordId = {};
             chronological.forEach(record => {
                 if (runningTotals[record.player] === undefined) runningTotals[record.player] = 0;
-                runningTotals[record.player] += record.win + record.loss + record.redeem;
+                runningTotals[record.player] += recordRewardDelta(record);
                 rewardByRecordId[record.id] = displayPoint(runningTotals[record.player]);
             });
 
@@ -1257,16 +1289,19 @@
                         : '<span class="points-negative">' + record.loss.toFixed(1) + '</span>';
                     gameLabel = escapeHtml(record.game);
                 } else if (record.isAttendance) {
-                    // 출석/참여 보너스 — 게임명과 무관하게 단일 라벨로 표시
-                    gainDisplay = record.win === 0
+                    // 출석/참여 보너스 — 게임 이름 그대로 보여주되 보너스 아이콘 prefix
+                    const bonus = record.attendBonus;
+                    gainDisplay = bonus === 0
                         ? '<span class="points-neutral">+0.0</span>'
-                        : '<span class="points-positive">+' + record.win.toFixed(1) + '</span>';
+                        : '<span class="points-positive">+' + bonus.toFixed(1) + '</span>';
                     lossDisplay = '<span class="points-neutral">-</span>';
-                    gameLabel = '<em style="color: var(--color-text-secondary);">📅 출석 체크</em>';
+                    const icon = record.game === 'HSM Running Club' || record.game === 'HSM Running' ? '🏃' : '📅';
+                    gameLabel = '<em style="color: var(--color-text-secondary);">' + icon + ' ' + escapeHtml(record.game) + '</em>';
                 } else if (record.isRedeem) {
-                    // 사용한 포인트 행
+                    // 순수 교환/사용 행 (게임 이름 비어있음)
+                    const used = record.redeem + record.exchange;
                     gainDisplay = '<span class="points-neutral">-</span>';
-                    lossDisplay = '<span class="points-negative">' + record.redeem.toFixed(1) + '</span>';
+                    lossDisplay = '<span class="points-negative">' + used.toFixed(1) + '</span>';
                     gameLabel = '<em style="color: var(--color-text-secondary);">🎁 포인트 사용</em>';
                 } else {
                     gainDisplay = '<span class="points-neutral">-</span>';
@@ -1315,22 +1350,23 @@
                 if (record.isGame) {
                     totalWin += record.win;
                     totalLoss += record.loss;
-                } else if (record.isAttendance) {
-                    totalAttendance += record.win;
-                    attendanceCount++;
-                } else if (record.isRedeem) {
-                    totalRedeem += record.redeem;
                 }
+                if (record.isAttendance) {
+                    totalAttendance += record.attendBonus;
+                    attendanceCount++;
+                }
+                totalRedeem += record.redeem + record.exchange;
+
                 const month = localMonthKey(record.date);
                 if (!monthlyStats[month]) monthlyStats[month] = { win: 0, loss: 0, redeem: 0, attendance: 0 };
                 if (record.isGame) {
                     monthlyStats[month].win += record.win;
                     monthlyStats[month].loss += record.loss;
-                } else if (record.isAttendance) {
-                    monthlyStats[month].attendance += record.win;
-                } else if (record.isRedeem) {
-                    monthlyStats[month].redeem += record.redeem;
                 }
+                if (record.isAttendance) {
+                    monthlyStats[month].attendance += record.attendBonus;
+                }
+                monthlyStats[month].redeem += record.redeem + record.exchange;
             });
 
             const reward = displayPoint(totalWin + totalLoss + totalRedeem + totalAttendance);
@@ -1482,7 +1518,7 @@
                 gameData
                     .filter(r => localDateKey(r.date) === dateKey)
                     .forEach(r => {
-                        cumulative[r.player] += r.win + r.loss + r.redeem;
+                        cumulative[r.player] += recordRewardDelta(r);
                     });
 
                 // 순위 산출: Reward Points (>=0) 내림차순. 동률은 같은 순위.
