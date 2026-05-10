@@ -2178,37 +2178,37 @@
         // ============================================================
         const ACHIEVEMENTS = [
             { id: 'first_win', tier: 'common', icon: '🎯', name: '첫 승',
-              description: '처음으로 1위를 차지했습니다',
+              description: '처음으로 승점을 획득했습니다',
               check: s => s.wins >= 1,
               progress: s => `${s.wins}/1승`,
               progressPct: s => Math.min(1, s.wins / 1) },
             { id: 'wins_10', tier: 'common', icon: '🏆', name: '10승 달성',
-              description: '10번 1위',
+              description: '10번 승점 획득',
               check: s => s.wins >= 10,
               progress: s => `${s.wins}/10승`,
               progressPct: s => Math.min(1, s.wins / 10) },
             { id: 'wins_25', tier: 'rare', icon: '🥇', name: '25승 달성',
-              description: '25번 1위 (실력자)',
+              description: '25번 승점 획득 (실력자)',
               check: s => s.wins >= 25,
               progress: s => `${s.wins}/25승`,
               progressPct: s => Math.min(1, s.wins / 25) },
             { id: 'wins_50', tier: 'epic', icon: '👑', name: '50승 달성',
-              description: '50번 1위 (전설급)',
+              description: '50번 승점 획득 (전설급)',
               check: s => s.wins >= 50,
               progress: s => `${s.wins}/50승`,
               progressPct: s => Math.min(1, s.wins / 50) },
             { id: 'streak_3', tier: 'common', icon: '🔥', name: '3연승',
-              description: '3게임 연속 1위',
+              description: '3게임 연속 승점 획득',
               check: s => s.longestStreak >= 3,
               progress: s => `최장 ${s.longestStreak}연승`,
               progressPct: s => Math.min(1, s.longestStreak / 3) },
             { id: 'streak_5', tier: 'rare', icon: '🔥', name: '5연승',
-              description: '5게임 연속 1위 (대단)',
+              description: '5게임 연속 승점 획득 (대단)',
               check: s => s.longestStreak >= 5,
               progress: s => `최장 ${s.longestStreak}연승`,
               progressPct: s => Math.min(1, s.longestStreak / 5) },
             { id: 'streak_10', tier: 'legendary', icon: '⚡', name: '10연승 신',
-              description: '10게임 연속 1위 (불가능에 가까운)',
+              description: '10게임 연속 승점 획득 (불가능에 가까운)',
               check: s => s.longestStreak >= 10,
               progress: s => `최장 ${s.longestStreak}연승`,
               progressPct: s => Math.min(1, s.longestStreak / 10) },
@@ -2271,7 +2271,8 @@
 
             const totalWin = gameRecords.reduce((s, r) => s + r.win, 0);
             const totalLoss = gameRecords.reduce((s, r) => s + r.loss, 0);
-            const wins = gameRecords.filter(r => r.win > 0 && r.rank === 1).length;
+            // 승리 정의 = 승점 획득 (rank 무관, 승점 > 0이면 승리)
+            const wins = gameRecords.filter(r => r.win > 0).length;
             const games = gameRecords.length;
             const tier = totalWin + totalLoss;
 
@@ -2281,10 +2282,10 @@
             ).size;
             const redeemCount = records.filter(r => r.redeem < 0 || r.exchange < 0).length;
 
-            // 연승 (rank === 1)
+            // 연승: 승점을 연속으로 획득한 게임 수 (승리 정의 일관성 유지)
             let longestStreak = 0, currentStreak = 0;
             sortedGameRecords.forEach(r => {
-                if (r.rank === 1) {
+                if (r.win > 0) {
                     currentStreak++;
                     if (currentStreak > longestStreak) longestStreak = currentStreak;
                 } else {
@@ -2434,7 +2435,8 @@
                 const g = byGame[r.game];
                 g.total += r.win + r.loss;
                 g.games++;
-                if (r.win > 0 && r.rank === 1) g.wins++;
+                // 승리 = 승점 획득 (rank 무관)
+                if (r.win > 0) g.wins++;
             });
             const rows = Object.values(byGame).map(g => ({
                 ...g,
@@ -2977,7 +2979,8 @@
             return stats;
         }
 
-        // 연승: "1위" 횟수의 연속 streak. 가장 긴 연승 + 현재 연승.
+        // 연승: 승점을 연속 획득한 게임 수. 가장 긴 연승 + 현재 연승.
+        // (승리 정의 = 승점 > 0, rank 무관)
         function calculateStreaks(records) {
             const gamesByPlayer = {};
             records.filter(r => r.isGame).forEach(r => {
@@ -2989,7 +2992,7 @@
                 const sorted = gamesByPlayer[player].slice().sort((a, b) => a.date - b.date || a.id - b.id);
                 let longest = 0, current = 0;
                 sorted.forEach(r => {
-                    if (r.rank === 1) {
+                    if (r.win > 0) {
                         current++;
                         if (current > longest) longest = current;
                     } else {
