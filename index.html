@@ -9,13 +9,22 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
+    <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' https://sung-jungmin.github.io; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
     <title>보드게임 리더보드</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="preconnect" href="https://fastly.jsdelivr.net">
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Subresource Integrity: CDN 변조 방지 -->
+    <link rel="stylesheet" as="style" crossorigin="anonymous"
+          integrity="sha384-f9iEnfDmuRSuBrXQjpPibejnfJMrZ2yI+715EjxlzBsPFIpaD1NxMh1MIzthxtCh"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+            integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+            integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g"
+            crossorigin="anonymous"></script>
     <style>
         :root {
             color-scheme: light dark;
@@ -996,6 +1005,79 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* 모달 - 성취 배지 */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: var(--sp-2);
+        }
+        .achievement {
+            position: relative;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 12px 8px 10px;
+            text-align: center;
+            transition: transform var(--dur-fast) var(--ease-out),
+                        box-shadow var(--dur-fast) var(--ease-out),
+                        border-color var(--dur-fast) var(--ease-out);
+            cursor: default;
+        }
+        .achievement:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+        .achievement__icon {
+            font-size: 26px;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .achievement__name {
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .achievement__sub {
+            font-size: 10px;
+            color: var(--text-subtle);
+            margin-top: 4px;
+            font-weight: var(--fw-medium);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.3;
+        }
+
+        /* 잠긴 배지 — 회색조 */
+        .achievement--locked {
+            opacity: 0.42;
+            filter: grayscale(0.85);
+        }
+        .achievement--locked .achievement__icon { filter: blur(0.3px); }
+
+        /* 달성 배지 — 등급별 보더/배경 */
+        .achievement--earned {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--surface), var(--primary-soft));
+        }
+        .achievement--earned.achievement--rare {
+            border-color: var(--accent-500);
+            background: linear-gradient(135deg, var(--surface), rgba(139, 92, 246, 0.10));
+        }
+        .achievement--earned.achievement--epic {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, var(--surface), rgba(245, 158, 11, 0.12));
+            box-shadow: 0 2px 12px -4px rgba(245, 158, 11, 0.25);
+        }
+        .achievement--earned.achievement--legendary {
+            border-color: #ec4899;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.06), rgba(245, 158, 11, 0.10), rgba(139, 92, 246, 0.10));
+            box-shadow: 0 4px 16px -4px rgba(236, 72, 153, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: legendaryGlow 3s ease-in-out infinite;
+        }
+        @keyframes legendaryGlow {
+            0%, 100% { box-shadow: 0 4px 16px -4px rgba(236, 72, 153, 0.4); }
+            50%      { box-shadow: 0 4px 24px -2px rgba(236, 72, 153, 0.6); }
+        }
+
         /* 모달 - 포인트 히스토리 */
         .point-history {
             background: var(--surface-2);
@@ -1642,6 +1724,26 @@
                 </section>
 
                 <section class="help-card">
+                    <h3>🏆 성취 배지</h3>
+                    <p>플레이어 카드를 클릭하면 모달에서 확인 가능한 17개 자동 배지.</p>
+                    <ul>
+                        <li><strong>등급:</strong> 일반(파랑) · 레어(보라) · 에픽(주황) · 전설(핑크 글로우)</li>
+                        <li>달성한 배지는 컬러 / 미달성은 회색 + 진행률 표시</li>
+                        <li>예: 첫 승 / 10·25·50승 / 3·5·10연승 / Tier 50·100·200 / 다재다능 / 단골 출석 / 강철 멘탈 등</li>
+                    </ul>
+                </section>
+
+                <section class="help-card">
+                    <h3>🛡️ 보안</h3>
+                    <ul>
+                        <li><strong>CSP (Content Security Policy)</strong>: 외부 스크립트는 jsDelivr CDN만 허용</li>
+                        <li><strong>SRI (Subresource Integrity)</strong>: CDN 파일이 변조되면 자동 차단</li>
+                        <li>업로드 비밀번호는 SHA-256 해시로만 저장 (평문 X)</li>
+                        <li>업로드 파일 검증: 확장자 + 10MB 제한 + 매크로/수식 비활성</li>
+                    </ul>
+                </section>
+
+                <section class="help-card">
                     <h3>🎨 색상 의미</h3>
                     <ul class="help-legend">
                         <li><span class="points-positive">+45.0</span> 긍정 — 점수 획득 / 양수 Tier</li>
@@ -1770,6 +1872,161 @@
         function signedPoint(value, decimals = 1) {
             if (value > 0) return '+' + value.toFixed(decimals);
             return value.toFixed(decimals);
+        }
+
+        // ============================================================
+        // 성취 배지 (Achievements)
+        // 각 배지는 check(stats)로 달성 여부를, progress(stats)로
+        // 잠긴 상태에서의 진행도 텍스트를 반환합니다.
+        // ============================================================
+        const ACHIEVEMENTS = [
+            { id: 'first_win', tier: 'common', icon: '🎯', name: '첫 승',
+              description: '처음으로 1위를 차지했습니다',
+              check: s => s.wins >= 1,
+              progress: s => `${s.wins}/1승` },
+            { id: 'wins_10', tier: 'common', icon: '🏆', name: '10승 달성',
+              description: '10번 1위',
+              check: s => s.wins >= 10,
+              progress: s => `${s.wins}/10승` },
+            { id: 'wins_25', tier: 'rare', icon: '🥇', name: '25승 달성',
+              description: '25번 1위 (실력자)',
+              check: s => s.wins >= 25,
+              progress: s => `${s.wins}/25승` },
+            { id: 'wins_50', tier: 'epic', icon: '👑', name: '50승 달성',
+              description: '50번 1위 (전설급)',
+              check: s => s.wins >= 50,
+              progress: s => `${s.wins}/50승` },
+            { id: 'streak_3', tier: 'common', icon: '🔥', name: '3연승',
+              description: '3게임 연속 1위',
+              check: s => s.longestStreak >= 3,
+              progress: s => `최장 ${s.longestStreak}연승` },
+            { id: 'streak_5', tier: 'rare', icon: '🔥', name: '5연승',
+              description: '5게임 연속 1위 (대단)',
+              check: s => s.longestStreak >= 5,
+              progress: s => `최장 ${s.longestStreak}연승` },
+            { id: 'streak_10', tier: 'legendary', icon: '⚡', name: '10연승 신',
+              description: '10게임 연속 1위 (불가능에 가까운)',
+              check: s => s.longestStreak >= 10,
+              progress: s => `최장 ${s.longestStreak}연승` },
+            { id: 'tier_50', tier: 'common', icon: '💎', name: 'Tier 50',
+              description: 'Tier Points 50점 돌파',
+              check: s => s.tier >= 50,
+              progress: s => `${s.tier.toFixed(0)}/50` },
+            { id: 'tier_100', tier: 'rare', icon: '💎', name: 'Tier 100',
+              description: 'Tier Points 100점 돌파',
+              check: s => s.tier >= 100,
+              progress: s => `${s.tier.toFixed(0)}/100` },
+            { id: 'tier_200', tier: 'epic', icon: '💠', name: 'Tier 200',
+              description: 'Tier Points 200점 돌파',
+              check: s => s.tier >= 200,
+              progress: s => `${s.tier.toFixed(0)}/200` },
+            { id: 'variety_5', tier: 'common', icon: '🎮', name: '다재다능',
+              description: '5종류 이상의 게임 플레이',
+              check: s => s.uniqueGames >= 5,
+              progress: s => `${s.uniqueGames}/5종` },
+            { id: 'variety_10', tier: 'rare', icon: '🎲', name: '게임 마니아',
+              description: '10종류 이상의 게임 플레이',
+              check: s => s.uniqueGames >= 10,
+              progress: s => `${s.uniqueGames}/10종` },
+            { id: 'attendance_10', tier: 'common', icon: '📅', name: '꾸준한 출석',
+              description: '10회 이상 모임 참여',
+              check: s => s.uniquePlayDates >= 10,
+              progress: s => `${s.uniquePlayDates}/10회` },
+            { id: 'attendance_25', tier: 'rare', icon: '🗓️', name: '단골 출석',
+              description: '25회 이상 모임 참여',
+              check: s => s.uniquePlayDates >= 25,
+              progress: s => `${s.uniquePlayDates}/25회` },
+            { id: 'first_redeem', tier: 'common', icon: '🎁', name: '첫 교환',
+              description: 'Reward Points로 첫 교환',
+              check: s => s.redeemCount >= 1,
+              progress: s => `${s.redeemCount}회` },
+            { id: 'high_winrate', tier: 'rare', icon: '📊', name: '승률 50%+',
+              description: '10게임 이상에서 승률 50% 이상',
+              check: s => s.games >= 10 && (s.wins / s.games) >= 0.5,
+              progress: s => s.games < 10 ? `${s.games}/10게임` : `승률 ${Math.round(s.wins / s.games * 100)}%` },
+            { id: 'iron_will', tier: 'epic', icon: '🛡️', name: '강철 멘탈',
+              description: '연속 5게임 무감점',
+              check: s => s.maxNoLossStreak >= 5,
+              progress: s => `최장 ${s.maxNoLossStreak}게임 무감점` }
+        ];
+
+        function computePlayerAchievementStats(playerName) {
+            const records = gameData.filter(r => r.player === playerName);
+            const gameRecords = records.filter(r => r.isGame);
+            const sortedGameRecords = gameRecords.slice().sort((a, b) => a.date - b.date || a.id - b.id);
+
+            const totalWin = gameRecords.reduce((s, r) => s + r.win, 0);
+            const totalLoss = gameRecords.reduce((s, r) => s + r.loss, 0);
+            const wins = gameRecords.filter(r => r.win > 0 && r.rank === 1).length;
+            const games = gameRecords.length;
+            const tier = totalWin + totalLoss;
+
+            const uniqueGames = new Set(gameRecords.map(r => r.game)).size;
+            const uniquePlayDates = new Set(
+                records.filter(r => r.isGame || r.isAttendance).map(r => localDateKey(r.date))
+            ).size;
+            const redeemCount = records.filter(r => r.redeem < 0 || r.exchange < 0).length;
+
+            // 연승 (rank === 1)
+            let longestStreak = 0, currentStreak = 0;
+            sortedGameRecords.forEach(r => {
+                if (r.rank === 1) {
+                    currentStreak++;
+                    if (currentStreak > longestStreak) longestStreak = currentStreak;
+                } else {
+                    currentStreak = 0;
+                }
+            });
+
+            // 무감점 연속 (loss === 0)
+            let maxNoLossStreak = 0, curNoLoss = 0;
+            sortedGameRecords.forEach(r => {
+                if (r.loss === 0) {
+                    curNoLoss++;
+                    if (curNoLoss > maxNoLossStreak) maxNoLossStreak = curNoLoss;
+                } else {
+                    curNoLoss = 0;
+                }
+            });
+
+            return {
+                totalWin, totalLoss, tier, wins, games,
+                uniqueGames, uniquePlayDates, redeemCount,
+                longestStreak, maxNoLossStreak
+            };
+        }
+
+        function renderAchievementsHTML(playerName) {
+            const stats = computePlayerAchievementStats(playerName);
+            const earned = [];
+            const locked = [];
+            ACHIEVEMENTS.forEach(a => {
+                if (a.check(stats)) earned.push(a);
+                else locked.push(a);
+            });
+
+            const earnedCards = earned.map(a => `
+                <div class="achievement achievement--earned achievement--${a.tier}" title="${escapeHtml(a.description)}">
+                    <div class="achievement__icon">${a.icon}</div>
+                    <div class="achievement__name">${escapeHtml(a.name)}</div>
+                    <div class="achievement__sub">${escapeHtml(a.description)}</div>
+                </div>
+            `).join('');
+
+            const lockedCards = locked.map(a => `
+                <div class="achievement achievement--locked" title="${escapeHtml(a.description)}">
+                    <div class="achievement__icon">${a.icon}</div>
+                    <div class="achievement__name">${escapeHtml(a.name)}</div>
+                    <div class="achievement__sub">${escapeHtml(a.progress(stats))}</div>
+                </div>
+            `).join('');
+
+            return `
+                <h3 style="margin-top: var(--sp-5);">🏆 성취 배지 <span class="badge-soft">${earned.length}/${ACHIEVEMENTS.length}</span></h3>
+                <div class="achievements-grid">
+                    ${earnedCards}${lockedCards}
+                </div>
+            `;
         }
 
         // 동률 처리: 최댓값을 가진 모든 항목 + 공동 여부 반환
@@ -2924,6 +3181,8 @@
                             <span class="stats-value ${streakInfo.current >= 1 ? 'points-positive' : 'points-neutral'}">${streakInfo.current >= 1 ? streakInfo.current + '연승' : '-'}</span>
                         </div>
                     </div>
+
+                    ${renderAchievementsHTML(playerName)}
 
                     <h3 style="margin-top: var(--sp-5);">📜 포인트 히스토리 <span class="badge-soft">최근 ${recentHistory.length}건</span></h3>
                     <div class="point-history">
