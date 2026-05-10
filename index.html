@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.3">
+    <meta name="app-version" content="v8.4">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -2096,6 +2096,18 @@
             position: relative;
             box-shadow: var(--shadow-md);
         }
+        /* V8.4: 히트맵 셀의 tooltip은 multi-line 허용 + z-index 올려 다른 셀 위로 */
+        .heatmap-table td[data-tooltip]::after {
+            white-space: normal;
+            min-width: 220px;
+            text-align: left;
+            z-index: 2000;
+            line-height: 1.5;
+        }
+        .heatmap-table td[data-tooltip]:hover::after,
+        .heatmap-table td[data-tooltip]:hover::before {
+            z-index: 2000;
+        }
         .heatmap-table td.heatmap-cell--player {
             text-align: left;
             font-weight: var(--fw-semibold);
@@ -2545,6 +2557,34 @@
             font-size: var(--fs-sm);
             color: var(--text-muted);
         }
+        /* V8.4: HoF 공동 1위 — 카드 강조 + 공동 1위 뱃지 */
+        .hof-card--tie {
+            border-color: var(--gold-to);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.05), var(--surface));
+        }
+        .hof-card__player {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .hof-card__sep {
+            color: var(--text-subtle);
+            font-weight: var(--fw-bold);
+            margin: 0 2px;
+        }
+        .hof-card__tie {
+            display: inline-block;
+            margin-top: var(--sp-2);
+            padding: 2px 8px;
+            background: linear-gradient(135deg, var(--gold-from), var(--gold-to));
+            color: #4a2c00;
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-bold);
+            border-radius: var(--r-pill);
+            letter-spacing: 0.04em;
+        }
 
         /* PR (Personal Record) - 플레이어 모달 안 */
         .pr-grid {
@@ -2663,7 +2703,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.3</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.4</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -2758,9 +2798,9 @@
             <button class="tab-button" role="tab" onclick="switchTab(event, 'byMonth')">월별</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'history')">플레이 히스토리</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'trend')">📈 순위 변화</button>
+            <button class="tab-button" role="tab" onclick="switchTab(event, 'championship')">🏆 챔피언십</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'h2h')">🥊 H2H 대결</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'heatmap')">🔥 히트맵</button>
-            <button class="tab-button" role="tab" onclick="switchTab(event, 'championship')">🏆 챔피언십</button>
             <button class="tab-button tab-button--help" role="tab" onclick="switchTab(event, 'help')" title="대시보드 설명" aria-label="대시보드 설명">❓ 설명</button>
         </div>
 
@@ -5496,12 +5536,13 @@
 
         function buildHeatmapMatrix() {
             const records = filteredData.filter(r => r.isGame);
-            // matrix[player][game] = { games, wins, totalRank, totalPoints, sessionPlayerCounts }
+            // matrix[player][game] = { games, wins, totalPoints, rankSumWin, normalizedRankSumWin }
+            // 핵심: 평균 순위는 "승점을 획득한 케이스(win > 0)"만 카운트 (사용자 요청 V8.4)
             const matrix = {};
             const games = new Set();
             const players = new Set();
 
-            // 세션 별 참가자 수 미리 계산 (정규화 순위 계산용)
+            // 세션 별 참가자 수 미리 계산
             const sessionSizes = {};
             records.forEach(r => {
                 sessionSizes[r.sessionId] = (sessionSizes[r.sessionId] || 0) + 1;
@@ -5513,18 +5554,23 @@
                 if (!matrix[r.player]) matrix[r.player] = {};
                 if (!matrix[r.player][r.game]) {
                     matrix[r.player][r.game] = {
-                        games: 0, wins: 0, totalRank: 0, totalPoints: 0,
-                        normalizedRankSum: 0
+                        games: 0,
+                        wins: 0,
+                        totalPoints: 0,
+                        // V8.4: 순위는 win > 0 케이스만 누적
+                        rankSumWin: 0,
+                        normalizedRankSumWin: 0
                     };
                 }
                 const c = matrix[r.player][r.game];
                 c.games++;
-                if (r.win > 0) c.wins++;
-                c.totalRank += r.rank || 0;
                 c.totalPoints += (r.win + r.loss);
-                // 정규화 순위: 1=최고(1.0), N=꼴찌(0.0)
-                const N = sessionSizes[r.sessionId] || 1;
-                c.normalizedRankSum += N > 1 ? (N - r.rank) / (N - 1) : 0.5;
+                if (r.win > 0) {
+                    c.wins++;
+                    c.rankSumWin += r.rank || 0;
+                    const N = sessionSizes[r.sessionId] || 1;
+                    c.normalizedRankSumWin += N > 1 ? (N - r.rank) / (N - 1) : 0.5;
+                }
             });
 
             return {
@@ -5577,31 +5623,56 @@
                 const cells = games.map(game => {
                     const c = matrix[player] && matrix[player][game];
                     if (!c || c.games === 0) {
-                        return `<td class="heatmap-cell--empty" title="${escapeHtml(player)} · ${escapeHtml(game)} · 미플레이">·</td>`;
+                        return `<td class="heatmap-cell--empty" data-tooltip="${escapeHtml(player + ' · ' + game + ' · 미플레이')}">·</td>`;
                     }
-                    let value, displayText, normalized, tooltip;
                     const winRate = c.wins / c.games;
-                    const avgRank = c.totalRank / c.games;
                     const avgPoints = c.totalPoints / c.games;
+                    // V8.4: 평균 순위는 승점 획득 케이스만 (c.wins > 0일 때만)
+                    const avgRank = c.wins > 0 ? c.rankSumWin / c.wins : null;
+                    const normalizedRank = c.wins > 0 ? c.normalizedRankSumWin / c.wins : null;
+
+                    let displayText, normalized, isEmpty = false;
 
                     if (heatmapMode === 'winrate') {
                         normalized = winRate;
                         displayText = Math.round(winRate * 100) + '%';
+                        // V8.4: 승률 0이면 숫자는 보이되 회색 처리
+                        if (winRate === 0) isEmpty = true;
                     } else if (heatmapMode === 'avgrank') {
-                        normalized = c.normalizedRankSum / c.games; // 0=꼴찌평균, 1=1위평균
+                        if (avgRank === null) {
+                            // 승리 케이스 0개 → 평균 순위 없음
+                            return `<td class="heatmap-cell--empty" data-tooltip="${escapeHtml(player + ' · ' + game + ' · ' + c.games + '게임 · 승점 획득 0회 (평균 순위 없음)')}">·</td>`;
+                        }
+                        normalized = normalizedRank;
                         displayText = avgRank.toFixed(1) + '위';
                     } else { // avgpoints
-                        // 점수 정규화: -10 ~ +10 정도가 일반적이라고 가정. 여기선 단순 sigmoid
-                        const sig = 1 / (1 + Math.exp(-avgPoints / 5));
-                        normalized = sig;
-                        displayText = (avgPoints >= 0 ? '+' : '') + avgPoints.toFixed(1);
+                        // V8.4: 평균 점수 0이면 없는 값 처리 (회색)
+                        if (avgPoints === 0) {
+                            displayText = '0.0';
+                            isEmpty = true;
+                        } else {
+                            const sig = 1 / (1 + Math.exp(-avgPoints / 5));
+                            normalized = sig;
+                            displayText = (avgPoints >= 0 ? '+' : '') + avgPoints.toFixed(1);
+                        }
                     }
-                    tooltip = `${player} · ${game}\n${c.games}게임 · 승률 ${Math.round(winRate * 100)}% · 평균 ${avgRank.toFixed(1)}위 · 평균점수 ${avgPoints.toFixed(1)}`;
+
+                    const tooltipParts = [
+                        player + ' · ' + game,
+                        c.games + '게임',
+                        '승률 ' + Math.round(winRate * 100) + '%',
+                        avgRank !== null ? '평균 ' + avgRank.toFixed(1) + '위 (승점 획득 시)' : '승점 획득 없음',
+                        '평균점수 ' + avgPoints.toFixed(1)
+                    ];
+                    const tooltip = tooltipParts.join(' · ');
+
+                    if (isEmpty) {
+                        return `<td class="heatmap-cell--empty" data-tooltip="${escapeHtml(tooltip)}" title="${escapeHtml(tooltip)}">${displayText}</td>`;
+                    }
 
                     const bg = heatColor(normalized);
-                    // 어두운 배경에선 흰 글자, 밝은 배경에선 어두운 글자
                     const textColor = normalized < 0.45 ? '#fff' : '#1a202c';
-                    return `<td style="background-color: ${bg}; color: ${textColor};" title="${escapeHtml(tooltip)}">${displayText}</td>`;
+                    return `<td style="background-color: ${bg}; color: ${textColor};" data-tooltip="${escapeHtml(tooltip)}" title="${escapeHtml(tooltip)}">${displayText}</td>`;
                 }).join('');
                 return `<tr><td class="heatmap-cell--player" data-player="${escapeHtml(player)}">${avatarHTML(player)}${escapeHtml(player)}</td>${cells}</tr>`;
             }).join('');
@@ -5733,73 +5804,86 @@
             `;
         }
 
-        // 명예의 전당: 다양한 카테고리별 최고기록자
+        // 명예의 전당: 카테고리별 최고기록자 (공동 1위 모두 포함)
         function calculateHallOfFame() {
             const games = gameData.filter(r => r.isGame);
             if (games.length === 0) return [];
 
             const result = [];
+            // 공동 1위를 모두 추출하는 헬퍼 — value가 최대인 항목들 반환
+            const topAll = (arr, valueGetter) => {
+                if (arr.length === 0) return { players: [], value: null };
+                const top = Math.max(...arr.map(valueGetter));
+                const winners = arr.filter(item => valueGetter(item) === top);
+                return { players: winners, value: top, isTie: winners.length > 1 };
+            };
 
-            // 1. 단일 게임 최고 점수
-            let bestSingle = null;
-            games.forEach(r => {
-                const pts = r.win + r.loss;
-                if (!bestSingle || pts > bestSingle.points) {
-                    bestSingle = { player: r.player, game: r.game, points: pts, date: r.date };
-                }
-            });
-            if (bestSingle && bestSingle.points > 0) {
+            // 1. 단일 게임 최고 점수 (공동 가능 — 같은 점수를 동시에 달성한 경우)
+            const singleScoreArr = games.map(r => ({
+                player: r.player, game: r.game, points: r.win + r.loss, date: r.date
+            }));
+            const bestSingle = topAll(singleScoreArr, x => x.points);
+            if (bestSingle.value !== null && bestSingle.value > 0) {
+                // 같은 플레이어가 여러 번 동률일 수 있음 → 플레이어 이름 dedup
+                const uniqueNames = Array.from(new Set(bestSingle.players.map(p => p.player)));
+                const sample = bestSingle.players[0];
                 result.push({
                     icon: '💥',
                     title: '단일 게임 최고 점수',
-                    player: bestSingle.player,
-                    detail: `${bestSingle.game} · +${bestSingle.points.toFixed(1)} · ${bestSingle.date.toLocaleDateString('ko-KR')}`
+                    players: uniqueNames,
+                    detail: uniqueNames.length === 1
+                        ? `${sample.game} · +${bestSingle.value.toFixed(1)} · ${sample.date.toLocaleDateString('ko-KR')}`
+                        : `+${bestSingle.value.toFixed(1)} 점 (다중 기록)`,
+                    isTie: uniqueNames.length > 1
                 });
             }
 
             // 2. 최장 연승
             const streaks = calculateStreaks(games);
-            const streakArr = Object.entries(streaks).map(([n, s]) => ({ n, longest: s.longest }))
-                .sort((a, b) => b.longest - a.longest);
-            if (streakArr[0] && streakArr[0].longest >= 2) {
+            const streakArr = Object.entries(streaks).map(([n, s]) => ({ name: n, longest: s.longest }));
+            const streakTop = topAll(streakArr, x => x.longest);
+            if (streakTop.value !== null && streakTop.value >= 2) {
                 result.push({
                     icon: '🔥',
                     title: '최장 연승',
-                    player: streakArr[0].n,
-                    detail: streakArr[0].longest + '연승'
+                    players: streakTop.players.map(x => x.name),
+                    detail: streakTop.value + '연승',
+                    isTie: streakTop.isTie
                 });
             }
 
-            // 3. 최다 우승 (1위 횟수)
+            // 3. 최다 1위 (승리 횟수)
             const winCount = {};
             games.filter(r => r.rank === 1 && r.win > 0).forEach(r => {
                 winCount[r.player] = (winCount[r.player] || 0) + 1;
             });
-            const winArr = Object.entries(winCount).sort((a, b) => b[1] - a[1]);
-            if (winArr[0]) {
+            const winArr = Object.entries(winCount).map(([name, count]) => ({ name, count }));
+            const winTop = topAll(winArr, x => x.count);
+            if (winTop.value !== null && winTop.value > 0) {
                 result.push({
                     icon: '👑',
                     title: '최다 1위',
-                    player: winArr[0][0],
-                    detail: winArr[0][1] + '회 우승'
+                    players: winTop.players.map(x => x.name),
+                    detail: winTop.value + '회 우승',
+                    isTie: winTop.isTie
                 });
             }
 
-            // 4. 가장 다양한 게임 플레이
+            // 4. 가장 다양한 게임
             const distinctGames = {};
             games.forEach(r => {
                 if (!distinctGames[r.player]) distinctGames[r.player] = new Set();
                 distinctGames[r.player].add(r.game);
             });
-            const variantArr = Object.entries(distinctGames)
-                .map(([n, set]) => ({ n, count: set.size }))
-                .sort((a, b) => b.count - a.count);
-            if (variantArr[0]) {
+            const variantArr = Object.entries(distinctGames).map(([n, set]) => ({ name: n, count: set.size }));
+            const varTop = topAll(variantArr, x => x.count);
+            if (varTop.value !== null && varTop.value > 0) {
                 result.push({
                     icon: '🎨',
                     title: '가장 다양한 게임',
-                    player: variantArr[0].n,
-                    detail: variantArr[0].count + '종 플레이'
+                    players: varTop.players.map(x => x.name),
+                    detail: varTop.value + '종 플레이',
+                    isTie: varTop.isTie
                 });
             }
 
@@ -5808,25 +5892,29 @@
             gameData.filter(r => r.isAttendance).forEach(r => {
                 attendanceCount[r.player] = (attendanceCount[r.player] || 0) + 1;
             });
-            const attArr = Object.entries(attendanceCount).sort((a, b) => b[1] - a[1]);
-            if (attArr[0] && attArr[0][1] > 0) {
+            const attArr = Object.entries(attendanceCount).map(([name, count]) => ({ name, count }));
+            const attTop = topAll(attArr, x => x.count);
+            if (attTop.value !== null && attTop.value > 0) {
                 result.push({
                     icon: '📅',
                     title: '최다 출석',
-                    player: attArr[0][0],
-                    detail: attArr[0][1] + '회 출석'
+                    players: attTop.players.map(x => x.name),
+                    detail: attTop.value + '회 출석',
+                    isTie: attTop.isTie
                 });
             }
 
             // 6. 최고 ELO
             const elos = calculateEloRatings(games);
-            const eloArr = Object.entries(elos).sort((a, b) => b[1] - a[1]);
-            if (eloArr[0]) {
+            const eloArr = Object.entries(elos).map(([name, rating]) => ({ name, rating: Math.round(rating) }));
+            const eloTop = topAll(eloArr, x => x.rating);
+            if (eloTop.value !== null) {
                 result.push({
                     icon: '⭐',
                     title: '최고 ELO',
-                    player: eloArr[0][0],
-                    detail: Math.round(eloArr[0][1]) + ' ELO'
+                    players: eloTop.players.map(x => x.name),
+                    detail: eloTop.value + ' ELO',
+                    isTie: eloTop.isTie
                 });
             }
 
@@ -5887,17 +5975,31 @@
                 `;
             }).join('');
 
-            const hofCards = hof.map(h => `
-                <div class="hof-card">
-                    <div class="hof-card__icon" aria-hidden="true">${h.icon}</div>
-                    <div class="hof-card__title">${escapeHtml(h.title)}</div>
-                    <div class="hof-card__player"><span class="player-name" data-player="${escapeHtml(h.player)}">${avatarHTML(h.player)}${escapeHtml(h.player)}</span></div>
-                    <div class="hof-card__detail">${escapeHtml(h.detail)}</div>
-                </div>
-            `).join('');
+            const hofCards = hof.map(h => {
+                const playerEls = h.players.map(p =>
+                    `<span class="player-name" data-player="${escapeHtml(p)}">${avatarHTML(p)}${escapeHtml(p)}</span>`
+                ).join('<span class="hof-card__sep">·</span>');
+                const tieBadge = h.isTie
+                    ? `<span class="hof-card__tie" aria-label="공동 1위">공동 1위 · ${h.players.length}명</span>`
+                    : '';
+                return `
+                    <div class="hof-card${h.isTie ? ' hof-card--tie' : ''}">
+                        <div class="hof-card__icon" aria-hidden="true">${h.icon}</div>
+                        <div class="hof-card__title">${escapeHtml(h.title)}</div>
+                        <div class="hof-card__player">${playerEls}</div>
+                        <div class="hof-card__detail">${escapeHtml(h.detail)}</div>
+                        ${tieBadge}
+                    </div>
+                `;
+            }).join('');
 
             out.innerHTML = `
-                <h2 style="margin-top: 0;">⭐ ELO 레이팅 Top 10</h2>
+                <h2 style="margin-top: 0;">🏆 명예의 전당</h2>
+                ${hof.length > 0
+                    ? `<div class="hof-grid">${hofCards}</div>`
+                    : emptyStateHTML('명예의 전당 데이터 없음')}
+
+                <h2>⭐ ELO 레이팅 Top 10</h2>
                 <div class="notice notice--warm" style="margin-bottom: var(--sp-3);">
                     <span class="notice__icon" aria-hidden="true">📐</span>
                     <div>
@@ -5917,11 +6019,6 @@
                 ${seasons.length > 0
                     ? `<div class="season-grid">${seasonCards}</div>`
                     : emptyStateHTML('시즌 데이터 없음')}
-
-                <h2>🏆 명예의 전당</h2>
-                ${hof.length > 0
-                    ? `<div class="hof-grid">${hofCards}</div>`
-                    : emptyStateHTML('명예의 전당 데이터 없음')}
             `;
             bindPlayerNameClicks(out);
         }
