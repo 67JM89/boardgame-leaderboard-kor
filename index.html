@@ -1128,12 +1128,13 @@
 
         .multiselect__panel {
             position: absolute;
-            top: calc(100% + 6px);
-            right: 0;
+            /* 데스크톱: 버튼의 왼쪽으로 열려서 차트를 가리지 않음 */
+            top: 0;
+            right: calc(100% + 8px);
             z-index: 1000;
-            min-width: 240px;
+            min-width: 260px;
             max-width: 320px;
-            max-height: 320px;
+            max-height: 380px;
             display: flex;
             flex-direction: column;
             background: var(--surface);
@@ -1141,11 +1142,25 @@
             border-radius: var(--r-md);
             box-shadow: var(--shadow-xl);
             overflow: hidden;
-            animation: msIn var(--dur-base) var(--ease-out);
+            animation: msInLeft var(--dur-base) var(--ease-out);
+        }
+        @keyframes msInLeft {
+            from { opacity: 0; transform: translateX(4px); }
+            to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes msIn {
             from { opacity: 0; transform: translateY(-4px); }
             to   { opacity: 1; transform: translateY(0); }
+        }
+        /* 모바일: 가로 공간 부족 → 버튼 아래로 열기 */
+        @media (max-width: 720px) {
+            .multiselect__panel {
+                top: calc(100% + 6px);
+                right: 0;
+                left: 0;
+                max-width: none;
+                animation: msIn var(--dur-base) var(--ease-out);
+            }
         }
 
         .multiselect__search-row {
@@ -1604,7 +1619,7 @@
             <div class="trend-toolbar">
                 <div class="notice" style="margin-top: 0; flex: 1;">
                     <span class="notice__icon" aria-hidden="true">📈</span>
-                    <div>각 모임 시점까지의 누적 Reward Points로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.</div>
+                    <div>각 모임 시점까지의 누적 <strong>Tier Points</strong>로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.</div>
                 </div>
                 <div class="multiselect" id="playerMultiselect">
                     <button class="multiselect__btn" type="button" id="playerMultiselectBtn" aria-haspopup="listbox" aria-expanded="false">
