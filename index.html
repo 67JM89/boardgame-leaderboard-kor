@@ -2,696 +2,1477 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="보드게임 모임의 점수를 추적하고 리더보드, 월별 순위, 게임별 통계를 한눈에 확인하세요.">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+    <meta property="og:title" content="보드게임 리더보드">
+    <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
     <title>보드게임 리더보드</title>
-    <script src="https://unpkg.com/xlsx@latest/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fastly.jsdelivr.net">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
-            --color-white: rgba(255, 255, 255, 1);
-            --color-cream-50: rgba(252, 252, 249, 1);
-            --color-cream-100: rgba(255, 255, 253, 1);
-            --color-gray-200: rgba(245, 245, 245, 1);
-            --color-gray-300: rgba(167, 169, 169, 1);
-            --color-slate-500: rgba(98, 108, 113, 1);
-            --color-charcoal-700: rgba(31, 33, 33, 1);
-            --color-charcoal-800: rgba(38, 40, 40, 1);
-            --color-slate-900: rgba(19, 52, 59, 1);
-            --color-teal-300: rgba(50, 184, 198, 1);
-            --color-teal-500: rgba(33, 128, 141, 1);
-            --color-teal-600: rgba(29, 116, 128, 1);
-            --color-teal-700: rgba(26, 104, 115, 1);
-            --color-red-400: rgba(255, 84, 89, 1);
-            --color-red-500: rgba(192, 21, 47, 1);
-            --color-orange-400: rgba(230, 129, 97, 1);
-            --color-orange-500: rgba(168, 75, 47, 1);
+            color-scheme: light dark;
 
-            --color-background: var(--color-cream-50);
-            --color-surface: var(--color-cream-100);
-            --color-text: var(--color-slate-900);
-            --color-text-secondary: var(--color-slate-500);
-            --color-primary: var(--color-teal-500);
-            --color-primary-hover: var(--color-teal-600);
-            --color-primary-active: var(--color-teal-700);
-            --color-border: rgba(94, 82, 64, 0.2);
-            --color-card-border: rgba(94, 82, 64, 0.12);
-            --color-btn-primary-text: var(--color-cream-50);
-            --color-success: var(--color-teal-500);
-            --color-warning: var(--color-orange-500);
-            --color-error: var(--color-red-500);
+            /* Brand */
+            --brand-50:  #eff6ff;
+            --brand-100: #dbeafe;
+            --brand-200: #bfdbfe;
+            --brand-300: #93c5fd;
+            --brand-400: #60a5fa;
+            --brand-500: #3b82f6;
+            --brand-600: #2563eb;
+            --brand-700: #1d4ed8;
+            --brand-800: #1e40af;
+            --brand-900: #1e3a8a;
 
-            --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            --font-family-mono: ui-monospace, monospace;
-            --font-size-sm: 12px;
-            --font-size-base: 14px;
-            --font-size-md: 14px;
-            --font-size-lg: 16px;
-            --font-size-xl: 18px;
-            --font-size-2xl: 20px;
-            --font-size-3xl: 24px;
-            --font-weight-normal: 400;
-            --font-weight-medium: 500;
-            --font-weight-semibold: 550;
-            --font-weight-bold: 600;
+            /* Accent (violet) */
+            --accent-400: #a78bfa;
+            --accent-500: #8b5cf6;
+            --accent-600: #7c3aed;
 
-            --space-4: 4px;
-            --space-8: 8px;
-            --space-12: 12px;
-            --space-16: 16px;
-            --space-20: 20px;
-            --space-24: 24px;
-            --space-32: 32px;
+            /* Semantic */
+            --success-400: #34d399;
+            --success-500: #10b981;
+            --success-600: #059669;
+            --danger-400:  #f87171;
+            --danger-500:  #ef4444;
+            --danger-600:  #dc2626;
+            --warning-400: #fbbf24;
+            --warning-500: #f59e0b;
 
-            --radius-base: 8px;
-            --radius-lg: 12px;
+            /* Medal palette */
+            --gold-from: #fde047;
+            --gold-to:   #f59e0b;
+            --silver-from:#e5e7eb;
+            --silver-to:  #9ca3af;
+            --bronze-from:#fcd34d;
+            --bronze-to:  #b45309;
 
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+            /* Neutrals (light theme defaults) */
+            --bg:            #f6f7fb;
+            --bg-elev:       #ffffff;
+            --bg-subtle:     #f1f5f9;
+            --bg-muted:      #e2e8f0;
+            --surface:       #ffffff;
+            --surface-2:     #f8fafc;
+            --surface-hover: #f1f5f9;
+            --border:        rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.16);
+            --text:          #0f172a;
+            --text-muted:    #475569;
+            --text-subtle:   #64748b;
+
+            /* Tokens */
+            --primary:        var(--brand-600);
+            --primary-hover:  var(--brand-700);
+            --primary-soft:   rgba(37, 99, 235, 0.10);
+            --primary-soft-2: rgba(37, 99, 235, 0.16);
+            --on-primary:     #ffffff;
+            --success:        var(--success-600);
+            --danger:         var(--danger-600);
+            --warning:        var(--warning-500);
+
+            /* Typography */
+            --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Noto Sans KR", system-ui, sans-serif;
+            --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            --font-num:  "Pretendard Variable", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+            --fs-xs: 11px;
+            --fs-sm: 12px;
+            --fs-base: 14px;
+            --fs-md: 15px;
+            --fs-lg: 16px;
+            --fs-xl: 18px;
+            --fs-2xl: 22px;
+            --fs-3xl: 28px;
+            --fs-4xl: 34px;
+
+            --fw-regular: 400;
+            --fw-medium:  500;
+            --fw-semibold:600;
+            --fw-bold:    700;
+
+            /* Spacing */
+            --sp-1: 4px;
+            --sp-2: 8px;
+            --sp-3: 12px;
+            --sp-4: 16px;
+            --sp-5: 20px;
+            --sp-6: 24px;
+            --sp-7: 32px;
+            --sp-8: 40px;
+            --sp-9: 48px;
+
+            /* Radius */
+            --r-sm: 6px;
+            --r-md: 10px;
+            --r-lg: 14px;
+            --r-xl: 20px;
+            --r-pill: 999px;
+
+            /* Shadow */
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 12px 32px -8px rgba(15, 23, 42, 0.12), 0 4px 12px -4px rgba(15, 23, 42, 0.08);
+            --shadow-xl: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+
+            /* Motion */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --dur-fast: 120ms;
+            --dur-base: 180ms;
+            --dur-slow: 280ms;
         }
 
-        * {
-            box-sizing: border-box;
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg:            #0b1020;
+                --bg-elev:       #0f172a;
+                --bg-subtle:     #111a2e;
+                --bg-muted:      #1f2937;
+                --surface:       #111827;
+                --surface-2:     #0f172a;
+                --surface-hover: #1e293b;
+                --border:        rgba(148, 163, 184, 0.14);
+                --border-strong: rgba(148, 163, 184, 0.28);
+                --text:          #e5e7eb;
+                --text-muted:    #94a3b8;
+                --text-subtle:   #64748b;
+
+                --primary:        var(--brand-400);
+                --primary-hover:  var(--brand-300);
+                --primary-soft:   rgba(96, 165, 250, 0.14);
+                --primary-soft-2: rgba(96, 165, 250, 0.22);
+                --on-primary:     #0b1020;
+
+                --success: var(--success-400);
+                --danger:  var(--danger-400);
+
+                --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+                --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
+                --shadow-lg: 0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -4px rgba(0, 0, 0, 0.35);
+                --shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+            }
         }
+
+        [data-theme="dark"] {
+            --bg:            #0b1020;
+            --bg-elev:       #0f172a;
+            --bg-subtle:     #111a2e;
+            --bg-muted:      #1f2937;
+            --surface:       #111827;
+            --surface-2:     #0f172a;
+            --surface-hover: #1e293b;
+            --border:        rgba(148, 163, 184, 0.14);
+            --border-strong: rgba(148, 163, 184, 0.28);
+            --text:          #e5e7eb;
+            --text-muted:    #94a3b8;
+            --text-subtle:   #64748b;
+            --primary:       var(--brand-400);
+            --primary-hover: var(--brand-300);
+            --primary-soft:  rgba(96, 165, 250, 0.14);
+            --primary-soft-2:rgba(96, 165, 250, 0.22);
+            --on-primary:    #0b1020;
+            --success: var(--success-400);
+            --danger:  var(--danger-400);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
 
         html {
-            font-family: var(--font-family-base);
-            color: var(--color-text);
-            background-color: var(--color-background);
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            font-feature-settings: "ss01", "ss02", "tnum";
         }
 
         body {
             margin: 0;
             padding: 0;
+            min-height: 100vh;
+            font-size: var(--fs-base);
+            line-height: 1.55;
+            background:
+                radial-gradient(1200px 600px at 0% -10%, var(--primary-soft), transparent 60%),
+                radial-gradient(900px 500px at 100% 0%, rgba(139, 92, 246, 0.08), transparent 65%),
+                var(--bg);
+            background-attachment: fixed;
         }
+
+        ::selection { background: var(--primary-soft-2); color: var(--text); }
 
         .container {
-            max-width: 1400px;
+            max-width: 1320px;
             margin: 0 auto;
-            padding: var(--space-20);
+            padding: var(--sp-6) var(--sp-5) var(--sp-9);
         }
 
-        header {
-            margin-bottom: var(--space-32);
-            border-bottom: 2px solid var(--color-border);
-            padding-bottom: var(--space-20);
+        /* ============== Header ============== */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: var(--sp-4);
+            margin-bottom: var(--sp-6);
+            padding-bottom: var(--sp-5);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .app-header__title {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .app-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--r-md);
+            background: linear-gradient(135deg, var(--brand-500), var(--accent-500));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.25);
         }
 
         h1 {
-            margin: 0 0 var(--space-8) 0;
-            font-size: var(--font-size-3xl);
-            font-weight: var(--font-weight-bold);
+            margin: 0;
+            font-size: var(--fs-3xl);
+            font-weight: var(--fw-bold);
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+
+        .app-header__subtitle {
+            margin: 4px 0 0 0;
+            color: var(--text-muted);
+            font-size: var(--fs-sm);
+        }
+
+        .app-header__actions {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+        }
+
+        .last-updated {
+            color: var(--text-subtle);
+            font-size: var(--fs-xs);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
 
         h2 {
-            margin: 0;
-            font-size: var(--font-size-2xl);
-            font-weight: var(--font-weight-bold);
-            margin-top: var(--space-24);
-            margin-bottom: var(--space-16);
+            margin: var(--sp-6) 0 var(--sp-3) 0;
+            font-size: var(--fs-xl);
+            font-weight: var(--fw-semibold);
+            letter-spacing: -0.01em;
         }
 
         h3 {
             margin: 0;
-            font-size: var(--font-size-lg);
-            font-weight: var(--font-weight-semibold);
+            font-size: var(--fs-lg);
+            font-weight: var(--fw-semibold);
+            letter-spacing: -0.01em;
         }
 
+        /* ============== Buttons ============== */
         .btn {
-            display: inline-block;
-            padding: var(--space-8) var(--space-16);
-            border-radius: var(--radius-base);
-            font-size: var(--font-size-base);
-            font-weight: 500;
+            --btn-bg: var(--surface);
+            --btn-fg: var(--text);
+            --btn-bd: var(--border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--sp-2);
+            padding: 9px 14px;
+            border-radius: var(--r-md);
+            font-family: inherit;
+            font-size: var(--fs-base);
+            font-weight: var(--fw-medium);
+            line-height: 1;
             cursor: pointer;
-            border: none;
-            transition: all 150ms ease;
+            border: 1px solid var(--btn-bd);
+            background: var(--btn-bg);
+            color: var(--btn-fg);
+            transition: background var(--dur-fast) var(--ease-out),
+                        border-color var(--dur-fast) var(--ease-out),
+                        transform var(--dur-fast) var(--ease-out),
+                        box-shadow var(--dur-fast) var(--ease-out);
             text-decoration: none;
-            text-align: center;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .btn:hover { background: var(--surface-hover); }
+        .btn:active { transform: translateY(1px); }
+        .btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
         }
 
         .btn-primary {
-            background: var(--color-primary);
-            color: var(--color-btn-primary-text);
+            --btn-bg: var(--primary);
+            --btn-fg: var(--on-primary);
+            --btn-bd: transparent;
+            box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+        .btn-primary:hover { --btn-bg: var(--primary-hover); }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: var(--r-md);
         }
 
-        .btn-primary:hover {
-            background: var(--color-primary-hover);
-        }
+        .file-input-wrapper { display: inline-block; position: relative; }
+        #fileInput { display: none; }
 
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--color-border);
-            color: var(--color-text);
+        .lock-indicator {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-left: 2px;
+            transition: opacity var(--dur-base) var(--ease-out);
         }
+        .lock-indicator.unlocked { opacity: 0.5; }
 
-        .btn-secondary:hover {
-            background: var(--color-gray-200);
-        }
-
-        .btn-sm {
-            padding: var(--space-4) var(--space-12);
-            font-size: var(--font-size-sm);
-        }
-
-        .file-input-wrapper {
-            display: inline-block;
-            position: relative;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .filters {
+        /* ============== Toolbar / Filters ============== */
+        .toolbar {
             display: flex;
-            gap: var(--space-12);
-            margin-bottom: var(--space-24);
+            gap: var(--sp-3);
+            margin-bottom: var(--sp-5);
             flex-wrap: wrap;
             align-items: center;
         }
 
-        select {
-            padding: var(--space-8) var(--space-12);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-base);
-            background-color: var(--color-surface);
-            color: var(--color-text);
-            font-size: var(--font-size-base);
+        select, .field {
+            font-family: inherit;
+            padding: 9px 36px 9px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            background-color: var(--surface);
+            color: var(--text);
+            font-size: var(--fs-base);
             cursor: pointer;
+            transition: border-color var(--dur-fast) var(--ease-out),
+                        box-shadow var(--dur-fast) var(--ease-out);
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px;
         }
 
+        select:hover { border-color: var(--border-strong); }
+        select:focus-visible {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+
+        /* ============== Summary bar ============== */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: var(--sp-4);
+            margin-bottom: var(--sp-5);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0 var(--sp-4);
+            border-right: 1px solid var(--border);
+        }
+        .summary-item:last-child { border-right: none; }
+
+        .summary-item__value {
+            font-family: var(--font-num);
+            font-size: var(--fs-2xl);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .summary-item__label {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+            letter-spacing: 0.02em;
+        }
+
+        @media (max-width: 720px) {
+            .summary-bar { grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); }
+            .summary-item { border-right: none; padding: 0 var(--sp-2); }
+        }
+
+        /* ============== Highlight cards (1위 등) ============== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: var(--space-16);
-            margin-bottom: var(--space-32);
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--sp-4);
+            margin-bottom: var(--sp-7);
         }
 
         .stat-card {
-            background: var(--color-surface);
-            border: 1px solid var(--color-card-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-16);
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: var(--sp-5);
             box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: border-color var(--dur-base) var(--ease-out),
+                        box-shadow var(--dur-base) var(--ease-out),
+                        transform var(--dur-base) var(--ease-out);
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+            opacity: 0.85;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-strong);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
         }
 
         .stat-card-label {
-            font-size: var(--font-size-sm);
-            color: var(--color-text-secondary);
-            margin-bottom: var(--space-8);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            margin-bottom: var(--sp-2);
+            font-weight: var(--fw-medium);
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .stat-card-value {
-            font-size: var(--font-size-3xl);
-            font-weight: var(--font-weight-bold);
-            color: var(--color-primary);
+            font-size: var(--fs-xl);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            letter-spacing: -0.01em;
         }
 
+        /* ============== Tabs ============== */
         .tabs {
             display: flex;
-            gap: var(--space-8);
-            margin-bottom: var(--space-20);
-            border-bottom: 2px solid var(--color-border);
+            gap: 2px;
+            margin-bottom: var(--sp-5);
+            padding: 4px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            overflow-x: auto;
+            scrollbar-width: none;
         }
+        .tabs::-webkit-scrollbar { display: none; }
 
         .tab-button {
-            padding: var(--space-12) var(--space-16);
+            padding: 8px 14px;
             border: none;
             background: transparent;
             cursor: pointer;
-            font-size: var(--font-size-base);
-            font-weight: var(--font-weight-medium);
-            color: var(--color-text-secondary);
-            transition: all 150ms ease;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
+            font-family: inherit;
+            font-size: var(--fs-base);
+            font-weight: var(--fw-medium);
+            color: var(--text-muted);
+            transition: background var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out);
+            border-radius: 7px;
+            white-space: nowrap;
         }
+
+        .tab-button:hover { color: var(--text); background: var(--surface-hover); }
 
         .tab-button.active {
-            color: var(--color-primary);
-            border-bottom-color: var(--color-primary);
+            color: var(--text);
+            background: var(--surface);
+            box-shadow: var(--shadow-xs);
         }
 
-        .tab-content {
-            display: none;
+        .tab-content { display: none; animation: fadeUp var(--dur-slow) var(--ease-out); }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        .tab-content.active {
-            display: block;
+        /* ============== Table ============== */
+        .table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .leaderboard-table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--color-surface);
-            border: 1px solid var(--color-card-border);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            font-size: var(--fs-base);
         }
 
         .leaderboard-table thead {
-            background: var(--color-gray-200);
+            background: var(--surface-2);
         }
 
         .leaderboard-table th {
-            padding: var(--space-12) var(--space-16);
+            padding: 10px 14px;
             text-align: left;
-            font-weight: var(--font-weight-semibold);
-            color: var(--color-text);
-            border-bottom: 1px solid var(--color-border);
-            font-size: var(--font-size-sm);
+            font-weight: var(--fw-semibold);
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--fs-xs);
+            letter-spacing: 0.04em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--surface-2);
         }
 
         .leaderboard-table th.sortable {
             cursor: pointer;
             user-select: none;
-            -webkit-tap-highlight-color: rgba(33, 128, 141, 0.18);
-            transition: background-color 0.15s;
+            -webkit-tap-highlight-color: var(--primary-soft);
+            transition: background-color var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out);
         }
 
-        .leaderboard-table th.sortable:hover {
-            background-color: rgba(33, 128, 141, 0.08);
-        }
-
-        .leaderboard-table th.sortable:active {
-            background-color: rgba(33, 128, 141, 0.18);
-        }
-
-        .leaderboard-table th.sortable.active {
-            background-color: rgba(33, 128, 141, 0.12);
-            color: var(--color-primary);
-        }
+        .leaderboard-table th.sortable:hover { background-color: var(--primary-soft); color: var(--primary); }
+        .leaderboard-table th.sortable:active { background-color: var(--primary-soft-2); }
+        .leaderboard-table th.sortable.active { color: var(--primary); }
 
         .leaderboard-table th .sort-arrow {
             display: inline-block;
             margin-left: 4px;
-            color: var(--color-text-secondary);
-            font-size: 1em;
-            font-weight: bold;
+            color: var(--text-subtle);
+            font-size: 10px;
+            font-weight: var(--fw-bold);
+            vertical-align: middle;
         }
 
-        .leaderboard-table th.sortable.active .sort-arrow {
-            color: var(--color-primary);
-            font-size: 1.1em;
-        }
+        .leaderboard-table th.sortable.active .sort-arrow { color: var(--primary); }
 
         .leaderboard-table td {
-            padding: var(--space-12) var(--space-16);
-            border-bottom: 1px solid var(--color-card-border);
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            vertical-align: middle;
         }
 
         .leaderboard-table tbody tr {
-            transition: background-color 150ms ease;
+            transition: background-color var(--dur-fast) var(--ease-out);
         }
 
-        .leaderboard-table tbody tr:hover {
-            background-color: rgba(33, 128, 141, 0.05);
-        }
+        .leaderboard-table tbody tr:hover { background-color: var(--surface-hover); }
+        .leaderboard-table tbody tr:last-child td { border-bottom: none; }
 
-        .leaderboard-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
+        /* ============== Rank badge ============== */
         .rank-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--color-primary);
-            color: var(--color-btn-primary-text);
-            font-weight: var(--font-weight-bold);
-            font-size: var(--font-size-lg);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 30px;
+            height: 30px;
+            border-radius: var(--r-pill);
+            background: var(--bg-muted);
+            color: var(--text-muted);
+            font-weight: var(--fw-bold);
+            font-size: var(--fs-sm);
+            font-variant-numeric: tabular-nums;
+            box-shadow: var(--shadow-xs);
         }
 
         .rank-badge.gold {
-            background: linear-gradient(135deg, #FFD700, #FFC700);
-            color: #333;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+            background: linear-gradient(135deg, var(--gold-from), var(--gold-to));
+            color: #422006;
+            box-shadow: 0 4px 12px -2px rgba(245, 158, 11, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
         .rank-badge.silver {
-            background: linear-gradient(135deg, #E8E8E8, #C0C0C0);
-            color: #333;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+            background: linear-gradient(135deg, var(--silver-from), var(--silver-to));
+            color: #1f2937;
+            box-shadow: 0 4px 12px -2px rgba(156, 163, 175, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
         .rank-badge.bronze {
-            background: linear-gradient(135deg, #CD7F32, #B87333);
-            color: white;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+            background: linear-gradient(135deg, var(--bronze-from), var(--bronze-to));
+            color: #fff;
+            box-shadow: 0 4px 12px -2px rgba(180, 83, 9, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
         }
 
         .rank-badge.red-last {
-            background: linear-gradient(135deg, #FF6B6B, #E53E3E);
+            background: linear-gradient(135deg, #fb7185, #e11d48);
             color: white;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(255, 75, 75, 0.4);
+            box-shadow: 0 4px 12px -2px rgba(225, 29, 72, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .rank-badge.red-second-last {
-            background: linear-gradient(135deg, #FF9999, #F08080);
+            background: linear-gradient(135deg, #fda4af, #f43f5e);
             color: white;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(255, 153, 153, 0.3);
+            box-shadow: 0 2px 8px -2px rgba(244, 63, 94, 0.3);
         }
 
+        /* 히스토리 비메달 표기 (감점 / 무점수) */
+        .rank-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .rank-mark--neutral {
+            color: var(--text-subtle);
+            font-weight: var(--fw-bold);
+            font-size: 16px;
+            opacity: 0.65;
+        }
+        .rank-mark--penalty {
+            font-size: 16px;
+            filter: drop-shadow(0 1px 2px rgba(220, 38, 38, 0.35));
+        }
+
+        /* ============== Player chip ============== */
         .player-name {
             cursor: pointer;
-            color: var(--color-primary);
-            font-weight: var(--font-weight-medium);
-            transition: color 150ms ease;
+            color: var(--text);
+            font-weight: var(--fw-semibold);
+            transition: color var(--dur-fast) var(--ease-out);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .player-name:hover {
-            color: var(--color-primary-hover);
-            text-decoration: underline;
+        .player-avatar {
+            display: inline-flex;
+            width: 26px;
+            height: 26px;
+            border-radius: var(--r-pill);
+            color: #fff;
+            font-size: 11px;
+            font-weight: var(--fw-bold);
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
         }
 
+        .player-name:hover { color: var(--primary); }
+        .player-name:hover .player-avatar { transform: scale(1.05); transition: transform var(--dur-fast) var(--ease-out); }
+
+        /* ============== Numeric tone — 긍정 / 부정 시각 강조 ============== */
         .points-positive {
-            color: var(--color-success);
-            font-weight: var(--font-weight-semibold);
+            color: var(--success);
+            font-weight: var(--fw-bold);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.01em;
         }
-
         .points-negative {
-            color: var(--color-error);
-            font-weight: var(--font-weight-semibold);
+            color: var(--danger);
+            font-weight: var(--fw-bold);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.01em;
         }
-
-        .points-neutral {
-            color: var(--color-text-secondary);
+        .points-neutral  {
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+            font-variant-numeric: tabular-nums;
         }
+        /* 큰 숫자 강조 (히어로/카드용) */
+        .stats-value.points-positive,
+        .rank-hero__pt.points-positive { text-shadow: 0 0 20px rgba(16, 185, 129, 0.12); }
+        .stats-value.points-negative   { text-shadow: 0 0 20px rgba(239, 68, 68, 0.12); }
 
+        /* ============== Modal ============== */
         .modal {
             display: none;
             position: fixed;
+            inset: 0;
             z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 150ms ease;
+            background-color: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeIn var(--dur-base) var(--ease-out);
         }
 
         .modal.active {
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: var(--sp-4);
         }
 
         @keyframes fadeIn {
             from { opacity: 0; }
-            to { opacity: 1; }
+            to   { opacity: 1; }
         }
 
         .modal-content {
-            background: var(--color-surface);
-            padding: var(--space-24);
-            border-radius: var(--radius-lg);
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            background: var(--surface);
+            padding: var(--sp-6);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            max-width: 640px;
+            width: 100%;
+            max-height: 88vh;
             overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            animation: slideUp 250ms ease;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp var(--dur-slow) var(--ease-out);
         }
 
         @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from { transform: translateY(8px) scale(0.985); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: var(--space-20);
-            border-bottom: 2px solid var(--color-border);
-            padding-bottom: var(--space-16);
+            margin-bottom: var(--sp-5);
+            padding-bottom: var(--sp-4);
+            border-bottom: 1px solid var(--border);
         }
 
         .modal-title {
-            font-size: var(--font-size-2xl);
-            font-weight: var(--font-weight-bold);
+            font-size: var(--fs-xl);
+            font-weight: var(--fw-bold);
             margin: 0;
+            letter-spacing: -0.01em;
+            display: inline-flex;
+            align-items: center;
         }
+        .modal-title .player-avatar { width: 30px; height: 30px; font-size: 13px; }
 
         .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
+            background: transparent;
+            border: 1px solid transparent;
+            font-size: 22px;
+            line-height: 1;
             cursor: pointer;
-            color: var(--color-text-secondary);
-            transition: color 150ms ease;
+            color: var(--text-muted);
+            transition: background var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out);
             padding: 0;
             width: 32px;
             height: 32px;
-            display: flex;
+            border-radius: var(--r-md);
+            display: inline-flex;
             align-items: center;
             justify-content: center;
         }
+        .close-btn:hover { color: var(--text); background: var(--surface-hover); }
 
-        .close-btn:hover {
-            color: var(--color-text);
+        .game-stats { margin-bottom: var(--sp-6); }
+
+        /* 모달 - 순위 히어로 */
+        .rank-hero {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4);
+            padding: var(--sp-4) var(--sp-5);
+            background: linear-gradient(135deg, var(--surface-2), var(--surface));
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            margin-bottom: var(--sp-5);
+            position: relative;
+            overflow: hidden;
+        }
+        .rank-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+        }
+        .rank-hero--gold::before   { background: linear-gradient(90deg, var(--gold-from), var(--gold-to)); }
+        .rank-hero--silver::before { background: linear-gradient(90deg, var(--silver-from), var(--silver-to)); }
+        .rank-hero--bronze::before { background: linear-gradient(90deg, var(--bronze-from), var(--bronze-to)); }
+
+        .rank-hero__rank {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            font-family: var(--font-num);
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+        .rank-hero__num {
+            font-size: 44px;
+            font-weight: var(--fw-bold);
+            letter-spacing: -0.04em;
+            color: var(--text);
+        }
+        .rank-hero__suffix {
+            font-size: var(--fs-md);
+            font-weight: var(--fw-medium);
+            color: var(--text-muted);
+        }
+        .rank-hero__meta { flex: 1; min-width: 0; }
+        .rank-hero__label {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2px;
+        }
+        .rank-hero__sub {
+            font-size: var(--fs-sm);
+            color: var(--text-muted);
+        }
+        .rank-hero__points { text-align: right; }
+        .rank-hero__pt {
+            font-family: var(--font-num);
+            font-size: var(--fs-2xl);
+            font-weight: var(--fw-bold);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
         }
 
-        .game-stats {
-            margin-bottom: var(--space-24);
+        /* 모달 - 보조 뱃지 */
+        .badge-soft {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            margin-left: 4px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-radius: var(--r-pill);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 모달 - 포인트 히스토리 */
+        .point-history {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            overflow: hidden;
+        }
+        .point-history__row {
+            display: grid;
+            grid-template-columns: 56px 1fr auto 64px;
+            gap: var(--sp-3);
+            align-items: center;
+            padding: 10px var(--sp-4);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--fs-sm);
+            font-variant-numeric: tabular-nums;
+        }
+        .point-history__row:last-child { border-bottom: none; }
+        .point-history__date { color: var(--text-subtle); font-weight: var(--fw-medium); }
+        .point-history__label {
+            color: var(--text);
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .point-history__delta { font-weight: var(--fw-semibold); }
+        .point-history__total {
+            text-align: right;
+            font-weight: var(--fw-semibold);
+            color: var(--text-muted);
         }
 
         .stats-section {
-            background: var(--color-background);
-            border-radius: var(--radius-base);
-            padding: var(--space-16);
-            margin-bottom: var(--space-16);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: var(--sp-4);
+            margin-bottom: var(--sp-4);
         }
 
         .stats-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--space-8) 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: var(--sp-2) 0;
+            border-bottom: 1px solid var(--border);
+            gap: var(--sp-3);
         }
+        .stats-row:last-child { border-bottom: none; }
 
-        .stats-row:last-child {
-            border-bottom: none;
-        }
-
-        .stats-label {
-            color: var(--color-text-secondary);
-        }
-
-        .stats-value {
-            font-weight: var(--font-weight-semibold);
-            color: var(--color-primary);
-        }
+        .stats-label { color: var(--text-muted); font-size: var(--fs-base); }
+        .stats-value { font-weight: var(--fw-semibold); color: var(--text); font-variant-numeric: tabular-nums; }
 
         .game-stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--space-12);
-            margin-bottom: var(--space-8);
-            background: var(--color-background);
-            border-radius: var(--radius-base);
-            border-left: 3px solid var(--color-primary);
+            padding: var(--sp-3) var(--sp-4);
+            margin-bottom: var(--sp-2);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            border-left: 3px solid var(--primary);
         }
+        .game-stat-item.best  { border-left-color: var(--success); }
+        .game-stat-item.worst { border-left-color: var(--danger); }
 
-        .game-stat-item.best {
-            border-left-color: var(--color-success);
-        }
+        .game-stat-label { font-weight: var(--fw-medium); color: var(--text); }
 
-        .game-stat-item.worst {
-            border-left-color: var(--color-error);
-        }
-
-        .game-stat-label {
-            font-weight: var(--font-weight-medium);
-        }
-
-        .game-stat-value {
-            font-weight: var(--font-weight-bold);
-            color: var(--color-primary);
-        }
-
+        /* ============== Empty / Notice ============== */
         .empty-state {
             text-align: center;
-            padding: var(--space-32);
-            color: var(--color-text-secondary);
+            padding: var(--sp-8);
+            color: var(--text-subtle);
+            font-size: var(--fs-base);
         }
+        .empty-state__icon { font-size: 36px; opacity: 0.55; margin-bottom: var(--sp-3); }
 
+        .notice {
+            display: flex;
+            gap: var(--sp-3);
+            align-items: flex-start;
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--primary-soft);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            border-radius: var(--r-md);
+            font-size: var(--fs-sm);
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-top: var(--sp-4);
+        }
+        .notice strong { color: var(--text); }
+        .notice--warm {
+            background: rgba(245, 158, 11, 0.10);
+            border-left-color: var(--warning-500);
+        }
+        .notice__icon { font-size: var(--fs-lg); line-height: 1.4; flex-shrink: 0; }
+
+        /* ============== Chart ============== */
         .chart-container {
-            background: var(--color-surface);
-            border: 1px solid var(--color-card-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-16);
-            margin: var(--space-24) 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: var(--sp-4);
+            margin: var(--sp-4) 0;
             position: relative;
-            height: 400px;
+            height: 480px;
+            box-shadow: var(--shadow-sm);
         }
 
-        canvas {
-            max-width: 100%;
+        canvas { max-width: 100%; }
+
+        /* 트렌드 차트 툴바 */
+        .trend-toolbar {
+            display: flex;
+            gap: var(--sp-3);
+            align-items: stretch;
+            margin-bottom: var(--sp-4);
+            margin-top: var(--sp-4);
+        }
+        @media (max-width: 720px) {
+            .trend-toolbar { flex-direction: column; }
         }
 
-        .player-checkbox-item {
+        /* 멀티셀렉트 드롭다운 */
+        .multiselect {
+            position: relative;
+            min-width: 200px;
+            flex-shrink: 0;
+        }
+
+        .multiselect__btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--sp-2);
+            width: 100%;
+            min-width: 200px;
+            padding: 10px 14px;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            font-family: inherit;
+            font-size: var(--fs-base);
+            font-weight: var(--fw-medium);
+            cursor: pointer;
+            transition: border-color var(--dur-fast) var(--ease-out),
+                        box-shadow var(--dur-fast) var(--ease-out);
+        }
+        .multiselect__btn:hover { border-color: var(--border-strong); }
+        .multiselect__btn:focus-visible,
+        .multiselect.open .multiselect__btn {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+        .multiselect.open .multiselect__btn svg { transform: rotate(180deg); }
+        .multiselect__btn svg { transition: transform var(--dur-base) var(--ease-out); }
+
+        .multiselect__panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            z-index: 50;
+            min-width: 240px;
+            max-height: 360px;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            animation: msIn var(--dur-base) var(--ease-out);
+        }
+        @keyframes msIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .multiselect__search-row {
+            padding: 6px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .multiselect__list {
+            overflow-y: auto;
+            padding: 4px;
+            scrollbar-width: thin;
+        }
+
+        .multiselect__option {
             display: flex;
             align-items: center;
-            gap: var(--space-8);
+            gap: var(--sp-2);
+            padding: 8px 12px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            font-size: var(--fs-sm);
+            color: var(--text);
+            transition: background var(--dur-fast) var(--ease-out);
+            user-select: none;
+        }
+        .multiselect__option:hover { background: var(--surface-hover); }
+
+        .multiselect__option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
         }
 
-        .player-checkbox-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
+        .multiselect__option--all {
+            font-weight: var(--fw-semibold);
+            color: var(--text);
         }
 
-        .player-checkbox-item label {
-            cursor: pointer;
-            font-size: var(--font-size-base);
-            color: var(--color-text);
+        .multiselect__option .multiselect__swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 4px;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+        }
+
+        .multiselect__option-name {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ============== Toast ============== */
+        .toast-host {
+            position: fixed;
+            bottom: var(--sp-5);
+            right: var(--sp-5);
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-2);
+            z-index: 1500;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            min-width: 260px;
+            max-width: 380px;
+            padding: var(--sp-3) var(--sp-4);
+            border-radius: var(--r-md);
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            font-size: var(--fs-base);
+            animation: toastIn var(--dur-slow) var(--ease-out);
+            pointer-events: auto;
+        }
+        .toast--success { border-left: 3px solid var(--success); }
+        .toast--error   { border-left: 3px solid var(--danger); }
+        .toast--info    { border-left: 3px solid var(--primary); }
+        .toast__icon { font-size: var(--fs-lg); }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastOut {
+            to { opacity: 0; transform: translateY(8px); }
+        }
+
+        /* ============== Skeleton loading ============== */
+        .skeleton {
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-muted);
+            border-radius: var(--r-sm);
+        }
+        .skeleton::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(100%); }
+        }
+
+        /* ============== Misc / Utility ============== */
+        .visually-hidden {
+            position: absolute !important;
+            clip: rect(0 0 0 0);
+            width: 1px; height: 1px;
+            margin: -1px; padding: 0;
+            overflow: hidden;
+            border: 0;
+        }
+
+        /* ================ Responsive ================ */
+        @media (max-width: 640px) {
+            .container { padding: var(--sp-4) var(--sp-3) var(--sp-7); }
+            h1 { font-size: var(--fs-2xl); }
+            .app-header { flex-direction: column; align-items: stretch; }
+            .app-header__actions { justify-content: flex-end; }
+            .stat-card-value { font-size: var(--fs-lg); }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); }
+            .stat-card { padding: var(--sp-3) var(--sp-4); }
+            .leaderboard-table th,
+            .leaderboard-table td { padding: 10px 10px; }
+            /* 사용한 포인트 / 승률 컬럼 숨김 */
+            .leaderboard-table th:nth-child(7),
+            .leaderboard-table td:nth-child(7),
+            .leaderboard-table th:nth-child(9),
+            .leaderboard-table td:nth-child(9) { display: none; }
+            .point-history__row { grid-template-columns: 48px 1fr auto 56px; gap: var(--sp-2); padding: 8px var(--sp-3); }
+            .rank-hero__num { font-size: 36px; }
+            .multiselect, .multiselect__btn { width: 100%; min-width: 0; }
+            .multiselect__panel { left: 0; right: 0; }
+            .toolbar { gap: var(--sp-2); }
+        }
+
+        /* 모바일 가로(landscape) - 작은 폰 가로 */
+        @media (max-width: 932px) and (orientation: landscape) and (max-height: 480px) {
+            .container { padding: var(--sp-3) var(--sp-4) var(--sp-5); max-width: 100%; }
+            .app-header { margin-bottom: var(--sp-3); padding-bottom: var(--sp-3); flex-direction: row; }
+            .app-logo { width: 36px; height: 36px; font-size: 18px; }
+            h1 { font-size: var(--fs-xl); }
+            .app-header__subtitle { display: none; }
+            .summary-bar { padding: var(--sp-3); margin-bottom: var(--sp-3); grid-template-columns: repeat(4, 1fr); }
+            .summary-item__value { font-size: var(--fs-xl); }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-4); }
+            .stat-card { padding: var(--sp-3); }
+            .stat-card-value { font-size: var(--fs-base); }
+            .tabs { padding: 3px; margin-bottom: var(--sp-3); }
+            .tab-button { padding: 6px 10px; font-size: var(--fs-sm); }
+            .chart-container { height: 320px; padding: var(--sp-3); }
+            .modal-content { max-height: 92vh; padding: var(--sp-4); }
+            .rank-hero { padding: var(--sp-3) var(--sp-4); }
+            .rank-hero__num { font-size: 32px; }
+        }
+
+        /* 태블릿 / 작은 노트북 */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .container { max-width: 100%; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎲 보드게임 리더보드</h1>
-            <p style="margin: var(--space-8) 0 0 0; color: var(--color-text-secondary);">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
+        <header class="app-header">
+            <div class="app-header__title">
+                <span class="app-logo" aria-hidden="true">🎲</span>
+                <div>
+                    <h1>보드게임 리더보드</h1>
+                    <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
+                </div>
+            </div>
+            <div class="app-header__actions">
+                <span class="last-updated" id="lastUpdated" aria-live="polite"></span>
+                <button class="btn btn-icon" id="refreshBtn" type="button" title="데이터 새로고침" aria-label="데이터 새로고침">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path><path d="M3 21v-5h5"></path></svg>
+                </button>
+                <button class="btn btn-icon" id="themeToggle" type="button" title="테마 변경" aria-label="테마 변경">
+                    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                </button>
+            </div>
         </header>
 
-        <div class="filters">
+        <div class="toolbar">
             <div class="file-input-wrapper">
-                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📁 파일 업로드 (XLSX)</button>
-                <input type="file" id="fileInput" accept=".xlsx" onchange="handleFileUpload(event)">
+                <button class="btn btn-primary" type="button" id="uploadBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17V3"></path><path d="M5 10l7-7 7 7"></path><path d="M3 21h18"></path></svg>
+                    XLSX 업로드
+                    <span class="lock-indicator" id="lockIndicator" aria-hidden="true">🔒</span>
+                </button>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
             </div>
-            <select id="monthFilter" onchange="updateDashboard()">
+            <select id="monthFilter" onchange="updateDashboard()" aria-label="월 필터">
                 <option value="">📅 모든 달</option>
             </select>
-            <select id="gameFilter" onchange="updateDashboard()">
+            <select id="gameFilter" onchange="updateDashboard()" aria-label="게임 필터">
                 <option value="">🎮 모든 게임</option>
             </select>
         </div>
 
-        <div style="margin-bottom: var(--space-24); padding: var(--space-16); background: var(--color-surface); border-radius: var(--radius-base); border: 1px solid var(--color-card-border);">
-            <div style="display: flex; gap: var(--space-24); flex-wrap: wrap; font-size: var(--font-size-sm); color: var(--color-text-secondary);">
-                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalPlayers">0</span> 플레이어</div>
-                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalGames">0</span> 게임</div>
-                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalRecords">0</span> 기록</div>
-                <div><span style="font-weight: var(--font-weight-semibold); color: var(--color-text);" id="totalPlayDates">0</span> 플레이 날짜</div>
+        <div class="summary-bar" role="group" aria-label="요약 통계">
+            <div class="summary-item">
+                <span class="summary-item__value" id="totalPlayers">0</span>
+                <span class="summary-item__label">플레이어</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-item__value" id="totalGames">0</span>
+                <span class="summary-item__label">게임</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-item__value" id="totalRecords">0</span>
+                <span class="summary-item__label">기록</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-item__value" id="totalPlayDates">0</span>
+                <span class="summary-item__label">모임 날짜</span>
             </div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-card-label" id="overallWinnerLabel">👑 모든 게임 1위</div>
-                <div class="stat-card-value" id="overallWinner" style="font-size: var(--font-size-lg);">-</div>
+                <div class="stat-card-label" id="overallWinnerLabel"><span aria-hidden="true">👑</span> 모든 게임 1위</div>
+                <div class="stat-card-value" id="overallWinner">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-label">📈 가장 많이 플레이</div>
-                <div class="stat-card-value" id="mostActivPlayer" style="font-size: var(--font-size-lg);">-</div>
+                <div class="stat-card-label"><span aria-hidden="true">📈</span> 가장 많이 플레이</div>
+                <div class="stat-card-value" id="mostActivPlayer">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-label">⬆️ 최고 승점</div>
-                <div class="stat-card-value" id="maxWinPlayer" style="font-size: var(--font-size-lg);">-</div>
+                <div class="stat-card-label"><span aria-hidden="true">⬆️</span> 최고 승점</div>
+                <div class="stat-card-value" id="maxWinPlayer">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-label">⬇️ 최고 감점</div>
-                <div class="stat-card-value" id="maxLossPlayer" style="font-size: var(--font-size-lg);">-</div>
+                <div class="stat-card-label"><span aria-hidden="true">🔥</span> 최장 연승</div>
+                <div class="stat-card-value" id="bestStreakPlayer">-</div>
             </div>
         </div>
 
-        <div class="tabs">
-            <button class="tab-button active" onclick="switchTab(event, 'overall')">전체 리더보드</button>
-            <button class="tab-button" onclick="switchTab(event, 'byGame')">게임별 리더보드</button>
-            <button class="tab-button" onclick="switchTab(event, 'byMonth')">월별 리더보드</button>
-            <button class="tab-button" onclick="switchTab(event, 'history')">플레이 히스토리</button>
-            <button class="tab-button" onclick="switchTab(event, 'trend')">📈 순위 변화</button>
+        <div class="tabs" role="tablist">
+            <button class="tab-button active" role="tab" onclick="switchTab(event, 'overall')">전체 리더보드</button>
+            <button class="tab-button" role="tab" onclick="switchTab(event, 'byGame')">게임별</button>
+            <button class="tab-button" role="tab" onclick="switchTab(event, 'byMonth')">월별</button>
+            <button class="tab-button" role="tab" onclick="switchTab(event, 'history')">플레이 히스토리</button>
+            <button class="tab-button" role="tab" onclick="switchTab(event, 'trend')">📈 순위 변화</button>
         </div>
 
-        <div id="overall" class="tab-content active">
-            <table class="leaderboard-table" id="overallTable">
-                <thead id="overallTableHead"></thead>
-                <tbody id="overallTableBody"></tbody>
-            </table>
-            <div style="margin-top: var(--space-20); padding: var(--space-16); background: rgba(33, 128, 141, 0.08); border-radius: var(--radius-base); border-left: 3px solid var(--color-primary); font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.6;">
-                <strong style="color: var(--color-primary);">📋 리더보드 정렬 기준</strong><br>
-                <div style="margin-top: var(--space-8);">
-                    <div>1순위: <strong>현재 포인트</strong> (Reward Points) - 총 승점 + 출석 보너스 − 총 감점 − 사용한 포인트 − 교환, 최소 0</div>
-                    <div>2순위: <strong>총 승점</strong> ⭐ (높을수록 유리) - 게임 실력 반영</div>
-                    <div>3순위: <strong>승리</strong> (높을수록 유리) - 승점을 얻은 게임 수</div>
-                    <div>4순위: <strong>게임 수</strong> ⭐⭐ (높을수록 유리) - 플레이 참여도</div>
-                    <div>5순위: <strong>총 감점</strong> (낮을수록 유리)</div>
+        <div id="overall" class="tab-content active" role="tabpanel">
+            <div class="table-wrap">
+                <div class="table-scroll">
+                    <table class="leaderboard-table" id="overallTable">
+                        <thead id="overallTableHead"></thead>
+                        <tbody id="overallTableBody"></tbody>
+                    </table>
                 </div>
             </div>
-            <div style="margin-top: var(--space-12); padding: var(--space-12); background: rgba(255, 215, 0, 0.08); border-radius: var(--radius-base); border-left: 3px solid #FFD700; font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: 1.6;">
-                <strong style="color: #B8860B;">🎁 현재 포인트 (Reward Points)</strong><br>
-                <div style="margin-top: var(--space-8);">
-                    상품과 교환할 수 있는 포인트입니다. <code>총 승점 + 출석 보너스 − |총 감점| − |사용한 포인트| − |교환|</code>로 계산되며, 음수가 되면 0으로 표시합니다. 출석 체크/HSM Running 행은 게임 수·승률에는 들어가지 않고 Reward Points에만 가산됩니다.
+            <div class="notice">
+                <span class="notice__icon" aria-hidden="true">📋</span>
+                <div>
+                    <strong>리더보드 정렬 기준</strong><br>
+                    1순위 <strong>현재 포인트</strong> (Reward Points) ·
+                    2순위 <strong>총 승점</strong> ·
+                    3순위 <strong>승리 횟수</strong> ·
+                    4순위 <strong>게임 수</strong> ·
+                    5순위 <strong>총 감점 (적을수록 유리)</strong>
+                </div>
+            </div>
+            <div class="notice notice--warm">
+                <span class="notice__icon" aria-hidden="true">🎁</span>
+                <div>
+                    <strong>현재 포인트 (Reward Points)</strong>는 상품과 교환할 수 있는 포인트입니다.
+                    <code>총 승점 + 출석 보너스 − |총 감점| − |사용한 포인트| − |교환|</code> 로 계산되며 음수가 되면 0으로 표시합니다.
+                    출석 체크 / HSM Running 행은 게임 수·승률에는 포함되지 않고 Reward Points에만 가산됩니다.
                 </div>
             </div>
         </div>
 
-        <div id="byGame" class="tab-content">
+        <div id="byGame" class="tab-content" role="tabpanel">
             <div id="gameLeaderboards"></div>
         </div>
 
-        <div id="byMonth" class="tab-content">
+        <div id="byMonth" class="tab-content" role="tabpanel">
             <div id="monthLeaderboards"></div>
         </div>
 
-        <div id="history" class="tab-content">
-            <table class="leaderboard-table" id="historyTable">
-                <thead>
-                    <tr>
-                        <th>날짜</th>
-                        <th>게임</th>
-                        <th>플레이어</th>
-                        <th>순위</th>
-                        <th>승점</th>
-                        <th>감점</th>
-                        <th>현재 포인트</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                </tbody>
-            </table>
+        <div id="history" class="tab-content" role="tabpanel">
+            <div class="table-wrap">
+                <div class="table-scroll">
+                    <table class="leaderboard-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th>게임</th>
+                                <th>플레이어</th>
+                                <th>순위</th>
+                                <th>승점</th>
+                                <th>감점</th>
+                                <th>현재 포인트</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <div id="trend" class="tab-content">
-            <div style="margin-bottom: var(--space-16); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
-                각 모임 시점까지의 누적 Reward Points로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.
+        <div id="trend" class="tab-content" role="tabpanel">
+            <div class="trend-toolbar">
+                <div class="notice" style="margin-top: 0; flex: 1;">
+                    <span class="notice__icon" aria-hidden="true">📈</span>
+                    <div>각 모임 시점까지의 누적 Reward Points로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.</div>
+                </div>
+                <div class="multiselect" id="playerMultiselect">
+                    <button class="multiselect__btn" type="button" id="playerMultiselectBtn" aria-haspopup="listbox" aria-expanded="false">
+                        <span id="playerMultiselectLabel">전체 플레이어</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="multiselect__panel" id="playerMultiselectPanel" role="listbox" aria-multiselectable="true" hidden>
+                        <div class="multiselect__search-row">
+                            <label class="multiselect__option multiselect__option--all">
+                                <input type="checkbox" id="playerSelectAll" checked>
+                                <span>전체 선택</span>
+                            </label>
+                        </div>
+                        <div class="multiselect__list" id="playerMultiselectList"></div>
+                    </div>
+                </div>
             </div>
-            <div id="playerCheckboxes" style="display: flex; flex-wrap: wrap; gap: var(--space-12); padding: var(--space-16); background: var(--color-surface); border: 1px solid var(--color-card-border); border-radius: var(--radius-base); margin-bottom: var(--space-16);"></div>
-            <div class="chart-container" style="height: 480px;">
+            <div class="chart-container">
                 <canvas id="monthlyTrendChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div id="playerModal" class="modal">
+    <div id="passwordModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="passwordModalTitle">🔒 관리자 인증</h2>
+                <button class="close-btn" type="button" onclick="closePasswordModal()" aria-label="닫기">&times;</button>
+            </div>
+            <p style="margin: 0 0 var(--sp-3) 0; color: var(--text-muted); font-size: var(--fs-sm);">XLSX 업로드는 관리자 비밀번호가 필요합니다.</p>
+            <form id="passwordForm" autocomplete="off">
+                <input type="password" id="passwordInput" class="field" autocomplete="current-password"
+                       style="width: 100%; padding: 11px 14px; background-image: none;"
+                       placeholder="비밀번호" aria-label="비밀번호" required>
+                <div id="passwordError" style="margin-top: var(--sp-2); color: var(--danger); font-size: var(--fs-sm); min-height: 18px;" aria-live="polite"></div>
+                <div style="display: flex; gap: var(--sp-2); margin-top: var(--sp-3); justify-content: flex-end;">
+                    <button type="button" class="btn" onclick="closePasswordModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">확인</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="playerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalPlayerName">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="modalPlayerName"></h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <button class="close-btn" type="button" onclick="closeModal()" aria-label="닫기">&times;</button>
             </div>
             <div id="modalBody"></div>
         </div>
     </div>
 
+    <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
     <script>
+        'use strict';
+        // ============================================================
+        // 상수 / 설정
+        // ============================================================
+        const GITHUB_DATA_URL = 'https://sung-jungmin.github.io/boardgame-leaderboard-kor/data/board.xlsx';
+        const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;       // 10MB
+        const ACCEPTED_EXTS = ['.xlsx', '.xls'];
+        const THEME_STORAGE_KEY = 'boardgame-leaderboard:theme';
+
+        // 업로드 비밀번호 (SHA-256).
+        // ⚠️ 클라이언트 사이드 보호 = "캐주얼한 침입 차단" 수준입니다. 진짜 보안 아님.
+        // 비밀번호 변경 방법: 콘솔에서 await hashPassword('새비밀번호') 실행 후 결과를 아래 상수에 붙여넣기.
+        const UPLOAD_PASSWORD_HASH = '651b24ff92cb94c5c552f1529fd8bd2b8dc45b9e12d2d185e910f1573095e91f';
+        const MAX_PASSWORD_ATTEMPTS = 5;
+        const PASSWORD_LOCKOUT_MS = 5 * 60 * 1000;   // 5분
+
         // ============================================================
         // 전역 상태
         // ============================================================
@@ -701,6 +1482,10 @@
         let cumulativeByDate = [];   // [{ dateKey, label, ranks: {player: rank} }]
         let allTrackedPlayers = [];
         let selectedPlayers = new Set();
+        let lastDataLoadAt = null;
+        let uploadAuthorized = false;          // 세션 내에서만 유효 (페이지 새로고침 시 재인증)
+        let passwordAttempts = 0;
+        let passwordLockedUntil = 0;
 
         // ============================================================
         // 유틸리티
@@ -714,6 +1499,77 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        // ============================================================
+        // 토스트 알림 (alert 대체)
+        // ============================================================
+        function showToast(message, type = 'info', durationMs = 3200) {
+            const host = document.getElementById('toastHost');
+            if (!host) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast toast--' + type;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            const iconMap = { success: '✅', error: '⚠️', info: 'ℹ️' };
+            toast.innerHTML =
+                '<span class="toast__icon" aria-hidden="true">' + (iconMap[type] || 'ℹ️') + '</span>' +
+                '<span>' + escapeHtml(message) + '</span>';
+            host.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                setTimeout(() => toast.remove(), 250);
+            }, durationMs);
+        }
+
+        // ============================================================
+        // 테마 (light / dark)
+        // ============================================================
+        function getStoredTheme() {
+            try { return localStorage.getItem(THEME_STORAGE_KEY); } catch { return null; }
+        }
+        function storeTheme(value) {
+            try { localStorage.setItem(THEME_STORAGE_KEY, value); } catch { /* noop */ }
+        }
+        function applyTheme(theme) {
+            // theme: 'light' | 'dark' | null(=system)
+            const root = document.documentElement;
+            if (theme === 'light' || theme === 'dark') {
+                root.setAttribute('data-theme', theme);
+            } else {
+                root.removeAttribute('data-theme');
+            }
+            updateThemeIcon();
+        }
+        function currentEffectiveTheme() {
+            const stored = document.documentElement.getAttribute('data-theme');
+            if (stored === 'light' || stored === 'dark') return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function toggleTheme() {
+            const next = currentEffectiveTheme() === 'dark' ? 'light' : 'dark';
+            storeTheme(next);
+            applyTheme(next);
+        }
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            if (!icon) return;
+            const isDark = currentEffectiveTheme() === 'dark';
+            icon.innerHTML = isDark
+                ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
+                : '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>';
+        }
+
+        // ============================================================
+        // 마지막 업데이트 시각
+        // ============================================================
+        function setLastUpdated(date) {
+            lastDataLoadAt = date;
+            const el = document.getElementById('lastUpdated');
+            if (!el || !date) return;
+            const formatted = date.toLocaleString('ko-KR', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            el.textContent = '업데이트 ' + formatted;
         }
 
         function localMonthKey(date) {
@@ -855,47 +1711,162 @@
         // 데이터 로드
         // ============================================================
 
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (typeof XLSX === 'undefined') {
-                alert('⏳ XLSX 라이브러리를 로드 중입니다. 잠시 후 다시 시도해주세요.');
+        // ============================================================
+        // 비밀번호 게이트
+        // ============================================================
+        async function hashPassword(plain) {
+            // 콘솔에서 새 비밀번호 해시 생성 시 사용:  await hashPassword('새비밀번호')
+            const enc = new TextEncoder().encode(String(plain));
+            const buf = await crypto.subtle.digest('SHA-256', enc);
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        // 디버깅 편의용 전역 노출 (보안 위험 아님 — 해시 함수만 노출)
+        window.hashPassword = hashPassword;
+
+        function timingSafeEqual(a, b) {
+            // 길이 다르면 false. 같으면 모든 문자 비교 (조기 종료 X) — 타이밍 공격 완화.
+            if (a.length !== b.length) return false;
+            let mismatch = 0;
+            for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+            return mismatch === 0;
+        }
+
+        function openPasswordModal() {
+            const now = Date.now();
+            if (now < passwordLockedUntil) {
+                const secs = Math.ceil((passwordLockedUntil - now) / 1000);
+                showToast('너무 많이 시도했습니다. ' + secs + '초 후 다시 시도하세요.', 'error');
                 return;
             }
+            const modal = document.getElementById('passwordModal');
+            const input = document.getElementById('passwordInput');
+            const errEl = document.getElementById('passwordError');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            errEl.textContent = '';
+            input.value = '';
+            setTimeout(() => input.focus(), 50);
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        async function submitPassword(plain) {
+            const errEl = document.getElementById('passwordError');
+            errEl.textContent = '';
+            try {
+                const hash = await hashPassword(plain);
+                if (timingSafeEqual(hash, UPLOAD_PASSWORD_HASH)) {
+                    uploadAuthorized = true;
+                    passwordAttempts = 0;
+                    const lockEl = document.getElementById('lockIndicator');
+                    if (lockEl) { lockEl.textContent = '🔓'; lockEl.classList.add('unlocked'); }
+                    closePasswordModal();
+                    showToast('인증되었습니다. 파일을 선택하세요.', 'success', 1800);
+                    setTimeout(() => document.getElementById('fileInput').click(), 200);
+                } else {
+                    passwordAttempts++;
+                    const remaining = MAX_PASSWORD_ATTEMPTS - passwordAttempts;
+                    if (remaining <= 0) {
+                        passwordLockedUntil = Date.now() + PASSWORD_LOCKOUT_MS;
+                        passwordAttempts = 0;
+                        closePasswordModal();
+                        showToast('5분간 잠금됩니다.', 'error');
+                    } else {
+                        errEl.textContent = '비밀번호가 일치하지 않습니다 (남은 시도: ' + remaining + ')';
+                    }
+                }
+            } catch (e) {
+                errEl.textContent = '인증 처리 오류: ' + e.message;
+            }
+        }
+
+        function requestUpload() {
+            if (uploadAuthorized) {
+                document.getElementById('fileInput').click();
+                return;
+            }
+            openPasswordModal();
+        }
+
+        function isAcceptedFile(file) {
+            if (!file || !file.name) return false;
+            const lower = file.name.toLowerCase();
+            return ACCEPTED_EXTS.some(ext => lower.endsWith(ext));
+        }
+
+        function parseWorkbookSafely(arrayBuffer) {
+            // sheetjs 옵션: 외부 링크 / 매크로 / 수식 평가 비활성. 데이터만 읽음.
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, {
+                type: 'array',
+                cellFormula: false,
+                cellHTML: false,
+                bookVBA: false,
+                cellDates: false
+            });
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                throw new Error('시트를 찾을 수 없습니다');
+            }
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            event.target.value = '';   // 같은 파일 재선택 가능하게
+            if (!file) return;
+
+            if (typeof XLSX === 'undefined') {
+                showToast('XLSX 라이브러리를 로드 중입니다. 잠시 후 다시 시도해주세요.', 'info');
+                return;
+            }
+            if (!isAcceptedFile(file)) {
+                showToast('지원하지 않는 파일 형식입니다 (.xlsx, .xls 만 허용)', 'error');
+                return;
+            }
+            if (file.size > MAX_UPLOAD_BYTES) {
+                showToast('파일이 너무 큽니다 (10MB 이하만 허용)', 'error');
+                return;
+            }
+
             const reader = new FileReader();
+            reader.onerror = () => showToast('파일을 읽는 중 오류가 발생했습니다', 'error');
             reader.onload = function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const rows = XLSX.utils.sheet_to_json(sheet);
+                    const rows = parseWorkbookSafely(e.target.result);
                     applyData(ingestRows(rows));
-                    alert('✅ 파일이 성공적으로 업로드되었습니다! (총 ' + gameData.length + '개 기록)');
+                    setLastUpdated(new Date(file.lastModified || Date.now()));
+                    showToast('파일 업로드 완료 (총 ' + gameData.length + '개 기록)', 'success');
                 } catch (error) {
-                    alert('❌ 파일 처리 중 오류가 발생했습니다: ' + error.message);
+                    console.error(error);
+                    showToast('파일 처리 중 오류: ' + error.message, 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        async function loadFromGitHub() {
+        async function loadFromGitHub({ silent = false } = {}) {
             try {
                 if (typeof XLSX === 'undefined') {
-                    setTimeout(loadFromGitHub, 500);
+                    setTimeout(() => loadFromGitHub({ silent }), 500);
                     return;
                 }
-                const GITHUB_DATA_URL = 'https://sung-jungmin.github.io/boardgame-leaderboard-kor/data/board.xlsx';
-                const response = await fetch(GITHUB_DATA_URL);
-                if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
+                const url = GITHUB_DATA_URL + '?_=' + Date.now();   // 캐시 우회
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const lastModifiedHeader = response.headers.get('last-modified');
                 const arrayBuffer = await response.arrayBuffer();
-                const data = new Uint8Array(arrayBuffer);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet);
+                const rows = parseWorkbookSafely(arrayBuffer);
                 applyData(ingestRows(rows));
-                console.log('✅ GitHub에서 데이터 로드 완료 (총 ' + gameData.length + '개 기록)');
+                setLastUpdated(lastModifiedHeader ? new Date(lastModifiedHeader) : new Date());
+                if (!silent) showToast('데이터 로드 완료 (' + gameData.length + '개 기록)', 'success', 2200);
+                console.log('✅ GitHub 데이터 로드 완료 (' + gameData.length + '개 기록)');
             } catch (error) {
                 console.error('❌ GitHub 데이터 로드 실패:', error);
+                if (!silent) showToast('GitHub 데이터 로드 실패. 파일 업로드로 시도해보세요.', 'error');
             }
         }
 
@@ -972,6 +1943,30 @@
                 s.totalRedeem += record.redeem + record.exchange;
             });
             return stats;
+        }
+
+        // 연승: "1위" 횟수의 연속 streak. 가장 긴 연승 + 현재 연승.
+        function calculateStreaks(records) {
+            const gamesByPlayer = {};
+            records.filter(r => r.isGame).forEach(r => {
+                if (!gamesByPlayer[r.player]) gamesByPlayer[r.player] = [];
+                gamesByPlayer[r.player].push(r);
+            });
+            const result = {};
+            Object.keys(gamesByPlayer).forEach(player => {
+                const sorted = gamesByPlayer[player].slice().sort((a, b) => a.date - b.date || a.id - b.id);
+                let longest = 0, current = 0;
+                sorted.forEach(r => {
+                    if (r.rank === 1) {
+                        current++;
+                        if (current > longest) longest = current;
+                    } else {
+                        current = 0;
+                    }
+                });
+                result[player] = { longest, current };
+            });
+            return result;
         }
 
         function displayPoint(value) {
@@ -1098,13 +2093,24 @@
             document.getElementById('mostActivPlayer').textContent = mostActivePlayer ? mostActivePlayer[0] : '-';
 
             let maxWin = -Infinity, maxWinPlayer = '-';
-            let minTotal = Infinity, maxLossPlayer = '-';
             Object.entries(stats).forEach(([player, s]) => {
                 if (s.totalWin > maxWin) { maxWin = s.totalWin; maxWinPlayer = player; }
-                if (s.total < minTotal) { minTotal = s.total; maxLossPlayer = player; }
             });
-            document.getElementById('maxWinPlayer').textContent = maxWinPlayer;
-            document.getElementById('maxLossPlayer').textContent = maxLossPlayer;
+            document.getElementById('maxWinPlayer').textContent = maxWinPlayer === '-'
+                ? '-' : maxWinPlayer + (maxWin > 0 ? ' (+' + maxWin.toFixed(1) + ')' : '');
+
+            // 최장 연승
+            const streaks = calculateStreaks(filteredData);
+            let bestLongest = 0, bestStreakPlayer = '-';
+            Object.entries(streaks).forEach(([player, st]) => {
+                if (st.longest > bestLongest) { bestLongest = st.longest; bestStreakPlayer = player; }
+            });
+            const streakEl = document.getElementById('bestStreakPlayer');
+            if (streakEl) {
+                streakEl.textContent = bestLongest >= 2
+                    ? bestStreakPlayer + ' (' + bestLongest + '연승)'
+                    : '-';
+            }
         }
 
         function getRankBadgeClass(rank, totalPlayers) {
@@ -1114,6 +2120,26 @@
             if (totalPlayers >= 4 && rank === totalPlayers) return 'red-last';
             if (totalPlayers >= 5 && rank === totalPlayers - 1) return 'red-second-last';
             return '';
+        }
+
+        // 플레이어 이름 → 결정적 색상 (HSL 색상환에서 균등 분포)
+        function playerHue(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = (hash * 31 + name.charCodeAt(i)) | 0;
+            }
+            return Math.abs(hash) % 360;
+        }
+        function playerInitial(name) {
+            const trimmed = (name || '').trim();
+            if (!trimmed) return '?';
+            // 한글/영문/숫자 첫 글자
+            return trimmed.charAt(0);
+        }
+        function avatarHTML(name) {
+            const hue = playerHue(name);
+            const bg = `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 70% 45%))`;
+            return `<span class="player-avatar" aria-hidden="true" style="background:${bg};">${escapeHtml(playerInitial(name))}</span>`;
         }
 
         // 컬럼: 순위 | 플레이어 | 현재 포인트 | 게임 수 | 총 승점 | 총 감점 | 사용한 포인트 | 승리 | 승률
@@ -1129,7 +2155,7 @@
                 return `
                     <tr>
                         <td><span class="rank-badge ${rankClass}">${idx + 1}</span></td>
-                        <td><span class="player-name" data-player="${escapeHtml(player.name)}">${escapeHtml(player.name)}</span></td>
+                        <td><span class="player-name" data-player="${escapeHtml(player.name)}">${avatarHTML(player.name)}${escapeHtml(player.name)}</span></td>
                         <td><span class="${rewardClass}">${reward.toFixed(1)}</span></td>
                         <td>${player.games}</td>
                         <td><span class="points-positive">+${player.totalWin.toFixed(1)}</span></td>
@@ -1193,10 +2219,19 @@
             bindSortClicks(head);
         }
 
+        function emptyStateHTML(message) {
+            return '<div class="empty-state"><div class="empty-state__icon">🎲</div>' + escapeHtml(message) + '</div>';
+        }
+
         function updateGameLeaderboards() {
             const games = new Set(filteredData.filter(r => r.isGame).map(r => r.game));
             const container = document.getElementById('gameLeaderboards');
             container.innerHTML = '';
+
+            if (games.size === 0) {
+                container.innerHTML = emptyStateHTML('필터에 해당하는 게임 기록이 없습니다');
+                return;
+            }
 
             Array.from(games).sort().forEach(game => {
                 // 게임별 리더보드는 그 게임의 게임 행만 사용. redeem은 게임 단위로 귀속되지 않으므로 제외.
@@ -1205,10 +2240,14 @@
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = `
                     <h2>${escapeHtml(game)}</h2>
-                    <table class="leaderboard-table">
-                        ${leaderboardHeadHTML()}
-                        <tbody>${renderLeaderboardRows(sorted)}</tbody>
-                    </table>
+                    <div class="table-wrap">
+                        <div class="table-scroll">
+                            <table class="leaderboard-table">
+                                ${leaderboardHeadHTML()}
+                                <tbody>${renderLeaderboardRows(sorted)}</tbody>
+                            </table>
+                        </div>
+                    </div>
                 `;
                 bindPlayerNameClicks(wrapper);
                 bindSortClicks(wrapper);
@@ -1222,6 +2261,11 @@
             const container = document.getElementById('monthLeaderboards');
             container.innerHTML = '';
 
+            if (months.size === 0) {
+                container.innerHTML = emptyStateHTML('필터에 해당하는 월별 기록이 없습니다');
+                return;
+            }
+
             Array.from(months).sort().reverse().forEach(month => {
                 const monthRecords = filteredData.filter(r => localMonthKey(r.date) === month);
                 const sorted = sortedPlayers(monthRecords);
@@ -1229,10 +2273,14 @@
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = `
                     <h2>${escapeHtml(monthName)}</h2>
-                    <table class="leaderboard-table">
-                        ${leaderboardHeadHTML()}
-                        <tbody>${renderLeaderboardRows(sorted)}</tbody>
-                    </table>
+                    <div class="table-wrap">
+                        <div class="table-scroll">
+                            <table class="leaderboard-table">
+                                ${leaderboardHeadHTML()}
+                                <tbody>${renderLeaderboardRows(sorted)}</tbody>
+                            </table>
+                        </div>
+                    </div>
                 `;
                 bindPlayerNameClicks(wrapper);
                 bindSortClicks(wrapper);
@@ -1267,16 +2315,30 @@
                 return (b.win + b.loss + b.redeem) - (a.win + a.loss + a.redeem);
             });
 
+            if (display.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7">' + emptyStateHTML('필터에 해당하는 기록이 없습니다') + '</td></tr>';
+                return;
+            }
+
             tbody.innerHTML = display.map(record => {
                 const reward = rewardByRecordId[record.id];
                 const rewardClass = reward > 0 ? 'points-positive' : 'points-neutral';
 
-                let rankBadge = '-';
-                if (record.isGame && record.rank) {
-                    const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
-                    const totalPlayers = sessionRecords.length;
-                    const rankClass = getRankBadgeClass(record.rank, totalPlayers);
-                    rankBadge = `<span class="rank-badge ${rankClass}" style="width: 24px; height: 24px; font-size: 11px; font-weight: bold;">${record.rank}</span>`;
+                let rankBadge = '<span class="rank-mark rank-mark--neutral" aria-label="기록 없음">–</span>';
+                if (record.isGame) {
+                    if (record.win > 0) {
+                        // 승점 있음 → 메달/순위 배지
+                        const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
+                        const totalPlayers = sessionRecords.length;
+                        const rankClass = getRankBadgeClass(record.rank, totalPlayers);
+                        rankBadge = `<span class="rank-badge ${rankClass}" style="width: 26px; height: 26px; font-size: 12px;">${record.rank}</span>`;
+                    } else if (record.loss < 0) {
+                        // 감점 있음 → 레드카드
+                        rankBadge = `<span class="rank-mark rank-mark--penalty" title="감점 ${record.loss.toFixed(1)}" aria-label="감점">🟥</span>`;
+                    } else {
+                        // 점수 없음 → 회색 마이너스
+                        rankBadge = `<span class="rank-mark rank-mark--neutral" aria-label="점수 없음">➖</span>`;
+                    }
                 }
 
                 let gainDisplay, lossDisplay, gameLabel;
@@ -1313,7 +2375,7 @@
                     <tr>
                         <td>${record.date.toLocaleDateString('ko-KR')}</td>
                         <td>${gameLabel}</td>
-                        <td>${escapeHtml(record.player)}</td>
+                        <td><span class="player-name" data-player="${escapeHtml(record.player)}">${avatarHTML(record.player)}${escapeHtml(record.player)}</span></td>
                         <td style="text-align: center;">${rankBadge}</td>
                         <td>${gainDisplay}</td>
                         <td>${lossDisplay}</td>
@@ -1321,6 +2383,7 @@
                     </tr>
                 `;
             }).join('');
+            bindPlayerNameClicks(tbody);
         }
 
         // ============================================================
@@ -1393,6 +2456,46 @@
                 ? (filteredPlayerRecords.filter(r => r.isGame).reduce((sum, r) => sum + r.win + r.loss, 0) / totalGames)
                 : 0;
 
+            // 연승 / 승률
+            const streakInfo = calculateStreaks(allPlayerRecords)[playerName] || { longest: 0, current: 0 };
+            const totalGamesAll = allPlayerRecords.filter(r => r.isGame).length;
+            const winsAll = allPlayerRecords.filter(r => r.isGame && r.win > 0).length;
+            const winRateAll = totalGamesAll > 0 ? Math.round((winsAll / totalGamesAll) * 100) : 0;
+
+            // 현재 순위 (필터 적용된 전체 리더보드 기준)
+            const allSorted = sortedPlayers(filteredData);
+            const totalRanked = allSorted.length;
+            const currentRank = allSorted.findIndex(p => p.name === playerName) + 1;
+            const rankPercentile = totalRanked > 0 && currentRank > 0
+                ? Math.round((1 - (currentRank - 1) / totalRanked) * 100)
+                : 0;
+
+            // 포인트 히스토리 (시간 순, 누적 reward + 델타)
+            const chronological = allPlayerRecords.slice().sort((a, b) => a.date - b.date || a.id - b.id);
+            let runningReward = 0;
+            const pointHistory = chronological.map(r => {
+                const delta = recordRewardDelta(r);
+                runningReward += delta;
+                let label;
+                if (r.isAttendance) {
+                    const icon = r.game === 'HSM Running Club' || r.game === 'HSM Running' ? '🏃' : '📅';
+                    label = icon + ' ' + r.game;
+                } else if (r.isRedeem) {
+                    label = '🎁 포인트 사용';
+                } else {
+                    label = r.game;
+                }
+                return {
+                    date: r.date,
+                    label,
+                    delta,
+                    reward: displayPoint(runningReward),
+                    isGame: r.isGame
+                };
+            }).reverse(); // 최신순 표시
+
+            const recentHistory = pointHistory.slice(0, 12);
+
             const monthlyStatsHtml = Object.entries(monthlyStats)
                 .sort((a, b) => b[0].localeCompare(a[0]))
                 .map(([month, stats]) => {
@@ -1416,15 +2519,30 @@
 
             const html = `
                 <div class="game-stats">
-                    <h3>🎁 Reward Points</h3>
-                    <div class="stats-section">
-                        <div class="stats-row">
-                            <span class="stats-label">현재 Reward Points</span>
-                            <span class="stats-value points-positive">${reward.toFixed(1)}</span>
+                    <div class="rank-hero ${currentRank === 1 ? 'rank-hero--gold' : currentRank === 2 ? 'rank-hero--silver' : currentRank === 3 ? 'rank-hero--bronze' : ''}">
+                        <div class="rank-hero__rank">
+                            <span class="rank-hero__num">${currentRank > 0 ? currentRank : '-'}</span>
+                            <span class="rank-hero__suffix">위</span>
                         </div>
+                        <div class="rank-hero__meta">
+                            <div class="rank-hero__label">현재 순위</div>
+                            <div class="rank-hero__sub">${totalRanked > 0 ? '전체 ' + totalRanked + '명 중 · 상위 ' + rankPercentile + '%' : '데이터 없음'}</div>
+                        </div>
+                        <div class="rank-hero__points">
+                            <div class="rank-hero__label">Reward Points</div>
+                            <div class="rank-hero__pt points-positive">${reward.toFixed(1)}</div>
+                        </div>
+                    </div>
+
+                    <h3>🎁 Reward Points 구성</h3>
+                    <div class="stats-section">
                         <div class="stats-row">
                             <span class="stats-label">누적 승점</span>
                             <span class="stats-value points-positive">+${totalWin.toFixed(1)}</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">📅 누적 출석 보너스 <span class="badge-soft">${attendanceCount}회</span></span>
+                            <span class="stats-value ${totalAttendance > 0 ? 'points-positive' : 'points-neutral'}">${totalAttendance > 0 ? '+' + totalAttendance.toFixed(1) : '0.0'}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">누적 감점</span>
@@ -1436,8 +2554,44 @@
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">게임당 평균 포인트</span>
-                            <span class="stats-value">${totalAvgPerGame.toFixed(1)}</span>
+                            <span class="stats-value ${totalAvgPerGame > 0 ? 'points-positive' : totalAvgPerGame < 0 ? 'points-negative' : 'points-neutral'}">${totalAvgPerGame > 0 ? '+' : ''}${totalAvgPerGame.toFixed(1)}</span>
                         </div>
+                    </div>
+
+                    <h3 style="margin-top: var(--sp-5);">🏆 전체 전적</h3>
+                    <div class="stats-section">
+                        <div class="stats-row">
+                            <span class="stats-label">총 게임 수</span>
+                            <span class="stats-value">${totalGamesAll}</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">승리 / 승률</span>
+                            <span class="stats-value">${winsAll} <span style="color: var(--text-subtle); font-weight: var(--fw-medium);">(${winRateAll}%)</span></span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">🔥 최장 연승</span>
+                            <span class="stats-value ${streakInfo.longest >= 2 ? 'points-positive' : ''}">${streakInfo.longest >= 1 ? streakInfo.longest + '연승' : '-'}</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">현재 연승</span>
+                            <span class="stats-value ${streakInfo.current >= 1 ? 'points-positive' : 'points-neutral'}">${streakInfo.current >= 1 ? streakInfo.current + '연승' : '-'}</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: var(--sp-5);">📜 포인트 히스토리 <span class="badge-soft">최근 ${recentHistory.length}건</span></h3>
+                    <div class="point-history">
+                        ${recentHistory.map(h => {
+                            const sign = h.delta > 0 ? '+' : '';
+                            const cls = h.delta > 0 ? 'points-positive' : h.delta < 0 ? 'points-negative' : 'points-neutral';
+                            return `
+                                <div class="point-history__row">
+                                    <div class="point-history__date">${h.date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}</div>
+                                    <div class="point-history__label">${escapeHtml(h.label)}</div>
+                                    <div class="point-history__delta ${cls}">${sign}${h.delta.toFixed(1)}</div>
+                                    <div class="point-history__total">${h.reward.toFixed(1)}</div>
+                                </div>
+                            `;
+                        }).join('') || '<div class="empty-state" style="padding: var(--sp-4);">기록이 없습니다</div>'}
                     </div>
 
                     <h3 style="margin-top: var(--space-20);">📅 월별 통계</h3>
@@ -1481,17 +2635,26 @@
                 </table>
             `;
 
-            document.getElementById('modalPlayerName').textContent = playerName;
+            document.getElementById('modalPlayerName').innerHTML =
+                avatarHTML(playerName) + '<span style="margin-left: 8px;">' + escapeHtml(playerName) + '</span>';
             document.getElementById('modalBody').innerHTML = html;
-            document.getElementById('playerModal').classList.add('active');
+            const modal = document.getElementById('playerModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
             document.getElementById('playerModal').classList.remove('active');
+            document.body.style.overflow = '';
         }
 
         document.getElementById('playerModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('playerModal').classList.contains('active')) {
+                closeModal();
+            }
         });
 
         // ============================================================
@@ -1546,34 +2709,100 @@
         }
 
         function initializeChartPlayers() {
-            const checkboxContainer = document.getElementById('playerCheckboxes');
-            if (!checkboxContainer) return;
-            checkboxContainer.innerHTML = '';
+            const list = document.getElementById('playerMultiselectList');
+            const allBox = document.getElementById('playerSelectAll');
+            if (!list || !allBox) return;
+
+            list.innerHTML = '';
             selectedPlayers.clear();
+
             allTrackedPlayers.forEach((player, idx) => {
                 selectedPlayers.add(player);
-                const div = document.createElement('div');
-                div.className = 'player-checkbox-item';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = 'player-checkbox-' + idx;
-                checkbox.value = player;
-                checkbox.checked = true;
-                checkbox.onchange = updateChartWithSelectedPlayers;
-                const label = document.createElement('label');
-                label.htmlFor = 'player-checkbox-' + idx;
-                label.textContent = player;
-                div.appendChild(checkbox);
-                div.appendChild(label);
-                checkboxContainer.appendChild(div);
+                const swatch = PLAYER_COLORS[idx % PLAYER_COLORS.length];
+                const id = 'player-msopt-' + idx;
+                const opt = document.createElement('label');
+                opt.className = 'multiselect__option';
+                opt.htmlFor = id;
+                opt.innerHTML =
+                    `<input type="checkbox" id="${id}" value="${escapeHtml(player)}" checked>` +
+                    `<span class="multiselect__swatch" style="background:${swatch}"></span>` +
+                    `<span class="multiselect__option-name">${escapeHtml(player)}</span>`;
+                opt.querySelector('input').addEventListener('change', onPlayerSelectionChange);
+                list.appendChild(opt);
             });
+
+            allBox.checked = true;
+            updatePlayerMultiselectLabel();
         }
 
-        function updateChartWithSelectedPlayers() {
+        function onPlayerSelectionChange() {
             selectedPlayers.clear();
-            const checkboxes = document.querySelectorAll('#playerCheckboxes input[type="checkbox"]');
+            const checkboxes = document.querySelectorAll('#playerMultiselectList input[type="checkbox"]');
             checkboxes.forEach(cb => { if (cb.checked) selectedPlayers.add(cb.value); });
+
+            // 전체 선택 체크박스 동기화
+            const allBox = document.getElementById('playerSelectAll');
+            if (allBox) {
+                const total = checkboxes.length;
+                const selected = selectedPlayers.size;
+                allBox.checked = (selected === total);
+                allBox.indeterminate = selected > 0 && selected < total;
+            }
+
+            updatePlayerMultiselectLabel();
             updateRankingTrendChart();
+        }
+
+        function onSelectAllToggle(checked) {
+            const checkboxes = document.querySelectorAll('#playerMultiselectList input[type="checkbox"]');
+            selectedPlayers.clear();
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+                if (checked) selectedPlayers.add(cb.value);
+            });
+            const allBox = document.getElementById('playerSelectAll');
+            if (allBox) allBox.indeterminate = false;
+            updatePlayerMultiselectLabel();
+            updateRankingTrendChart();
+        }
+
+        function updatePlayerMultiselectLabel() {
+            const label = document.getElementById('playerMultiselectLabel');
+            if (!label) return;
+            const total = allTrackedPlayers.length;
+            const selected = selectedPlayers.size;
+            if (total === 0) {
+                label.textContent = '플레이어';
+            } else if (selected === total) {
+                label.textContent = '전체 플레이어 (' + total + ')';
+            } else if (selected === 0) {
+                label.textContent = '선택 없음';
+            } else if (selected === 1) {
+                label.textContent = Array.from(selectedPlayers)[0];
+            } else {
+                label.textContent = selected + '/' + total + '명 선택';
+            }
+        }
+
+        function setupPlayerMultiselect() {
+            const root = document.getElementById('playerMultiselect');
+            const btn = document.getElementById('playerMultiselectBtn');
+            const panel = document.getElementById('playerMultiselectPanel');
+            const allBox = document.getElementById('playerSelectAll');
+            if (!root || !btn || !panel || !allBox) return;
+
+            const open = () => { root.classList.add('open'); panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); };
+            const close = () => { root.classList.remove('open'); panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+            const toggle = () => { root.classList.contains('open') ? close() : open(); };
+
+            btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+            allBox.addEventListener('change', () => onSelectAllToggle(allBox.checked));
+            document.addEventListener('click', (e) => {
+                if (!root.contains(e.target)) close();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && root.classList.contains('open')) close();
+            });
         }
 
         const PLAYER_COLORS = ['#2180A0', '#E74C3C', '#3498DB', '#F39C12', '#27AE60',
@@ -1695,16 +2924,19 @@
                     borderColor: PLAYER_COLORS[idx % PLAYER_COLORS.length],
                     backgroundColor: PLAYER_COLORS[idx % PLAYER_COLORS.length],
                     fill: false,
-                    tension: 0.25,
-                    borderWidth: 2.5,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    tension: 0,            // 직선 라인
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    spanGaps: true
                 });
             });
 
             // 가장 긴 이름 기준으로 끝점 라벨 공간 확보 (대략 글자당 7px + 패딩)
             const maxNameLen = datasets.reduce((m, d) => Math.max(m, (d.label || '').length), 0);
             const endLabelPad = Math.min(180, Math.max(56, maxNameLen * 8 + 28));
+
+            const colors = getChartColors();
 
             if (rankingTrendChart) rankingTrendChart.destroy();
             rankingTrendChart = new Chart(ctx, {
@@ -1714,9 +2946,18 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: { padding: { right: endLabelPad } },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { display: true, position: 'top' },
+                        legend: { display: false },   // 끝점 알약 라벨이 범례 역할
                         tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                            titleColor: '#fff',
+                            bodyColor: '#e5e7eb',
+                            borderColor: 'rgba(148, 163, 184, 0.2)',
+                            borderWidth: 1,
+                            padding: 10,
+                            cornerRadius: 8,
+                            displayColors: true,
                             callbacks: {
                                 label: (item) => `${item.dataset.label}: ${item.parsed.y}위`
                             }
@@ -1727,10 +2968,15 @@
                             reverse: true,
                             min: 1,
                             max: Math.max(totalPlayers, 1),
-                            ticks: { stepSize: 1, precision: 0 },
-                            title: { display: true, text: '순위' }
+                            ticks: { stepSize: 1, precision: 0, color: colors.muted },
+                            grid:  { color: colors.grid },
+                            title: { display: true, text: '순위', color: colors.muted }
                         },
-                        x: { title: { display: true, text: '모임 날짜' } }
+                        x: {
+                            ticks: { color: colors.muted },
+                            grid:  { color: colors.grid },
+                            title: { display: true, text: '모임 날짜', color: colors.muted }
+                        }
                     }
                 },
                 plugins: [endLabelPlugin]
@@ -1738,15 +2984,87 @@
         }
 
         // ============================================================
-        // 진입점
+        // Chart.js 테마 변경 감지 → 차트 색상 갱신
+        // ============================================================
+        function getChartColors() {
+            const styles = getComputedStyle(document.documentElement);
+            return {
+                text:   styles.getPropertyValue('--text').trim() || '#0f172a',
+                muted:  styles.getPropertyValue('--text-muted').trim() || '#475569',
+                grid:   styles.getPropertyValue('--border').trim() || 'rgba(15,23,42,0.08)'
+            };
+        }
+
+        // ============================================================
+        // 진입점 / 와이어업
         // ============================================================
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(loadFromGitHub, 500);
+        function bootstrap() {
+            // 1) 테마 초기화: 저장된 값 → 시스템 prefers
+            const stored = getStoredTheme();
+            applyTheme(stored);
+
+            // 2) 시스템 테마 변경 감지 (저장된 값이 없을 때만 따라감)
+            try {
+                const mq = window.matchMedia('(prefers-color-scheme: dark)');
+                const handler = () => {
+                    if (!getStoredTheme()) updateThemeIcon();
+                    if (rankingTrendChart) updateRankingTrendChart();
+                };
+                if (mq.addEventListener) mq.addEventListener('change', handler);
+                else if (mq.addListener) mq.addListener(handler);
+            } catch { /* noop */ }
+
+            // 3) 버튼 와이어업
+            const themeBtn = document.getElementById('themeToggle');
+            if (themeBtn) themeBtn.addEventListener('click', () => {
+                toggleTheme();
+                if (rankingTrendChart) updateRankingTrendChart();
             });
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.addEventListener('click', () => {
+                refreshBtn.disabled = true;
+                refreshBtn.style.opacity = '0.6';
+                loadFromGitHub({ silent: false }).finally(() => {
+                    setTimeout(() => {
+                        refreshBtn.disabled = false;
+                        refreshBtn.style.opacity = '';
+                    }, 600);
+                });
+            });
+
+            // 4) 멀티셀렉트 컴포넌트
+            setupPlayerMultiselect();
+
+            // 5) 업로드 버튼 → 비밀번호 게이트
+            const uploadBtn = document.getElementById('uploadBtn');
+            if (uploadBtn) uploadBtn.addEventListener('click', requestUpload);
+
+            // 6) 비밀번호 모달
+            const pwForm = document.getElementById('passwordForm');
+            if (pwForm) pwForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const val = document.getElementById('passwordInput').value;
+                submitPassword(val);
+            });
+            const pwModal = document.getElementById('passwordModal');
+            if (pwModal) pwModal.addEventListener('click', (e) => {
+                if (e.target === pwModal) closePasswordModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && pwModal && pwModal.classList.contains('active')) {
+                    closePasswordModal();
+                }
+            });
+
+            // 7) 데이터 로드
+            setTimeout(() => loadFromGitHub({ silent: true }), 300);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootstrap);
         } else {
-            setTimeout(loadFromGitHub, 500);
+            bootstrap();
         }
         </script>
 </body>
