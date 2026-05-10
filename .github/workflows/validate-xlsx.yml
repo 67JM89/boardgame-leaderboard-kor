@@ -1,0 +1,80 @@
+name: Validate xlsx data
+
+# data/board.xlsx 가 push / PR 될 때 자동으로 형식 검증.
+# 실패 시 GitHub Pages 배포 전에 빨간 X로 막아줌 (Branch Protection 활성 시).
+
+on:
+  push:
+    paths:
+      - 'data/board.xlsx'
+      - '.github/workflows/validate-xlsx.yml'
+  pull_request:
+    paths:
+      - 'data/board.xlsx'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install openpyxl
+        run: pip install openpyxl==3.1.5
+
+      - name: Validate xlsx structure
+        run: |
+          python <<'PY'
+          import openpyxl, sys, os
+
+          path = 'data/board.xlsx'
+          if not os.path.exists(path):
+              print(f'❌ {path} not found')
+              sys.exit(1)
+
+          try:
+              wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
+          except Exception as e:
+              print(f'❌ xlsx 파일 손상: {e}')
+              sys.exit(1)
+
+          ws = wb.active
+          required = ['플레이 날짜', '게임 이름', '플레이어 이름', '승점', '감점']
+          first_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
+          if not first_row:
+              print('❌ 헤더 행이 없습니다')
+              sys.exit(1)
+
+          headers = [str(v).strip() if v is not None else '' for v in first_row]
+          missing = [c for c in required if c not in headers]
+          if missing:
+              print(f'❌ 필수 컬럼 누락: {missing}')
+              print(f'   현재 헤더: {headers}')
+              sys.exit(1)
+
+          # 데이터 행 카운트
+          row_count = 0
+          for _ in ws.iter_rows(min_row=2, values_only=True):
+              row_count += 1
+
+          print(f'✅ xlsx 검증 통과')
+          print(f'   - 시트: {ws.title}')
+          print(f'   - 헤더: {headers}')
+          print(f'   - 데이터 행: {row_count}')
+          PY
+
+      - name: Report file size
+        run: |
+          SIZE=$(stat -c%s data/board.xlsx)
+          echo "📦 board.xlsx size: $SIZE bytes ($(echo "scale=1; $SIZE/1024" | bc) KB)"
+          if [ "$SIZE" -gt 10485760 ]; then
+            echo "❌ 파일이 10MB 초과 (브라우저 업로드 제한)"
+            exit 1
+          fi

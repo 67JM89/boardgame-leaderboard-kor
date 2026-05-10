@@ -1,0 +1,21 @@
+# Dependabot — 의존성 자동 업데이트 PR 생성.
+# 이 프로젝트는 npm/yarn 미사용 (CDN 직접 로드)이므로,
+# 추적 가능한 건 GitHub Actions 워크플로우의 액션 버전.
+# (actions/checkout@v4 → v5 같은 업데이트가 PR로 자동 제안됨)
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "ci"
+      include: scope
+    labels:
+      - dependencies
+      - github-actions

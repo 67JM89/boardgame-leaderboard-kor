@@ -1,0 +1,16 @@
+# CODEOWNERS — 파일별 코드 오너를 정의.
+# Branch Protection 에서 "Require review from Code Owners" 켜면 매칭되는 파일 변경 시
+# 해당 오너 승인이 필수로 요구됨.
+#
+# 문법: <pattern>  <owner1> <owner2> ...
+# 마지막 매칭 규칙이 우선.
+# 1인 운영이므로 모든 파일을 본인 소유로 지정.
+
+# 모든 파일 기본 오너
+*           @sung-jungmin
+
+# 데이터 파일은 특별 관리
+/data/      @sung-jungmin
+
+# CI / 인프라 파일
+/.github/   @sung-jungmin
