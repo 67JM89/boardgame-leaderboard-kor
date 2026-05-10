@@ -1189,16 +1189,31 @@
             color: var(--primary);
             font-variant-numeric: tabular-nums;
         }
-        .next-goal__bar {
-            height: 6px;
+        /* 스텝형 progress bar — 1유닛 1셀 */
+        .next-goal__steps {
+            display: flex;
+            gap: 4px;
+            height: 10px;
+        }
+        .next-goal__step {
+            flex: 1;
             background: var(--bg-muted);
             border-radius: 3px;
+            position: relative;
             overflow: hidden;
+            transition: background var(--dur-base) var(--ease-out);
         }
-        .next-goal__fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
-            border-radius: 3px;
+        .next-goal__step--filled {
+            background: linear-gradient(135deg, var(--brand-500), var(--accent-500));
+            box-shadow: 0 0 6px rgba(139, 92, 246, 0.25);
+        }
+        .next-goal__step--partial::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: var(--fill, 0%);
+            background: linear-gradient(135deg, var(--brand-500), var(--accent-500));
+            border-radius: 3px 0 0 3px;
             transition: width var(--dur-slow) var(--ease-out);
         }
         .next-goal__sub {
@@ -2022,11 +2037,12 @@
 
                 <section class="help-card">
                     <h3>🏆 성취 배지</h3>
-                    <p>플레이어 카드를 클릭하면 모달에서 확인 가능한 17개 자동 배지.</p>
+                    <p>플레이어 카드를 클릭하면 모달에서 확인 가능한 20개 자동 배지.</p>
                     <ul>
                         <li><strong>등급:</strong> 일반(파랑) · 레어(보라) · 에픽(주황) · 전설(핑크 글로우)</li>
                         <li>달성한 배지는 컬러 / 미달성은 회색 + 진행률 표시</li>
-                        <li>예: 첫 승 / 10·25·50승 / 3·5·10연승 / Tier 50·100·200 / 다재다능 / 단골 출석 / 강철 멘탈 등</li>
+                        <li><strong>다음 목표</strong> 섹션은 가까운 3개를 스텝형 progress bar로 보여줌</li>
+                        <li>카테고리: 승리(1·3·10·20승) / 연승(2·3·5) / Tier(20·50·100) / 다양성 / 출석 / 승률 / 🎢 위험감수자(감점) / 🛍️ 교환 장려</li>
                     </ul>
                 </section>
 
@@ -2176,93 +2192,96 @@
         // 각 배지는 check(stats)로 달성 여부를, progress(stats)로
         // 잠긴 상태에서의 진행도 텍스트를 반환합니다.
         // ============================================================
-        const ACHIEVEMENTS = [
+        // 월 1회 모임 기준으로 난이도를 약 3배 완화. 단순한 형태로 정의 후 자동 derive.
+        // 필드: id / tier / icon / name / description / current(s) / target / unit
+        // 특수 케이스만 check / progress / progressPct 직접 제공.
+        const ACHIEVEMENTS = ([
+            // ── Wins (승점 획득 횟수) ─────────────────────────────────────
             { id: 'first_win', tier: 'common', icon: '🎯', name: '첫 승',
               description: '처음으로 승점을 획득했습니다',
-              check: s => s.wins >= 1,
-              progress: s => `${s.wins}/1승`,
-              progressPct: s => Math.min(1, s.wins / 1) },
-            { id: 'wins_10', tier: 'common', icon: '🏆', name: '10승 달성',
-              description: '10번 승점 획득',
-              check: s => s.wins >= 10,
-              progress: s => `${s.wins}/10승`,
-              progressPct: s => Math.min(1, s.wins / 10) },
-            { id: 'wins_25', tier: 'rare', icon: '🥇', name: '25승 달성',
-              description: '25번 승점 획득 (실력자)',
-              check: s => s.wins >= 25,
-              progress: s => `${s.wins}/25승`,
-              progressPct: s => Math.min(1, s.wins / 25) },
-            { id: 'wins_50', tier: 'epic', icon: '👑', name: '50승 달성',
-              description: '50번 승점 획득 (전설급)',
-              check: s => s.wins >= 50,
-              progress: s => `${s.wins}/50승`,
-              progressPct: s => Math.min(1, s.wins / 50) },
-            { id: 'streak_3', tier: 'common', icon: '🔥', name: '3연승',
-              description: '3게임 연속 승점 획득',
-              check: s => s.longestStreak >= 3,
-              progress: s => `최장 ${s.longestStreak}연승`,
-              progressPct: s => Math.min(1, s.longestStreak / 3) },
-            { id: 'streak_5', tier: 'rare', icon: '🔥', name: '5연승',
-              description: '5게임 연속 승점 획득 (대단)',
-              check: s => s.longestStreak >= 5,
-              progress: s => `최장 ${s.longestStreak}연승`,
-              progressPct: s => Math.min(1, s.longestStreak / 5) },
-            { id: 'streak_10', tier: 'legendary', icon: '⚡', name: '10연승 신',
-              description: '10게임 연속 승점 획득 (불가능에 가까운)',
-              check: s => s.longestStreak >= 10,
-              progress: s => `최장 ${s.longestStreak}연승`,
-              progressPct: s => Math.min(1, s.longestStreak / 10) },
-            { id: 'tier_50', tier: 'common', icon: '💎', name: 'Tier 50',
+              current: s => s.wins, target: 1, unit: '승' },
+            { id: 'wins_3', tier: 'common', icon: '🏆', name: '3승 달성',
+              description: '3번 승점 획득',
+              current: s => s.wins, target: 3, unit: '승' },
+            { id: 'wins_10', tier: 'rare', icon: '🥇', name: '10승 달성',
+              description: '10번 승점 획득 (실력자)',
+              current: s => s.wins, target: 10, unit: '승' },
+            { id: 'wins_20', tier: 'epic', icon: '👑', name: '20승 달성',
+              description: '20번 승점 획득 (베테랑)',
+              current: s => s.wins, target: 20, unit: '승' },
+
+            // ── Streaks (연속 승점) ──────────────────────────────────────
+            { id: 'streak_2', tier: 'common', icon: '🔥', name: '2연승',
+              description: '2게임 연속 승점 획득',
+              current: s => s.longestStreak, target: 2, unit: '연승' },
+            { id: 'streak_3', tier: 'rare', icon: '🔥', name: '3연승',
+              description: '3게임 연속 승점 획득 (대단)',
+              current: s => s.longestStreak, target: 3, unit: '연승' },
+            { id: 'streak_5', tier: 'legendary', icon: '⚡', name: '5연승 신',
+              description: '5게임 연속 승점 획득 (전설)',
+              current: s => s.longestStreak, target: 5, unit: '연승' },
+
+            // ── Tier Points ──────────────────────────────────────────────
+            { id: 'tier_20', tier: 'common', icon: '💎', name: 'Tier 20',
+              description: 'Tier Points 20점 돌파',
+              current: s => Math.max(0, s.tier), target: 20, unit: '' },
+            { id: 'tier_50', tier: 'rare', icon: '💎', name: 'Tier 50',
               description: 'Tier Points 50점 돌파',
-              check: s => s.tier >= 50,
-              progress: s => `${s.tier.toFixed(0)}/50`,
-              progressPct: s => Math.min(1, Math.max(0, s.tier) / 50) },
-            { id: 'tier_100', tier: 'rare', icon: '💎', name: 'Tier 100',
+              current: s => Math.max(0, s.tier), target: 50, unit: '' },
+            { id: 'tier_100', tier: 'epic', icon: '💠', name: 'Tier 100',
               description: 'Tier Points 100점 돌파',
-              check: s => s.tier >= 100,
-              progress: s => `${s.tier.toFixed(0)}/100`,
-              progressPct: s => Math.min(1, Math.max(0, s.tier) / 100) },
-            { id: 'tier_200', tier: 'epic', icon: '💠', name: 'Tier 200',
-              description: 'Tier Points 200점 돌파',
-              check: s => s.tier >= 200,
-              progress: s => `${s.tier.toFixed(0)}/200`,
-              progressPct: s => Math.min(1, Math.max(0, s.tier) / 200) },
-            { id: 'variety_5', tier: 'common', icon: '🎮', name: '다재다능',
+              current: s => Math.max(0, s.tier), target: 100, unit: '' },
+
+            // ── Variety (게임 종류) ───────────────────────────────────────
+            { id: 'variety_3', tier: 'common', icon: '🎮', name: '다재다능',
+              description: '3종류 이상의 게임 플레이',
+              current: s => s.uniqueGames, target: 3, unit: '종' },
+            { id: 'variety_5', tier: 'rare', icon: '🎲', name: '게임 마니아',
               description: '5종류 이상의 게임 플레이',
-              check: s => s.uniqueGames >= 5,
-              progress: s => `${s.uniqueGames}/5종`,
-              progressPct: s => Math.min(1, s.uniqueGames / 5) },
-            { id: 'variety_10', tier: 'rare', icon: '🎲', name: '게임 마니아',
-              description: '10종류 이상의 게임 플레이',
-              check: s => s.uniqueGames >= 10,
-              progress: s => `${s.uniqueGames}/10종`,
-              progressPct: s => Math.min(1, s.uniqueGames / 10) },
-            { id: 'attendance_10', tier: 'common', icon: '📅', name: '꾸준한 출석',
-              description: '10회 이상 모임 참여',
-              check: s => s.uniquePlayDates >= 10,
-              progress: s => `${s.uniquePlayDates}/10회`,
-              progressPct: s => Math.min(1, s.uniquePlayDates / 10) },
-            { id: 'attendance_25', tier: 'rare', icon: '🗓️', name: '단골 출석',
-              description: '25회 이상 모임 참여',
-              check: s => s.uniquePlayDates >= 25,
-              progress: s => `${s.uniquePlayDates}/25회`,
-              progressPct: s => Math.min(1, s.uniquePlayDates / 25) },
-            { id: 'first_redeem', tier: 'common', icon: '🎁', name: '첫 교환',
-              description: 'Reward Points로 첫 교환',
-              check: s => s.redeemCount >= 1,
-              progress: s => `${s.redeemCount}회`,
-              progressPct: s => s.redeemCount >= 1 ? 1 : 0 },
+              current: s => s.uniqueGames, target: 5, unit: '종' },
+
+            // ── Attendance (출석) ────────────────────────────────────────
+            { id: 'attendance_3', tier: 'common', icon: '📅', name: '꾸준한 출석',
+              description: '3회 이상 모임 참여',
+              current: s => s.uniquePlayDates, target: 3, unit: '회' },
+            { id: 'attendance_7', tier: 'rare', icon: '🗓️', name: '단골 출석',
+              description: '7회 이상 모임 참여',
+              current: s => s.uniquePlayDates, target: 7, unit: '회' },
+
+            // ── Win rate (특수 — 게임 수 게이트 포함) ───────────────────
             { id: 'high_winrate', tier: 'rare', icon: '📊', name: '승률 50%+',
-              description: '10게임 이상에서 승률 50% 이상',
-              check: s => s.games >= 10 && (s.wins / s.games) >= 0.5,
-              progress: s => s.games < 10 ? `${s.games}/10게임` : `승률 ${Math.round(s.wins / s.games * 100)}%`,
-              progressPct: s => s.games < 10 ? Math.min(1, s.games / 10) * 0.5 : Math.min(1, (s.wins / s.games) / 0.5) },
-            { id: 'iron_will', tier: 'epic', icon: '🛡️', name: '강철 멘탈',
-              description: '연속 5게임 무감점',
-              check: s => s.maxNoLossStreak >= 5,
-              progress: s => `최장 ${s.maxNoLossStreak}게임 무감점`,
-              progressPct: s => Math.min(1, s.maxNoLossStreak / 5) }
-        ];
+              description: '3게임 이상에서 승률 50% 이상',
+              check: s => s.games >= 3 && (s.wins / s.games) >= 0.5,
+              progress: s => s.games < 3 ? `${s.games}/3게임 (게임 수 부족)` : `승률 ${Math.round(s.wins / s.games * 100)}%`,
+              progressPct: s => s.games < 3 ? Math.min(1, s.games / 3) * 0.5 : Math.min(1, (s.wins / s.games) / 0.5) },
+
+            // ── 감점 받은 사람용 (강철 멘탈 대체 — 희귀) ──────────────────
+            { id: 'risk_taker', tier: 'rare', icon: '🎢', name: '위험감수자',
+              description: '게임에서 한 번이라도 감점 — 도전했다는 증거',
+              current: s => s.lossCount, target: 1, unit: '회' },
+            { id: 'risk_veteran', tier: 'epic', icon: '🩸', name: '베테랑 도전자',
+              description: '감점 3번 이상 (정말 과감한 도전자)',
+              current: s => s.lossCount, target: 3, unit: '회' },
+
+            // ── Redemption (교환 장려) ────────────────────────────────────
+            { id: 'first_redeem', tier: 'common', icon: '🎁', name: '첫 교환',
+              description: '처음으로 Reward Points 교환',
+              current: s => s.redeemCount, target: 1, unit: '회' },
+            { id: 'redeem_3', tier: 'rare', icon: '🛍️', name: '교환의 달인',
+              description: '3번 교환 — Reward 활용도 만점',
+              current: s => s.redeemCount, target: 3, unit: '회' },
+            { id: 'redeem_5', tier: 'epic', icon: '💸', name: '큰 손',
+              description: '5번 교환 — 진정한 스폰서',
+              current: s => s.redeemCount, target: 5, unit: '회' }
+        ]).map(a => {
+            // current/target 기반 자동 derive (특수 케이스는 이미 정의된 것 우선)
+            if (a.target !== undefined && typeof a.current === 'function') {
+                if (!a.check)       a.check       = s => a.current(s) >= a.target;
+                if (!a.progress)    a.progress    = s => `${a.current(s)}/${a.target}${a.unit || ''}`;
+                if (!a.progressPct) a.progressPct = s => Math.min(1, a.current(s) / a.target);
+            }
+            return a;
+        });
 
         function computePlayerAchievementStats(playerName) {
             const records = gameData.filter(r => r.player === playerName);
@@ -2281,6 +2300,8 @@
                 records.filter(r => r.isGame || r.isAttendance).map(r => localDateKey(r.date))
             ).size;
             const redeemCount = records.filter(r => r.redeem < 0 || r.exchange < 0).length;
+            // 감점 받은 횟수 (희귀 — 도전자 배지용)
+            const lossCount = gameRecords.filter(r => r.loss < 0).length;
 
             // 연승: 승점을 연속으로 획득한 게임 수 (승리 정의 일관성 유지)
             let longestStreak = 0, currentStreak = 0;
@@ -2306,7 +2327,7 @@
 
             return {
                 totalWin, totalLoss, tier, wins, games,
-                uniqueGames, uniquePlayDates, redeemCount,
+                uniqueGames, uniquePlayDates, redeemCount, lossCount,
                 longestStreak, maxNoLossStreak
             };
         }
@@ -2393,28 +2414,58 @@
             `;
         }
 
-        // 다음 목표: 미달성 배지 중 진행률 가장 높은 N개
+        // 스텝형 progress bar — 1유닛 1셀로 시각화 (target ≤ 10이면 정확히 그만큼, 초과면 10셀)
+        function renderProgressSteps(achievement, stats) {
+            let segments, currentInCells;
+            if (achievement.target !== undefined && typeof achievement.current === 'function' && achievement.target >= 1) {
+                if (achievement.target <= 10) {
+                    segments = achievement.target;
+                    currentInCells = achievement.current(stats);
+                } else {
+                    segments = 10;
+                    currentInCells = (achievement.current(stats) / achievement.target) * 10;
+                }
+            } else {
+                // 특수 케이스: progressPct로 derive
+                segments = 10;
+                currentInCells = achievement.progressPct(stats) * 10;
+            }
+            let html = '';
+            for (let i = 0; i < segments; i++) {
+                const fill = Math.max(0, Math.min(1, currentInCells - i));
+                if (fill >= 0.99) {
+                    html += '<span class="next-goal__step next-goal__step--filled"></span>';
+                } else if (fill > 0) {
+                    html += `<span class="next-goal__step next-goal__step--partial" style="--fill:${(fill * 100).toFixed(1)}%"></span>`;
+                } else {
+                    html += '<span class="next-goal__step"></span>';
+                }
+            }
+            return html;
+        }
+
+        // 다음 목표: 미달성 배지 중 진행률 가장 높은 N개 (스텝형 진행도 표시)
         function renderNextGoals(playerName, n = 3) {
             const stats = computePlayerAchievementStats(playerName);
             const locked = ACHIEVEMENTS
                 .filter(a => !a.check(stats))
-                .map(a => ({ ...a, pct: a.progressPct(stats) }))
-                .filter(a => a.pct > 0)
-                .sort((a, b) => b.pct - a.pct)
+                .map(a => ({ a, pct: a.progressPct(stats) }))
+                .filter(x => x.pct > 0)
+                .sort((x, y) => y.pct - x.pct)
                 .slice(0, n);
             if (locked.length === 0) {
                 return ''; // 모든 배지 달성한 사람이거나 시작 안 한 경우
             }
-            const items = locked.map(a => {
-                const pct = Math.round(a.pct * 100);
+            const items = locked.map(({ a, pct }) => {
+                const pctRounded = Math.round(pct * 100);
                 return `
                     <div class="next-goal">
                         <div class="next-goal__head">
                             <span class="next-goal__icon">${a.icon}</span>
                             <span class="next-goal__name">${escapeHtml(a.name)}</span>
-                            <span class="next-goal__pct">${pct}%</span>
+                            <span class="next-goal__pct">${pctRounded}%</span>
                         </div>
-                        <div class="next-goal__bar"><div class="next-goal__fill" style="width:${pct}%"></div></div>
+                        <div class="next-goal__steps">${renderProgressSteps(a, stats)}</div>
                         <div class="next-goal__sub">${escapeHtml(a.progress(stats))}</div>
                     </div>
                 `;
