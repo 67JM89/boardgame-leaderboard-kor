@@ -1142,21 +1142,23 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: var(--r-sm);
-            font-size: 11px;
-            font-weight: var(--fw-bold);
-            font-variant-numeric: tabular-nums;
-            color: #fff;
+            width: 28px;
+            height: 28px;
+            font-size: 18px;
+            line-height: 1;
             cursor: help;
+            transition: transform var(--dur-fast) var(--ease-out);
+            user-select: none;
         }
-        .form-pip--win     { background: linear-gradient(135deg, var(--gold-from), var(--gold-to)); color: #422006; }
-        .form-pip--podium  { background: linear-gradient(135deg, var(--silver-from), var(--silver-to)); color: #1f2937; }
-        .form-pip--podium3 { background: linear-gradient(135deg, var(--bronze-from), var(--bronze-to)); }
-        .form-pip--lose    { background: var(--bg-muted); color: var(--text-muted); }
-        .form-pip--penalty { background: linear-gradient(135deg, #fb7185, #e11d48); }
-        .form-pip--neutral { background: var(--bg-muted); color: var(--text-subtle); }
+        .form-pip:hover { transform: scale(1.18); }
+        .form-pip--dash {
+            color: var(--text-subtle);
+            font-size: 16px;
+            font-weight: var(--fw-bold);
+        }
+        .form-pip--penalty {
+            filter: drop-shadow(0 1px 3px rgba(220, 38, 38, 0.35));
+        }
 
         /* NEXT GOALS — 다음 목표 진행도 */
         .next-goals {
@@ -1399,7 +1401,7 @@
         }
         .point-history__row {
             display: grid;
-            grid-template-columns: 56px 1fr auto 64px;
+            grid-template-columns: 52px 22px 1fr auto 60px;
             gap: var(--sp-3);
             align-items: center;
             padding: 10px var(--sp-4);
@@ -1409,6 +1411,16 @@
         }
         .point-history__row:last-child { border-bottom: none; }
         .point-history__date { color: var(--text-subtle); font-weight: var(--fw-medium); }
+        .point-history__marker {
+            font-size: 16px;
+            line-height: 1;
+            text-align: center;
+        }
+        .point-history__marker--dash {
+            color: var(--text-subtle);
+            font-weight: var(--fw-bold);
+            font-size: 14px;
+        }
         .point-history__label {
             color: var(--text);
             min-width: 0;
@@ -1421,6 +1433,13 @@
             text-align: right;
             font-weight: var(--fw-semibold);
             color: var(--text-muted);
+        }
+        @media (max-width: 480px) {
+            .point-history__row {
+                grid-template-columns: 44px 20px 1fr auto 52px;
+                gap: var(--sp-2);
+                padding: 8px var(--sp-3);
+            }
         }
 
         .stats-section {
@@ -2379,7 +2398,8 @@
             `;
         }
 
-        // 최근 N경기의 결과 (1위=금, 2-3위=동, 4위 이하=회색, 감점 있음=빨강)
+        // 최근 N경기의 결과
+        // 규칙: 승점 획득 + 1/2/3위 → 🥇🥈🥉 메달 / 감점 → 🟥 / 그 외(승점 없음) → — 회색 대시
         function renderRecentForm(playerName, n = 8) {
             const games = gameData.filter(r => r.player === playerName && r.isGame)
                 .sort((a, b) => b.date - a.date || b.id - a.id)
@@ -2387,24 +2407,26 @@
                 .reverse(); // 최근→오래된 순으로 표시 (왼→오)
             if (games.length === 0) return '';
             const pips = games.map(r => {
-                let cls = 'form-pip--neutral', label = '-', title = r.game;
-                if (r.loss < 0) {
-                    cls = 'form-pip--penalty'; label = '−';
-                    title = `${r.game} (감점 ${r.loss.toFixed(1)})`;
-                } else if (r.rank === 1 && r.win > 0) {
-                    cls = 'form-pip--win'; label = '1';
+                let symbol, cls = 'form-pip', title;
+                if (r.win > 0 && r.rank === 1) {
+                    symbol = '🥇';
                     title = `${r.game} (1위 +${r.win.toFixed(1)})`;
-                } else if (r.rank === 2) {
-                    cls = 'form-pip--podium'; label = '2';
-                    title = `${r.game} (2위)`;
-                } else if (r.rank === 3) {
-                    cls = 'form-pip--podium3'; label = '3';
-                    title = `${r.game} (3위)`;
+                } else if (r.win > 0 && r.rank === 2) {
+                    symbol = '🥈';
+                    title = `${r.game} (2위 +${r.win.toFixed(1)})`;
+                } else if (r.win > 0 && r.rank === 3) {
+                    symbol = '🥉';
+                    title = `${r.game} (3위 +${r.win.toFixed(1)})`;
+                } else if (r.loss < 0) {
+                    symbol = '🟥';
+                    cls += ' form-pip--penalty';
+                    title = `${r.game} (감점 ${r.loss.toFixed(1)})`;
                 } else {
-                    cls = 'form-pip--lose'; label = String(r.rank || '·');
-                    title = `${r.game} (${r.rank || '?'}위)`;
+                    symbol = '—';
+                    cls += ' form-pip--dash';
+                    title = `${r.game} (포인트 없음${r.rank ? ` · ${r.rank}위` : ''})`;
                 }
-                return `<span class="form-pip ${cls}" title="${escapeHtml(title)}">${label}</span>`;
+                return `<span class="${cls}" title="${escapeHtml(title)}">${symbol}</span>`;
             }).join('');
             return `
                 <div class="recent-form-wrap">
@@ -3598,23 +3620,32 @@
             const tierTotal = totalWin + totalLoss;
 
             // 포인트 히스토리 (시간 순, 누적 reward + 델타)
+            // marker: 게임이면 메달/감점/대시, 출석/교환은 해당 아이콘
             const chronological = allPlayerRecords.slice().sort((a, b) => a.date - b.date || a.id - b.id);
             let runningReward = 0;
             const pointHistory = chronological.map(r => {
                 const delta = recordRewardDelta(r);
                 runningReward += delta;
-                let label;
+                let label, marker;
                 if (r.isAttendance) {
-                    const icon = r.game === 'HSM Running Club' || r.game === 'HSM Running' ? '🏃' : '📅';
-                    label = icon + ' ' + r.game;
+                    marker = (r.game === 'HSM Running Club' || r.game === 'HSM Running') ? '🏃' : '📅';
+                    label = r.game;
                 } else if (r.isRedeem) {
-                    label = '🎁 포인트 사용';
+                    marker = '🎁';
+                    label = '포인트 사용';
                 } else {
+                    // 게임 행: 승점 + 1/2/3위 → 메달, 감점 → 레드카드, 그 외 → 회색 대시
+                    if (r.win > 0 && r.rank === 1)      marker = '🥇';
+                    else if (r.win > 0 && r.rank === 2) marker = '🥈';
+                    else if (r.win > 0 && r.rank === 3) marker = '🥉';
+                    else if (r.loss < 0)                marker = '🟥';
+                    else                                marker = '—';
                     label = r.game;
                 }
                 return {
                     date: r.date,
                     label,
+                    marker,
                     delta,
                     reward: displayPoint(runningReward),
                     isGame: r.isGame
@@ -3745,9 +3776,11 @@
                         ${recentHistory.map(h => {
                             const sign = h.delta > 0 ? '+' : '';
                             const cls = h.delta > 0 ? 'points-positive' : h.delta < 0 ? 'points-negative' : 'points-neutral';
+                            const markerCls = h.marker === '—' ? 'point-history__marker point-history__marker--dash' : 'point-history__marker';
                             return `
                                 <div class="point-history__row">
                                     <div class="point-history__date">${h.date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}</div>
+                                    <div class="${markerCls}">${h.marker}</div>
                                     <div class="point-history__label">${escapeHtml(h.label)}</div>
                                     <div class="point-history__delta ${cls}">${sign}${h.delta.toFixed(1)}</div>
                                     <div class="point-history__total">${h.reward.toFixed(1)}</div>
