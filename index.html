@@ -1714,6 +1714,19 @@
                 .replace(/'/g, '&#39;');
         }
 
+        // 숫자 → 의미 클래스 (양수 초록, 음수 빨강, 0 회색)
+        function pointClass(value) {
+            if (value > 0) return 'points-positive';
+            if (value < 0) return 'points-negative';
+            return 'points-neutral';
+        }
+
+        // 양수에만 + 부호 / 0 또는 음수는 부호 없음 (음수는 자체 - 보유)
+        function signedPoint(value, decimals = 1) {
+            if (value > 0) return '+' + value.toFixed(decimals);
+            return value.toFixed(decimals);
+        }
+
         // ============================================================
         // 토스트 알림 (alert 대체)
         // ============================================================
@@ -2304,7 +2317,7 @@
             const sortedAll = sortedPlayers(filteredData);
             const winner = sortedAll[0];
             document.getElementById('overallWinner').textContent = winner
-                ? winner.name + ' (' + (winner.tier > 0 ? '+' : '') + winner.tier.toFixed(1) + ')'
+                ? winner.name + ' (' + winner.tier.toFixed(1) + ')'
                 : '-';
             document.getElementById('overallWinnerLabel').textContent =
                 gameFilter ? '👑 ' + gameFilter + ' 1위' : '👑 모든 게임 1위';
@@ -2373,8 +2386,6 @@
             return sorted.map((player, idx) => {
                 const rankClass = getRankBadgeClass(idx + 1, sorted.length);
                 const tier = player.tier;
-                const tierClass = tier > 0 ? 'points-positive' : tier < 0 ? 'points-negative' : 'points-neutral';
-                const tierText = (tier > 0 ? '+' : '') + tier.toFixed(1);
                 const reward = displayPoint(player.total);
                 const rewardClass = reward > 0 ? 'points-positive' : 'points-neutral';
                 const lossText = player.totalLoss === 0 ? '0.0' : player.totalLoss.toFixed(1);
@@ -2385,10 +2396,10 @@
                     <tr>
                         <td><span class="rank-badge ${rankClass}">${idx + 1}</span></td>
                         <td><span class="player-name" data-player="${escapeHtml(player.name)}">${avatarHTML(player.name)}${escapeHtml(player.name)}</span></td>
-                        <td><span class="${tierClass}">${tierText}</span></td>
+                        <td><span class="${pointClass(tier)}">${tier.toFixed(1)}</span></td>
                         <td><span class="${rewardClass}">${reward.toFixed(1)}</span></td>
                         <td>${player.games}</td>
-                        <td><span class="points-positive">+${player.totalWin.toFixed(1)}</span></td>
+                        <td><span class="${pointClass(player.totalWin)}">${signedPoint(player.totalWin)}</span></td>
                         <td><span class="${lossClass}">${lossText}</span></td>
                         <td><span class="${redeemClass}">${redeemText}</span></td>
                         <td>${player.wins}</td>
@@ -2773,7 +2784,7 @@
                         </div>
                         <div class="rank-hero__points">
                             <div class="rank-hero__label">Tier Points</div>
-                            <div class="rank-hero__pt ${tierTotal > 0 ? 'points-positive' : tierTotal < 0 ? 'points-negative' : 'points-neutral'}">${(tierTotal > 0 ? '+' : '') + tierTotal.toFixed(1)}</div>
+                            <div class="rank-hero__pt ${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</div>
                             <div class="rank-hero__sub" style="margin-top: 4px;">🎁 Reward <span class="${reward > 0 ? 'points-positive' : 'points-neutral'}" style="font-weight: var(--fw-semibold);">${reward.toFixed(1)}</span></div>
                         </div>
                     </div>
@@ -2782,7 +2793,7 @@
                     <div class="stats-section">
                         <div class="stats-row">
                             <span class="stats-label">누적 승점</span>
-                            <span class="stats-value points-positive">+${totalWin.toFixed(1)}</span>
+                            <span class="stats-value ${pointClass(totalWin)}">${signedPoint(totalWin)}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">누적 감점</span>
@@ -2790,11 +2801,11 @@
                         </div>
                         <div class="stats-row" style="border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px;">
                             <span class="stats-label" style="font-weight: var(--fw-semibold);">= Tier Points</span>
-                            <span class="stats-value ${tierTotal > 0 ? 'points-positive' : tierTotal < 0 ? 'points-negative' : 'points-neutral'}">${(tierTotal > 0 ? '+' : '') + tierTotal.toFixed(1)}</span>
+                            <span class="stats-value ${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">게임당 평균</span>
-                            <span class="stats-value ${totalAvgPerGame > 0 ? 'points-positive' : totalAvgPerGame < 0 ? 'points-negative' : 'points-neutral'}">${totalAvgPerGame > 0 ? '+' : ''}${totalAvgPerGame.toFixed(1)}</span>
+                            <span class="stats-value ${pointClass(totalAvgPerGame)}">${signedPoint(totalAvgPerGame)}</span>
                         </div>
                     </div>
 
@@ -2802,11 +2813,11 @@
                     <div class="stats-section">
                         <div class="stats-row">
                             <span class="stats-label">Tier Points (게임 점수)</span>
-                            <span class="stats-value ${tierTotal > 0 ? 'points-positive' : tierTotal < 0 ? 'points-negative' : 'points-neutral'}">${(tierTotal > 0 ? '+' : '') + tierTotal.toFixed(1)}</span>
+                            <span class="stats-value ${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">📅 누적 출석 보너스 <span class="badge-soft">${attendanceCount}회</span></span>
-                            <span class="stats-value ${totalAttendance > 0 ? 'points-positive' : 'points-neutral'}">${totalAttendance > 0 ? '+' + totalAttendance.toFixed(1) : '0.0'}</span>
+                            <span class="stats-value ${pointClass(totalAttendance)}">${totalAttendance > 0 ? '+' + totalAttendance.toFixed(1) : totalAttendance.toFixed(1)}</span>
                         </div>
                         <div class="stats-row">
                             <span class="stats-label">🎁 사용한 포인트 / 교환</span>
@@ -2860,11 +2871,11 @@
                     <h3 style="margin-top: var(--space-20);">📊 게임별 성적</h3>
                     ${best ? `<div class="game-stat-item best">
                         <span class="game-stat-label">✨ 가장 잘하는 게임</span>
-                        <span><strong>${escapeHtml(best.game)}</strong> (<span class="${best.avgPerGame < 0 ? 'points-negative' : 'points-positive'}">게임당 ${best.avgPerGame.toFixed(1)}점</span>)</span>
+                        <span><strong>${escapeHtml(best.game)}</strong> (<span class="${pointClass(best.avgPerGame)}">게임당 ${best.avgPerGame.toFixed(1)}점</span>)</span>
                     </div>` : ''}
                     ${worst && worst !== best ? `<div class="game-stat-item worst">
                         <span class="game-stat-label">⚠️ 가장 못하는 게임</span>
-                        <span><strong>${escapeHtml(worst.game)}</strong> (<span class="${worst.avgPerGame < 0 ? 'points-negative' : 'points-positive'}">게임당 ${worst.avgPerGame.toFixed(1)}점</span>)</span>
+                        <span><strong>${escapeHtml(worst.game)}</strong> (<span class="${pointClass(worst.avgPerGame)}">게임당 ${worst.avgPerGame.toFixed(1)}점</span>)</span>
                     </div>` : ''}
                 </div>
 
