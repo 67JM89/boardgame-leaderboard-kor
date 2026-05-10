@@ -1,208 +1,195 @@
-# 보드게임 리더보드 대시보드 / Boardgame Leaderboard Dashboard
+# 🎲 보드게임 리더보드 / Boardgame Leaderboard
 
-**[🎲 Live Demo](https://67jm89.github.io/boardgame-leaderboard-kor/)** (🔒 Private — collaborator만 접속 가능)
+**[🔗 Live](https://67jm89.github.io/boardgame-leaderboard-kor/)** &nbsp;·&nbsp; 🔒 **Private Pages** (GitHub Enterprise, collaborator + 로그인 필요)
 
----
+소규모 보드게임 모임의 결과를 기록·분석하는 단일 페이지 대시보드. 로컬 Excel(`data/board.xlsx`) → GitHub Pages 자동 배포 워크플로우로 운영됩니다.
 
-## 개요 / Overview
-개인 또는 소규모 모임의 보드게임 결과를 기록하고, **리더보드**, **월별 성적**, **게임별 통계**를 한눈에 확인할 수 있는 대시보드입니다. 엑셀 파일(`board.xlsx`)에 게임 결과를 입력하면, HTML 대시보드에서 자동으로 순위와 통계를 계산합니다.
-
-이 리포지토리는 다음 두 가지를 포함합니다:
-
-- **`index.html`** : 브라우저에서 실행하는 보드게임 리더보드 대시보드
-- **`data/board.xlsx`** : 게임 플레이 기록 (플레이 날짜, 게임 이름, 플레이어, 승점, 감점)
-
-A dashboard for recording board game results in personal or small group gatherings, and checking **leaderboards**, **monthly standings**, and **game-specific statistics** at a glance. Simply enter game results in an Excel file (`board.xlsx`), and the HTML dashboard automatically calculates rankings and statistics.
-
-This repository includes:
-
-- **`index.html`** : A browser-based board game leaderboard dashboard
-- **`data/board.xlsx`** : Game play records (play date, game name, player, wins, losses)
+A single-page dashboard for tracking & analyzing small-group boardgame results. Powered by a local Excel file (`data/board.xlsx`) auto-deployed via GitHub Pages.
 
 ---
 
-## 사용 방법 / How to Use
-#### 1. 대시보드 열기
-
-1. 이 리포지토리를 로컬 PC에 **클론** 또는 **ZIP 다운로드** 합니다.
-2. 로컬 폴더에서 `index.html` 파일을 더블클릭하여 브라우저(Chrome, Firefox 등)로 엽니다.
-3. 대시보드는 항상 서버의 최신 데이터를 불러오며, 화면 상단의 **파일 업로드(XLSX)** 버튼으로 다른 파일을 업로드하여 즉시 확인할 수도 있습니다.
-
-> **참고:** 이 HTML 파일은 로컬에서만 실행되며, 별도의 웹 서버 없이도 브라우저에서 바로 동작합니다.
-
-#### 2. 엑셀 데이터 업데이트
-
-1. `data/board.xlsx` 파일을 열고 **새로운 게임 결과를 입력**합니다:
-   - 플레이 날짜 (예: 2026-01-20)
-   - 게임 이름 (예: 콩심기, Take 5!)
-   - 플레이어 이름
-   - 승점 (예: 3)
-   - 감점 (예: -1.0)
-
-2. 파일을 저장한 후, 터미널/명령줄에서 다음 명령을 실행하여 변경사항을 GitHub에 푸시합니다:
-
-```bash
-git add data/board.xlsx
-git commit -m "Update board results"
-git push origin main
-```
-
-#### 3. 주요 기능
-
-- **전체 리더보드** (Overall Leaderboard)
-  - 현재 포인트, 총 승점, 총 감점, 게임 수, 승리 수, 평균 포인트를 표시합니다.
-  - 정렬 순서: 현재 포인트 → 총 승점 → 게임 수 → 총 감점 → 승리 수
-
-- **게임별 리더보드** (Game-Specific Leaderboard)
-  - 특정 게임에서의 순위와 통계를 따로 확인할 수 있습니다.
-
-- **월별 리더보드** (Monthly Leaderboard)
-  - 연·월 범위를 선택하면, 해당 기간의 게임 결과만을 기반으로 순위를 계산합니다.
-
-- **플레이 히스토리 & 플레이어 상세 정보**
-  - 각 플레이어의 날짜별 기록, 포인트 변화, 게임별/월별 누적 통계를 조회할 수 있습니다.
-
-#### 1. Open the Dashboard
-
-1. **Clone** or **download as ZIP** this repository to your local PC.
-2. Double-click the `index.html` file in the local folder to open it in a web browser (Chrome, Firefox, etc.).
-3. The dashboard always loads the latest data from the server. You can also use the **Upload File (XLSX)** button at the top of the screen to upload a different file and view results immediately.
-
-> **Note:** This HTML file runs locally and works directly in your browser without requiring a separate web server.
-
-#### 2. Update Excel Data
-
-1. Open the `data/board.xlsx` file and **enter new game results**:
-   - Play Date (e.g., 2026-01-20)
-   - Game Name (e.g., Bean Farming, Take 5!)
-   - Player Name
-   - Win Score (e.g., 3)
-   - Loss Score (e.g., -1.0)
-
-2. Save the file, then run the following commands in your terminal to push changes to GitHub:
-
-```bash
-git add data/board.xlsx
-git commit -m "Update board results"
-git push origin main
-```
-
-#### 3. Key Features
-
-- **Overall Leaderboard**
-  - Displays current points, total wins, total losses, game count, win count, and average points.
-  - Sorted by: Current Points → Total Wins → Game Count → Total Losses → Win Count
-
-- **Game-Specific Leaderboard**
-  - View rankings and statistics for a particular game separately.
-
-- **Monthly Leaderboard**
-  - Select a year and month range to calculate rankings based only on results from that period.
-
-- **Play History & Player Details**
-  - View each player's date-by-date records, point changes, and accumulated statistics by game and month.
-
----
-
-## 승점 / 감점 규칙 / Scoring Rules
-이 리더보드는 각 게임 결과에서 **승점(+)과 감점(-)** 을 합산하여 포인트를 계산합니다.
-
-- 각 기록은 다음 컬럼을 가집니다:
-  - **승점** : 해당 판에서 얻은 점수 (보통 상위 순위 보상)
-  - **감점** : 해당 판에서 잃은 점수 (페널티, 보통 음수)
-
-- 한 판에서의 포인트 변화는 다음과 같이 계산됩니다:
-  ```
-  포인트 변화 = 승점 + 감점
-  ```
-
-- 플레이어의 **현재 포인트**는 선택된 기간(필터)에 포함된 모든 게임의 포인트 변화를 순서대로 더한 값입니다.
-  포인트가 음수로 내려가지 않도록, 최소값은 **0**으로 처리됩니다.
-
-The leaderboard calculates points by summing **win scores (+) and loss scores (-)** from each game result.
-
-- Each record contains:
-  - **Win Score** : Points earned in that game (usually rewards for higher placements)
-  - **Loss Score** : Points lost in that game (penalty, usually negative)
-
-- A player's point change in one game is calculated as:
-  ```
-  Point Change = Win Score + Loss Score
-  ```
-
-- A player's **Current Points** is the cumulative sum of all point changes from games within the selected period.
-  The minimum value is set to **0** to prevent negative totals.
-
----
-
-## 랭킹 정렬 기준 / Ranking Criteria
-모든 리더보드는 다음 순서로 플레이어 순위를 결정합니다:
-
-| 순위 | 기준 | 설명 |
-|------|------|------|
-| **1순위** | **현재 포인트** (높을수록 우위) | 지금까지의 누적 결과를 보여주는 최종 점수입니다. |
-| **2순위** | **총 승점** (높을수록 우위) | 선택된 기간 동안 획득한 승점의 합입니다. 상위 순위를 자주 달성한 플레이어가 유리합니다. |
-| **3순위** | **게임 수** (높을수록 우위) | 해당 기간 동안 참여한 판 수입니다. 많이 참여한 사람을 우대하여 "꼴찌를 해도 괜찮으니 많이 참여하자"는 메시지를 반영합니다. |
-| **4순위** | **총 감점** (낮을수록 우위) | 선택된 기간 동안의 감점 절댓값 합입니다. 손실을 적게 낸, 안정적인 플레이를 강조합니다. |
-| **5순위** | **승리** (높을수록 우위) | 1등을 한 횟수입니다. 동일 조건에서 1등을 더 자주 한 플레이어가 상위에 옵니다. |
-
-**정렬 기준의 철학:**
-
-- **총 승점** (2순위)은 게임 실력과 성과를 강조합니다.
-- **게임 수** (3순위)를 상위에 배치한 것은 **참여도**를 실력만큼 중요하게 본다는 의미입니다.
-- 이를 통해 "꼴찌를 해도 괜찮으니, 게임에 자주 참여해 주세요!"라는 커뮤니티의 메시지를 전달합니다.
-
-All leaderboards rank players in the following order:
-
-| Rank | Criteria | Description |
-|------|----------|-------------|
-| **1st** | **Current Points** (higher is better) | The final accumulated score reflecting overall performance. |
-| **2nd** | **Total Win Score** (higher is better) | Sum of all win scores earned during the selected period. Players with frequent top finishes have an advantage. |
-| **3rd** | **Game Count** (higher is better) | Number of games played during the selected period. This prioritizes participation, sending the message "It's okay to finish last—just participate often!" |
-| **4th** | **Total Loss Score** (lower is better) | Absolute value sum of loss scores during the selected period. Emphasizes stable, consistent play with minimal losses. |
-| **5th** | **Wins** (higher is better) | Number of 1st place finishes. In case of a tie, the player with more 1st place finishes ranks higher. |
-
-**Philosophy Behind the Ranking:**
-
-- **Total Win Score** (2nd) emphasizes gameplay skill and performance.
-- Placing **Game Count** (3rd) high reflects that **participation** is valued as much as skill.
-- This conveys the community's message: "It's okay if you finish last—please join us often!"
-
----
-
-## 주의 사항 / Cautions
-
-- 이 리포지토리는 **공개(Public)** 로 설정되어 있으므로, `data/board.xlsx`의 플레이어 이름과 점수는 누구나 열람 가능합니다. 이를 감수하고 사용하시기 바랍니다.
-- 리더보드 로직(정렬 기준, 포인트 계산 방식)을 수정하려면, `index.html`의 JavaScript 코드도 함께 업데이트해야 합니다.
-
-- This repository is set to **Public**, so player names and scores in `data/board.xlsx` are viewable by anyone. Please use this tool with that in mind.
-- If you modify the leaderboard logic (sorting criteria, point calculation), you must also update the JavaScript code in `index.html` accordingly.
-
----
-
-## 파일 구조 / File Structure
+## 📦 구성 / Contents
 
 ```
 boardgame-leaderboard-kor/
-├── index.html          # 리더보드 대시보드 (로컬에서 실행)
-│                       # Leaderboard dashboard (runs locally)
+├── index.html              # 메인 대시보드 (현재 활성 버전)
+├── index.v2~v8.html        # 이전 버전 스냅샷 (참고용)
 ├── data/
-│   └── board.xlsx      # 게임 기록 데이터 (정기적으로 업데이트)
-│                       # Game records data (updated periodically)
-└── README.md           # 이 문서 / This document
+│   └── board.xlsx          # 게임 플레이 기록 (master data)
+├── .github/
+│   ├── workflows/
+│   │   └── validate-xlsx.yml  # xlsx 무결성 자동 검증 CI
+│   ├── CODEOWNERS              # 파일 오너
+│   └── dependabot.yml          # GitHub Actions 버전 자동 업데이트
+├── docs/
+│   └── DEVOPS.md           # Branch Protection / Environments / PR Preview 가이드
+└── README.md               # 이 문서
 ```
 
 ---
 
-## 라이선스 / License
-자유롭게 사용, 수정, 배포 가능합니다.
-Free to use, modify, and distribute.
+## ✨ 주요 기능 / Features
+
+### 🏆 리더보드 & 통계
+- **전체 / 게임별 / 월별** 리더보드 (정렬 가능 컬럼)
+- **Tier Points vs Reward Points** 이원 점수 체계 (게임 실력 vs 교환 가능 지갑)
+- **출석 보너스** (출석 체크 / HSM Running Club)
+- **메달 시스템** (금/은/동 + 꼴찌/꼴찌 직전 빨강 마커)
+- **반응형 정렬**: 컬럼 클릭 시 desc → asc → default 토글
+
+### 🆕 V6 — 분석/탐색
+- 🥊 **H2H 대결**: 두 플레이어 함께 참가한 세션의 승/무/패 통계
+- 🔥 **히트맵**: 플레이어 × 게임 격자, 승률/평균순위/평균점수 3-mode 색상 그라디언트
+- 🆕 **최근 모임 카드**: 가장 최근 세션의 게임별 우승자 요약
+- ▲▼ **순위 변동 화살표**: 직전 세션 대비 ±N 표시
+- ⏱ **카운트업 애니메이션**: 첫 로드 시 통계가 0→실제값으로
+
+### 🛠 V7 — 실용/폴리시
+- 🆕 **자동 업데이트 감지**: ETag 폴링 90초마다 → 배너로 "새 버전 있음" 알림 (hard refresh 불필요)
+- 📷 **PNG 공유**: 헤더 공유 버튼으로 전체 페이지를 PNG로 다운로드
+- 🖨 **Print Stylesheet**: `Ctrl+P` 시 리더보드만 깔끔한 출력
+- 🏷️ **헤더 버전 칩** (`v8.6` 등) — 캐시 디버깅용
+
+### 🏅 V8 — 챔피언십 & 인사이트
+- 🏆 **챔피언십 탭**: 시즌(분기별) 챔피언 → 명예의 전당(공동 1위 지원) → ELO Top 10
+- 💡 **자동 인사이트 캐러셀**: 데이터에서 발견한 1줄 사실 회전 (6.5초 간격)
+  - 예: "Julia님이 이번 달 Tier +12.5 상승", "Catan은 최근 30일 최다 플레이"
+- ⚡ **Personal Records**: 플레이어 모달에 게임별 단일 세션 최고 기록
+- 📊 **모바일 분석 탭 압축**: 4개 분석 탭 → `📊 분석` 드롭다운으로 압축
+- 🎨 **컬럼 군별 음영**: Tier=보라 wash / Reward=파랑 wash로 시각 그룹 강조
+
+### 🔒 보안 / Security
+- **CSP** (Content Security Policy): jsDelivr CDN만 허용
+- **SRI** (Subresource Integrity): CDN 파일 변조 자동 차단
+- **SHA-256 해시 비밀번호** (XLSX 업로드 보호, 5회 실패 시 5분 잠금)
+- **Private Pages** (GitHub Enterprise): 로그인한 collaborator만 접근
 
 ---
 
-## 문의 및 피드백 / Contact & Feedback
+## 🚀 데이터 갱신 워크플로우 / Update Workflow
 
-문제를 발견하거나 기능을 제안하고 싶다면, GitHub Issues를 통해 연락주세요.  
-If you find any issues or have feature suggestions, please reach out via GitHub Issues.
+### Claude Code 사용자
+```
+1. data/board.xlsx 편집 + 저장 (Excel 닫기)
+2. Claude Code에서  /private-repo_hsm_boardgame
+3. 자동: git add + commit + push → Pages 1~2분 후 자동 배포
+```
 
-**Repository:** [67JM89/boardgame-leaderboard-kor](https://github.com/67JM89/boardgame-leaderboard-kor) (Private, GitHub Team)
+### 수동 (terminal)
+```bash
+# 1. xlsx 편집/저장 + Excel 닫기
+# 2. 아래 명령 실행
+git add data/board.xlsx
+git commit -m "Update data: $(date '+%Y-%m-%d %H:%M')"
+git push origin main
+```
+
+### End User (친구들)
+- GitHub 로그인 + 저장소 collaborator 권한 필요 (Private repo)
+- 페이지 첫 접속 시 GitHub 인증 → `refactored-giggle-XXXX.pages.github.io` 로 자동 리다이렉트 (정상)
+- 새 버전 배포되면 90초 내 우측 하단 배너 자동 표시 → "새로고침" 클릭
+
+---
+
+## 📋 점수 체계 / Scoring System
+
+### Tier Points (게임 실력 점수)
+**순위를 결정하는 핵심 점수.** 음수 가능.
+
+```
+Tier Points = 누적 승점 + 누적 감점
+```
+
+- 게임 행에서만 계산 (출석 보너스 무관)
+- 사용/교환은 영향 없음 → **교환해도 순위 안 떨어짐**
+
+### Reward Points (교환 가능 포인트, 지갑)
+**상품 교환용.** 최소 0 (음수 floor).
+
+```
+Reward Points = Tier + 출석 보너스 − 사용한 포인트 − 교환
+```
+
+### ELO Rating (V8)
+체스 ELO와 같은 페어와이즈 정통 실력 점수. 모두 1000부터 시작.
+- 같은 세션 내 모든 플레이어 쌍에 대해 업데이트
+- K-factor = 32 / (N-1) 로 정규화 (N=세션 참가자 수, 큰 세션 스윙 폭주 방지)
+
+---
+
+## 🏆 리더보드 정렬 기준 / Ranking Criteria
+
+| 우선 | 기준 | 효과 |
+|:----:|------|------|
+| 1 | **Tier Points** ↓ | 누적 승점 + 감점, 실력의 핵심 점수 |
+| 2 | **총 승점** ↓ | 상위 순위 자주 → 가산점 |
+| 3 | **승리 횟수** ↓ | 승점 > 0 받은 게임 수 |
+| 4 | **게임 수** ↓ | 참여도 우대 ("꼴찌해도 참여만 하라") |
+| 5 | **총 감점** ↑ (적을수록) | 안정적 플레이 강조 |
+
+---
+
+## 🏷 컬럼 순서 (V8.2) / Column Order
+
+의미 그룹 3덩어리:
+
+```
+순위 │ 플레이어 ║ Tier │ 총승점 │ 총감점 ║ 게임수 │ 승리 │ 승률 ║ Reward │ 🏃RUN │ 사용
+                ╰─────── Tier 군 ───────╯ ╰── 활동 군 ──╯ ╰─── Reward 군 ───╯
+                (보라 wash)              (기본)         (파랑 wash)
+```
+
+모바일에선 디테일(총승점/총감점/RUN/사용) 4컬럼 자동 hide → 7컬럼만 노출.
+
+---
+
+## 🛠 인프라 / CI · DevOps
+
+### GitHub Actions
+- **`.github/workflows/validate-xlsx.yml`**: `data/board.xlsx` push 시 자동 무결성 검증
+  - 필수 컬럼 확인 (`플레이 날짜`, `게임 이름`, `플레이어 이름`, `승점`, `감점`)
+  - 10MB 초과 차단
+
+### Dependabot
+- `.github/dependabot.yml`: 매주 월요일 09:00 KST 액션 버전 자동 업데이트 PR
+
+### CODEOWNERS
+- `.github/CODEOWNERS`: 파일별 오너 지정 (Branch Protection 결합 시 효력)
+
+### 추가 셋업 가이드
+👉 [`docs/DEVOPS.md`](docs/DEVOPS.md) — Branch Protection, Environments + Secrets, PR Preview Deploys 등.
+
+---
+
+## ⚠️ 주의 사항 / Cautions
+
+- **Private repo**: collaborator 권한 없으면 페이지 접근 불가. 코드/데이터도 외부 비공개.
+- **GitHub Enterprise 구독 필수**: Private Pages 기능은 Enterprise plan에서만 활성. Team plan은 Pages를 Public로만 노출.
+- **하드 리프레시 불필요**: V7부터 자동 업데이트 감지 배너가 새 버전을 알림. (그래도 안 보이면 `Ctrl+Shift+R`)
+- **데이터는 Excel 마스터**: 모든 통계는 `data/board.xlsx`에서 파싱. 다른 곳에서 직접 수정 X.
+
+---
+
+## 🧠 학습 가치 (Personal Project Goals)
+
+이 프로젝트는 **회사 업무에서 자주 보는 GitHub 패턴**을 1인 환경에서 학습하기 위한 케이스 스터디입니다:
+
+- Organization 운영 (`67JM89`)
+- Team → Enterprise plan 업그레이드 (Private Pages 활성)
+- Repo 이전 (`sung-jungmin` → `67JM89`) + 자동 redirect
+- Private Pages + auth 서브도메인 (`refactored-giggle-*`)
+- GitHub Actions / CODEOWNERS / Dependabot
+- Branch Protection (계획)
+- Environments + Secrets (계획)
+
+---
+
+## 📜 라이선스 / License
+
+자유롭게 사용, 수정, 배포 가능. Free to use, modify, distribute.
+
+## 💬 문의 / Contact
+
+Issues 탭으로 연락 / Reach out via GitHub Issues.
+
+**Repository:** [67JM89/boardgame-leaderboard-kor](https://github.com/67JM89/boardgame-leaderboard-kor) (Private, GitHub Enterprise)
