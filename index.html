@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.4">
+    <meta name="app-version" content="v8.5">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -577,6 +577,61 @@
         }
         .tab-button--help.active {
             color: var(--accent-500);
+        }
+
+        /* V8.5: 모바일용 분석 탭 오버플로우 메뉴 */
+        .tab-overflow {
+            position: relative;
+            display: none;  /* 데스크톱: 숨김 */
+        }
+        .tab-button--overflow {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tab-button--overflow.active {
+            color: var(--text);
+            background: var(--surface);
+            box-shadow: var(--shadow-xs);
+        }
+        .tab-overflow__panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 180px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-md);
+            box-shadow: var(--shadow-lg);
+            padding: 4px;
+            z-index: 50;
+            display: none;
+            animation: fadeUp var(--dur-base) var(--ease-out);
+        }
+        .tab-overflow__panel.active { display: block; }
+        .tab-overflow__item {
+            display: block;
+            width: 100%;
+            padding: 9px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            font-size: var(--fs-sm);
+            text-align: left;
+            cursor: pointer;
+            border-radius: var(--r-sm);
+            transition: background var(--dur-fast) var(--ease-out);
+        }
+        .tab-overflow__item:hover { background: var(--surface-hover); }
+        .tab-overflow__item.active {
+            color: var(--primary);
+            font-weight: var(--fw-semibold);
+            background: var(--primary-soft);
+        }
+        @media (max-width: 768px) {
+            .tab-button--analytics { display: none; }
+            .tab-overflow { display: inline-block; }
         }
 
         /* 설명 카드 그리드 */
@@ -1907,6 +1962,69 @@
         /*     Rank Change Arrows (E), Count-up (D)                      */
         /* ============================================================ */
 
+        /* V8.5: 자동 인사이트 캐러셀 — 데이터에서 발견한 1줄 사실들 회전 */
+        .insights-carousel {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.04), var(--surface));
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: var(--sp-3) var(--sp-4);
+            margin-bottom: var(--sp-4);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            min-height: 52px;
+            position: relative;
+        }
+        .insights-carousel__icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: transform var(--dur-base) var(--ease-out);
+        }
+        .insights-carousel__text {
+            flex: 1;
+            min-width: 0;
+            color: var(--text);
+            font-size: var(--fs-base);
+            font-weight: var(--fw-medium);
+            line-height: 1.4;
+            transition: opacity var(--dur-base) var(--ease-out);
+        }
+        .insights-carousel__text strong {
+            color: var(--primary);
+            font-weight: var(--fw-semibold);
+        }
+        .insights-carousel.fading .insights-carousel__text,
+        .insights-carousel.fading .insights-carousel__icon {
+            opacity: 0;
+        }
+        .insights-carousel__dots {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .insights-carousel__dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--border-strong);
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: background var(--dur-base) var(--ease-out),
+                        width var(--dur-base) var(--ease-out);
+        }
+        .insights-carousel__dot:hover { background: var(--text-muted); }
+        .insights-carousel__dot.active {
+            background: var(--primary);
+            width: 20px;
+            border-radius: 4px;
+        }
+        @media (max-width: 480px) {
+            .insights-carousel { padding: var(--sp-2) var(--sp-3); }
+            .insights-carousel__text { font-size: var(--fs-sm); }
+        }
+
         /* B. 최근 세션 요약 카드 */
         .recent-session-card {
             background: linear-gradient(135deg, var(--primary-soft), var(--surface));
@@ -2703,7 +2821,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.4</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.5</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -2780,6 +2898,13 @@
             </div>
         </div>
 
+        <!-- V8.5: 자동 인사이트 캐러셀 — 데이터에서 회전 표시 -->
+        <section id="insightsCarousel" class="insights-carousel" hidden aria-label="자동 인사이트" aria-live="polite">
+            <span class="insights-carousel__icon" id="insightsCarouselIcon" aria-hidden="true">💡</span>
+            <div class="insights-carousel__text" id="insightsCarouselText"></div>
+            <div class="insights-carousel__dots" id="insightsCarouselDots" role="tablist"></div>
+        </section>
+
         <!-- V6: 최근 세션 요약 카드 (B) -->
         <section id="recentSessionCard" class="recent-session-card" hidden aria-label="가장 최근 모임 요약">
             <div class="recent-session-card__header">
@@ -2797,10 +2922,20 @@
             <button class="tab-button" role="tab" onclick="switchTab(event, 'byGame')">게임별</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'byMonth')">월별</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'history')">플레이 히스토리</button>
-            <button class="tab-button" role="tab" onclick="switchTab(event, 'trend')">📈 순위 변화</button>
-            <button class="tab-button" role="tab" onclick="switchTab(event, 'championship')">🏆 챔피언십</button>
-            <button class="tab-button" role="tab" onclick="switchTab(event, 'h2h')">🥊 H2H 대결</button>
-            <button class="tab-button" role="tab" onclick="switchTab(event, 'heatmap')">🔥 히트맵</button>
+            <button class="tab-button tab-button--analytics" role="tab" onclick="switchTab(event, 'trend')">📈 순위 변화</button>
+            <button class="tab-button tab-button--analytics" role="tab" onclick="switchTab(event, 'championship')">🏆 챔피언십</button>
+            <button class="tab-button tab-button--analytics" role="tab" onclick="switchTab(event, 'h2h')">🥊 H2H 대결</button>
+            <button class="tab-button tab-button--analytics" role="tab" onclick="switchTab(event, 'heatmap')">🔥 히트맵</button>
+            <!-- V8.5: 모바일 전용 오버플로우 메뉴 — 분석 탭들을 압축 -->
+            <div class="tab-overflow">
+                <button class="tab-button tab-button--overflow" type="button" onclick="toggleTabOverflow(event)" aria-haspopup="menu" aria-expanded="false">📊 분석 ▾</button>
+                <div class="tab-overflow__panel" id="tabOverflowPanel" role="menu">
+                    <button class="tab-overflow__item" type="button" role="menuitem" data-tab="trend" onclick="switchTabFromOverflow('trend')">📈 순위 변화</button>
+                    <button class="tab-overflow__item" type="button" role="menuitem" data-tab="championship" onclick="switchTabFromOverflow('championship')">🏆 챔피언십</button>
+                    <button class="tab-overflow__item" type="button" role="menuitem" data-tab="h2h" onclick="switchTabFromOverflow('h2h')">🥊 H2H 대결</button>
+                    <button class="tab-overflow__item" type="button" role="menuitem" data-tab="heatmap" onclick="switchTabFromOverflow('heatmap')">🔥 히트맵</button>
+                </div>
+            </div>
             <button class="tab-button tab-button--help" role="tab" onclick="switchTab(event, 'help')" title="대시보드 설명" aria-label="대시보드 설명">❓ 설명</button>
         </div>
 
@@ -4159,6 +4294,8 @@
             updateStats();
             // V6: D. 숫자 카운트업 애니메이션 (updateStats 후, 텍스트 세팅 직후)
             animateSummaryCounters();
+            // V8.5: 자동 인사이트 캐러셀
+            renderInsightsCarousel();
             // V6: B. 최근 세션 요약 카드
             updateRecentSessionCard();
             updateOverallLeaderboard();
@@ -4536,12 +4673,51 @@
         function switchTab(evt, tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-overflow__item').forEach(it => it.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
             if (tabName === 'trend') updateRankingTrendChart();
             if (tabName === 'h2h') updateH2H();           // V6: A
             if (tabName === 'heatmap') updateHeatmap();   // V6: C
             if (tabName === 'championship') updateChampionship();  // V8
+
+            // V8.5: 모바일 오버플로우 메뉴 상태 동기화
+            const analyticsTabs = ['trend', 'championship', 'h2h', 'heatmap'];
+            const overflowBtn = document.querySelector('.tab-button--overflow');
+            if (overflowBtn) overflowBtn.classList.toggle('active', analyticsTabs.includes(tabName));
+            const overflowItem = document.querySelector('.tab-overflow__item[data-tab="' + tabName + '"]');
+            if (overflowItem) overflowItem.classList.add('active');
+        }
+
+        // V8.5: 오버플로우 메뉴 토글/닫기 + 메뉴 항목 선택
+        function toggleTabOverflow(evt) {
+            evt.stopPropagation();
+            const panel = document.getElementById('tabOverflowPanel');
+            const btn = evt.currentTarget;
+            const isOpen = panel.classList.toggle('active');
+            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen) {
+                // 다음 tick에 외부 클릭 리스너 등록 (현재 클릭으로 닫히지 않게)
+                setTimeout(() => document.addEventListener('click', closeTabOverflowOnOutside), 0);
+            }
+        }
+        function closeTabOverflowOnOutside(e) {
+            if (e.target.closest('.tab-overflow')) return;
+            const panel = document.getElementById('tabOverflowPanel');
+            const btn = document.querySelector('.tab-button--overflow');
+            if (panel) panel.classList.remove('active');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+            document.removeEventListener('click', closeTabOverflowOnOutside);
+        }
+        function switchTabFromOverflow(tabName) {
+            // 패널 먼저 닫기
+            const panel = document.getElementById('tabOverflowPanel');
+            const overflowBtn = document.querySelector('.tab-button--overflow');
+            if (panel) panel.classList.remove('active');
+            if (overflowBtn) overflowBtn.setAttribute('aria-expanded', 'false');
+            document.removeEventListener('click', closeTabOverflowOnOutside);
+            // 해당 탭 전환 — 분석 탭들은 모바일에서 hidden이라 currentTarget 없음
+            switchTab(null, tabName);
         }
 
         // ============================================================
@@ -5219,6 +5395,232 @@
                 muted:  styles.getPropertyValue('--text-muted').trim() || '#475569',
                 grid:   styles.getPropertyValue('--border').trim() || 'rgba(15,23,42,0.08)'
             };
+        }
+
+        // ============================================================
+        // V8.5: 자동 인사이트 카드 (회전 캐러셀)
+        // 데이터에서 발견한 흥미로운 1줄 사실들을 5~7초 간격으로 회전 표시.
+        // ============================================================
+        function generateInsights() {
+            const games = gameData.filter(r => r.isGame);
+            if (games.length === 0) return [];
+            const insights = [];
+
+            // 헬퍼 — strong wrap
+            const s = (text) => '<strong>' + escapeHtml(text) + '</strong>';
+
+            const now = new Date();
+            const thisMonthKey = localMonthKey(now);
+            const lastMonth = new Date(now);
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            const lastMonthKey = localMonthKey(lastMonth);
+
+            const thisMonthRecords = games.filter(r => localMonthKey(r.date) === thisMonthKey);
+            const lastMonthRecords = games.filter(r => localMonthKey(r.date) === lastMonthKey);
+
+            // 1. 이번 달 Tier 상승 1위
+            if (thisMonthRecords.length >= 3) {
+                const thisStats = calculatePlayerStats(thisMonthRecords);
+                const lastStats = lastMonthRecords.length > 0 ? calculatePlayerStats(lastMonthRecords) : {};
+                let topMover = null, topDelta = 0;
+                Object.keys(thisStats).forEach(p => {
+                    const thisTier = thisStats[p].totalWin + thisStats[p].totalLoss;
+                    const lastTier = lastStats[p] ? (lastStats[p].totalWin + lastStats[p].totalLoss) : 0;
+                    const delta = thisTier - lastTier;
+                    if (delta > topDelta) { topDelta = delta; topMover = p; }
+                });
+                if (topMover && topDelta >= 3) {
+                    insights.push({
+                        icon: '🚀',
+                        text: s(topMover) + '님이 이번 달 Tier가 ' + s('+' + topDelta.toFixed(1)) + ' 상승했어요'
+                    });
+                }
+            }
+
+            // 2. 최근 30일 가장 인기 게임
+            const thirty = new Date(now);
+            thirty.setDate(thirty.getDate() - 30);
+            const recent30 = games.filter(r => r.date >= thirty);
+            if (recent30.length > 0) {
+                const gc = {};
+                recent30.forEach(r => { gc[r.game] = (gc[r.game] || 0) + 1; });
+                const [topGame, topCount] = Object.entries(gc).sort((a, b) => b[1] - a[1])[0];
+                if (topCount >= 2) {
+                    insights.push({
+                        icon: '🎯',
+                        text: '최근 30일 가장 많이 플레이된 게임은 ' + s(topGame) + ' (' + topCount + '회)'
+                    });
+                }
+            }
+
+            // 3. 진행 중인 연승
+            const streaks = calculateStreaks(games);
+            const activeStreaks = Object.entries(streaks)
+                .filter(([n, st]) => st.current >= 2)
+                .sort((a, b) => b[1].current - a[1].current);
+            if (activeStreaks[0]) {
+                const [name, st] = activeStreaks[0];
+                insights.push({
+                    icon: '🔥',
+                    text: s(name) + '님이 ' + s(st.current + '연승') + ' 진행 중이에요'
+                });
+            }
+
+            // 4. 이번 달 모임 수 비교
+            const thisSess = new Set(thisMonthRecords.map(r => r.sessionId)).size;
+            const lastSess = new Set(lastMonthRecords.map(r => r.sessionId)).size;
+            if (thisSess > 0) {
+                if (lastSess > 0 && Math.abs(thisSess - lastSess) >= 1) {
+                    const diff = thisSess - lastSess;
+                    insights.push({
+                        icon: diff > 0 ? '📈' : '📉',
+                        text: '이번 달은 ' + s(thisSess + '번') + ' 모였어요 (지난 달 대비 ' + s((diff > 0 ? '+' : '') + diff + '회') + ')'
+                    });
+                } else {
+                    insights.push({
+                        icon: '📅',
+                        text: '이번 달은 ' + s(thisSess + '번') + ' 모였어요'
+                    });
+                }
+            }
+
+            // 5. 가장 자주 함께 플레이한 페어
+            const pairCount = {};
+            const sessionPlayers = {};
+            games.forEach(r => {
+                if (!sessionPlayers[r.sessionId]) sessionPlayers[r.sessionId] = new Set();
+                sessionPlayers[r.sessionId].add(r.player);
+            });
+            Object.values(sessionPlayers).forEach(set => {
+                const uniq = Array.from(set).sort();
+                for (let i = 0; i < uniq.length; i++) {
+                    for (let j = i + 1; j < uniq.length; j++) {
+                        const key = uniq[i] + ' & ' + uniq[j];
+                        pairCount[key] = (pairCount[key] || 0) + 1;
+                    }
+                }
+            });
+            const topPair = Object.entries(pairCount).sort((a, b) => b[1] - a[1])[0];
+            if (topPair && topPair[1] >= 5) {
+                insights.push({
+                    icon: '👥',
+                    text: s(topPair[0]) + '는 가장 자주 함께 게임한 쌍이에요 (' + topPair[1] + '세션)'
+                });
+            }
+
+            // 6. 최고 ELO 보유자
+            const elos = calculateEloRatings(games);
+            const eloArr = Object.entries(elos).sort((a, b) => b[1] - a[1]);
+            if (eloArr[0]) {
+                const [name, rating] = eloArr[0];
+                const delta = Math.round(rating - ELO_INITIAL);
+                if (delta >= 20) {
+                    insights.push({
+                        icon: '⭐',
+                        text: s(name) + '님의 ELO가 ' + s(Math.round(rating) + '점') + ' (+' + delta + ')으로 최고에요'
+                    });
+                }
+            }
+
+            // 7. 평균 순위가 좋은 사람 (5게임 이상)
+            const playerRanks = {};
+            games.filter(r => r.win > 0).forEach(r => {
+                if (!playerRanks[r.player]) playerRanks[r.player] = { sum: 0, count: 0 };
+                playerRanks[r.player].sum += r.rank;
+                playerRanks[r.player].count++;
+            });
+            const avgRanks = Object.entries(playerRanks)
+                .filter(([n, st]) => st.count >= 5)
+                .map(([n, st]) => ({ name: n, avg: st.sum / st.count }))
+                .sort((a, b) => a.avg - b.avg);
+            if (avgRanks[0]) {
+                insights.push({
+                    icon: '🎖️',
+                    text: s(avgRanks[0].name) + '님의 승점 획득 시 평균 순위는 ' + s(avgRanks[0].avg.toFixed(1) + '위') + '예요'
+                });
+            }
+
+            // 8. 다양성 — 최근 한 달 새로 시도된 게임
+            if (thisMonthRecords.length > 0 && lastMonthRecords.length > 0) {
+                const lastGames = new Set(games.filter(r => r.date < new Date(thisMonthKey + '-01')).map(r => r.game));
+                const newGames = Array.from(new Set(thisMonthRecords.map(r => r.game))).filter(g => !lastGames.has(g));
+                if (newGames.length > 0) {
+                    insights.push({
+                        icon: '✨',
+                        text: '이번 달 새로 시도한 게임: ' + s(newGames.join(', '))
+                    });
+                }
+            }
+
+            return insights;
+        }
+
+        let insightsList = [];
+        let insightsIdx = 0;
+        let insightsTimer = null;
+        let insightsHovered = false;
+
+        function renderInsightsCarousel() {
+            const carousel = document.getElementById('insightsCarousel');
+            if (!carousel) return;
+            insightsList = generateInsights();
+            if (insightsList.length === 0) {
+                carousel.hidden = true;
+                if (insightsTimer) clearInterval(insightsTimer);
+                return;
+            }
+            carousel.hidden = false;
+            insightsIdx = 0;
+            renderCurrentInsight(false);
+            // Dots
+            const dotsEl = document.getElementById('insightsCarouselDots');
+            dotsEl.innerHTML = insightsList.map((_, i) =>
+                `<button class="insights-carousel__dot${i === 0 ? ' active' : ''}" type="button" data-idx="${i}" aria-label="인사이트 ${i + 1}"></button>`
+            ).join('');
+            dotsEl.querySelectorAll('[data-idx]').forEach(d => {
+                d.addEventListener('click', () => {
+                    insightsIdx = parseInt(d.dataset.idx);
+                    renderCurrentInsight(true);
+                    startInsightTimer();
+                });
+            });
+            // Hover pause
+            carousel.onmouseenter = () => { insightsHovered = true; };
+            carousel.onmouseleave = () => { insightsHovered = false; };
+            startInsightTimer();
+        }
+
+        function renderCurrentInsight(animate) {
+            const carousel = document.getElementById('insightsCarousel');
+            const iconEl = document.getElementById('insightsCarouselIcon');
+            const textEl = document.getElementById('insightsCarouselText');
+            const dots = document.querySelectorAll('.insights-carousel__dot');
+            if (!carousel || !iconEl || !textEl || insightsList.length === 0) return;
+            const insight = insightsList[insightsIdx];
+            const apply = () => {
+                iconEl.textContent = insight.icon;
+                textEl.innerHTML = insight.text;
+                dots.forEach((d, i) => d.classList.toggle('active', i === insightsIdx));
+            };
+            if (animate) {
+                carousel.classList.add('fading');
+                setTimeout(() => {
+                    apply();
+                    carousel.classList.remove('fading');
+                }, 180);
+            } else {
+                apply();
+            }
+        }
+
+        function startInsightTimer() {
+            if (insightsTimer) clearInterval(insightsTimer);
+            if (insightsList.length <= 1) return;
+            insightsTimer = setInterval(() => {
+                if (insightsHovered) return;
+                insightsIdx = (insightsIdx + 1) % insightsList.length;
+                renderCurrentInsight(true);
+            }, 6500);
         }
 
         // ============================================================
