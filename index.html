@@ -2329,7 +2329,9 @@
                 playerGameCount[record.player] = (playerGameCount[record.player] || 0) + 1;
             });
             const mostActivePlayer = Object.entries(playerGameCount).sort((a, b) => b[1] - a[1])[0];
-            document.getElementById('mostActivPlayer').textContent = mostActivePlayer ? mostActivePlayer[0] : '-';
+            document.getElementById('mostActivPlayer').textContent = mostActivePlayer
+                ? mostActivePlayer[0] + ' (' + mostActivePlayer[1] + '게임)'
+                : '-';
 
             let maxWin = -Infinity, maxWinPlayer = '-';
             Object.entries(stats).forEach(([player, s]) => {
