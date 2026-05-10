@@ -1139,6 +1139,7 @@
             gap: 4px;
         }
         .form-pip {
+            position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -1146,7 +1147,7 @@
             height: 28px;
             font-size: 18px;
             line-height: 1;
-            cursor: help;
+            cursor: default;
             transition: transform var(--dur-fast) var(--ease-out);
             user-select: none;
         }
@@ -1158,6 +1159,49 @@
         }
         .form-pip--penalty {
             filter: drop-shadow(0 1px 3px rgba(220, 38, 38, 0.35));
+        }
+
+        /* 커스텀 툴팁 — 브라우저 기본 title보다 즉시, 예쁘게 */
+        [data-tooltip] {
+            position: relative;
+        }
+        [data-tooltip]::after,
+        [data-tooltip]::before {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--dur-fast) var(--ease-out),
+                        transform var(--dur-fast) var(--ease-out);
+            position: absolute;
+            z-index: 1500;
+        }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            padding: 6px 10px;
+            background: rgba(15, 23, 42, 0.96);
+            color: #fff;
+            border-radius: 6px;
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-medium);
+            white-space: nowrap;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+            max-width: 260px;
+            text-align: center;
+        }
+        [data-tooltip]::before {
+            content: '';
+            bottom: calc(100% + 2px);
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            border: 4px solid transparent;
+            border-top-color: rgba(15, 23, 42, 0.96);
+        }
+        [data-tooltip]:hover::after,
+        [data-tooltip]:hover::before {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
 
         /* NEXT GOALS — 다음 목표 진행도 */
@@ -1320,6 +1364,35 @@
         }
 
         /* 모달 - 성취 배지 */
+        .achievements {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-4);
+        }
+        .achievements-category {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: var(--sp-3);
+        }
+        .achievements-category__title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--sp-2);
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+        }
+        .achievements-category__count {
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            color: var(--text-subtle);
+            background: var(--surface);
+            padding: 2px 8px;
+            border-radius: var(--r-pill);
+            font-variant-numeric: tabular-nums;
+        }
         .achievements-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -2216,80 +2289,80 @@
         // 특수 케이스만 check / progress / progressPct 직접 제공.
         const ACHIEVEMENTS = ([
             // ── Wins (승점 획득 횟수) ─────────────────────────────────────
-            { id: 'first_win', tier: 'common', icon: '🎯', name: '첫 승',
+            { id: 'first_win', category: '🏆 승리', tier: 'common', icon: '🎯', name: '첫 승',
               description: '처음으로 승점을 획득했습니다',
               current: s => s.wins, target: 1, unit: '승' },
-            { id: 'wins_3', tier: 'common', icon: '🏆', name: '3승 달성',
+            { id: 'wins_3', category: '🏆 승리', tier: 'common', icon: '🏆', name: '3승 달성',
               description: '3번 승점 획득',
               current: s => s.wins, target: 3, unit: '승' },
-            { id: 'wins_10', tier: 'rare', icon: '🥇', name: '10승 달성',
+            { id: 'wins_10', category: '🏆 승리', tier: 'rare', icon: '🥇', name: '10승 달성',
               description: '10번 승점 획득 (실력자)',
               current: s => s.wins, target: 10, unit: '승' },
-            { id: 'wins_20', tier: 'epic', icon: '👑', name: '20승 달성',
+            { id: 'wins_20', category: '🏆 승리', tier: 'epic', icon: '👑', name: '20승 달성',
               description: '20번 승점 획득 (베테랑)',
               current: s => s.wins, target: 20, unit: '승' },
 
             // ── Streaks (연속 승점) ──────────────────────────────────────
-            { id: 'streak_2', tier: 'common', icon: '🔥', name: '2연승',
+            { id: 'streak_2', category: '🔥 연승', tier: 'common', icon: '🔥', name: '2연승',
               description: '2게임 연속 승점 획득',
               current: s => s.longestStreak, target: 2, unit: '연승' },
-            { id: 'streak_3', tier: 'rare', icon: '🔥', name: '3연승',
+            { id: 'streak_3', category: '🔥 연승', tier: 'rare', icon: '🔥', name: '3연승',
               description: '3게임 연속 승점 획득 (대단)',
               current: s => s.longestStreak, target: 3, unit: '연승' },
-            { id: 'streak_5', tier: 'legendary', icon: '⚡', name: '5연승 신',
+            { id: 'streak_5', category: '🔥 연승', tier: 'legendary', icon: '⚡', name: '5연승 신',
               description: '5게임 연속 승점 획득 (전설)',
               current: s => s.longestStreak, target: 5, unit: '연승' },
 
             // ── Tier Points ──────────────────────────────────────────────
-            { id: 'tier_20', tier: 'common', icon: '💎', name: 'Tier 20',
+            { id: 'tier_20', category: '💎 Tier', tier: 'common', icon: '💎', name: 'Tier 20',
               description: 'Tier Points 20점 돌파',
               current: s => Math.max(0, s.tier), target: 20, unit: '' },
-            { id: 'tier_50', tier: 'rare', icon: '💎', name: 'Tier 50',
+            { id: 'tier_50', category: '💎 Tier', tier: 'rare', icon: '💎', name: 'Tier 50',
               description: 'Tier Points 50점 돌파',
               current: s => Math.max(0, s.tier), target: 50, unit: '' },
-            { id: 'tier_100', tier: 'epic', icon: '💠', name: 'Tier 100',
+            { id: 'tier_100', category: '💎 Tier', tier: 'epic', icon: '💠', name: 'Tier 100',
               description: 'Tier Points 100점 돌파',
               current: s => Math.max(0, s.tier), target: 100, unit: '' },
 
             // ── Variety (게임 종류) ───────────────────────────────────────
-            { id: 'variety_3', tier: 'common', icon: '🎮', name: '다재다능',
+            { id: 'variety_3', category: '🎮 다양성', tier: 'common', icon: '🎮', name: '다재다능',
               description: '3종류 이상의 게임 플레이',
               current: s => s.uniqueGames, target: 3, unit: '종' },
-            { id: 'variety_5', tier: 'rare', icon: '🎲', name: '게임 마니아',
+            { id: 'variety_5', category: '🎮 다양성', tier: 'rare', icon: '🎲', name: '게임 마니아',
               description: '5종류 이상의 게임 플레이',
               current: s => s.uniqueGames, target: 5, unit: '종' },
 
             // ── Attendance (출석) ────────────────────────────────────────
-            { id: 'attendance_3', tier: 'common', icon: '📅', name: '꾸준한 출석',
+            { id: 'attendance_3', category: '📅 출석', tier: 'common', icon: '📅', name: '꾸준한 출석',
               description: '3회 이상 모임 참여',
               current: s => s.uniquePlayDates, target: 3, unit: '회' },
-            { id: 'attendance_7', tier: 'rare', icon: '🗓️', name: '단골 출석',
+            { id: 'attendance_7', category: '📅 출석', tier: 'rare', icon: '🗓️', name: '단골 출석',
               description: '7회 이상 모임 참여',
               current: s => s.uniquePlayDates, target: 7, unit: '회' },
 
             // ── Win rate (특수 — 게임 수 게이트 포함) ───────────────────
-            { id: 'high_winrate', tier: 'rare', icon: '📊', name: '승률 50%+',
+            { id: 'high_winrate', category: '📊 승률', tier: 'rare', icon: '📊', name: '승률 50%+',
               description: '3게임 이상에서 승률 50% 이상',
               check: s => s.games >= 3 && (s.wins / s.games) >= 0.5,
               progress: s => s.games < 3 ? `${s.games}/3게임 (게임 수 부족)` : `승률 ${Math.round(s.wins / s.games * 100)}%`,
               progressPct: s => s.games < 3 ? Math.min(1, s.games / 3) * 0.5 : Math.min(1, (s.wins / s.games) / 0.5) },
 
             // ── 감점 받은 사람용 (강철 멘탈 대체 — 희귀) ──────────────────
-            { id: 'risk_taker', tier: 'rare', icon: '🎢', name: '위험감수자',
+            { id: 'risk_taker', category: '🎢 위험 감수', tier: 'rare', icon: '🎢', name: '위험감수자',
               description: '게임에서 한 번이라도 감점 — 도전했다는 증거',
               current: s => s.lossCount, target: 1, unit: '회' },
-            { id: 'risk_veteran', tier: 'epic', icon: '🩸', name: '베테랑 도전자',
+            { id: 'risk_veteran', category: '🎢 위험 감수', tier: 'epic', icon: '🩸', name: '베테랑 도전자',
               description: '감점 3번 이상 (정말 과감한 도전자)',
               current: s => s.lossCount, target: 3, unit: '회' },
 
             // ── Redemption (교환 장려) ────────────────────────────────────
-            { id: 'first_redeem', tier: 'common', icon: '🎁', name: '첫 교환',
+            { id: 'first_redeem', category: '🎁 교환', tier: 'common', icon: '🎁', name: '첫 교환',
               description: '처음으로 Reward Points 교환',
               current: s => s.redeemCount, target: 1, unit: '회' },
-            { id: 'redeem_3', tier: 'rare', icon: '🛍️', name: '교환의 달인',
+            { id: 'redeem_3', category: '🎁 교환', tier: 'rare', icon: '🛍️', name: '교환의 달인',
               description: '3번 교환 — Reward 활용도 만점',
               current: s => s.redeemCount, target: 3, unit: '회' },
-            { id: 'redeem_5', tier: 'epic', icon: '💸', name: '큰 손',
+            { id: 'redeem_5', category: '🎁 교환', tier: 'epic', icon: '💸', name: '큰 손',
               description: '5번 교환 — 진정한 스폰서',
               current: s => s.redeemCount, target: 5, unit: '회' }
         ]).map(a => {
@@ -2426,7 +2499,7 @@
                     cls += ' form-pip--dash';
                     title = `${r.game} (포인트 없음${r.rank ? ` · ${r.rank}위` : ''})`;
                 }
-                return `<span class="${cls}" title="${escapeHtml(title)}">${symbol}</span>`;
+                return `<span class="${cls}" data-tooltip="${escapeHtml(title)}">${symbol}</span>`;
             }).join('');
             return `
                 <div class="recent-form-wrap">
@@ -2541,34 +2614,51 @@
 
         function renderAchievementsHTML(playerName) {
             const stats = computePlayerAchievementStats(playerName);
-            const earned = [];
-            const locked = [];
+            const earnedCount = ACHIEVEMENTS.filter(a => a.check(stats)).length;
+
+            // 카테고리별 그룹화 (정의 순서 보존)
+            const byCategory = {};
+            const categoryOrder = [];
             ACHIEVEMENTS.forEach(a => {
-                if (a.check(stats)) earned.push(a);
-                else locked.push(a);
+                const cat = a.category || '기타';
+                if (!byCategory[cat]) {
+                    byCategory[cat] = { items: [], earned: 0 };
+                    categoryOrder.push(cat);
+                }
+                byCategory[cat].items.push(a);
+                if (a.check(stats)) byCategory[cat].earned++;
             });
 
-            const earnedCards = earned.map(a => `
-                <div class="achievement achievement--earned achievement--${a.tier}" title="${escapeHtml(a.description)}">
-                    <div class="achievement__icon">${a.icon}</div>
-                    <div class="achievement__name">${escapeHtml(a.name)}</div>
-                    <div class="achievement__sub">${escapeHtml(a.description)}</div>
-                </div>
-            `).join('');
-
-            const lockedCards = locked.map(a => `
-                <div class="achievement achievement--locked" title="${escapeHtml(a.description)}">
-                    <div class="achievement__icon">${a.icon}</div>
-                    <div class="achievement__name">${escapeHtml(a.name)}</div>
-                    <div class="achievement__sub">${escapeHtml(a.progress(stats))}</div>
-                </div>
-            `).join('');
+            const sections = categoryOrder.map(cat => {
+                const { items, earned } = byCategory[cat];
+                const cards = items.map(a => {
+                    const isEarned = a.check(stats);
+                    const sub = isEarned ? a.description : a.progress(stats);
+                    const cls = isEarned
+                        ? `achievement achievement--earned achievement--${a.tier}`
+                        : 'achievement achievement--locked';
+                    return `
+                        <div class="${cls}" data-tooltip="${escapeHtml(a.description)}">
+                            <div class="achievement__icon">${a.icon}</div>
+                            <div class="achievement__name">${escapeHtml(a.name)}</div>
+                            <div class="achievement__sub">${escapeHtml(sub)}</div>
+                        </div>
+                    `;
+                }).join('');
+                return `
+                    <div class="achievements-category">
+                        <div class="achievements-category__title">
+                            <span>${cat}</span>
+                            <span class="achievements-category__count">${earned}/${items.length}</span>
+                        </div>
+                        <div class="achievements-grid">${cards}</div>
+                    </div>
+                `;
+            }).join('');
 
             return `
-                <h3 style="margin-top: var(--sp-5);">🏆 성취 배지 <span class="badge-soft">${earned.length}/${ACHIEVEMENTS.length}</span></h3>
-                <div class="achievements-grid">
-                    ${earnedCards}${lockedCards}
-                </div>
+                <h3 style="margin-top: var(--sp-5);">🏆 성취 배지 <span class="badge-soft">${earnedCount}/${ACHIEVEMENTS.length}</span></h3>
+                <div class="achievements">${sections}</div>
             `;
         }
 
