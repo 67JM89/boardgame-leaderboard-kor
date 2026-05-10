@@ -1069,6 +1069,36 @@
 
         canvas { max-width: 100%; }
 
+        /* 트렌드 서브탭 (지표 전환: Tier / Reward) */
+        .trend-subtabs {
+            display: inline-flex;
+            gap: 2px;
+            margin-top: var(--sp-4);
+            padding: 3px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+        }
+        .trend-subtab {
+            padding: 7px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-medium);
+            cursor: pointer;
+            border-radius: var(--r-sm);
+            transition: background var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out);
+        }
+        .trend-subtab:hover:not(.active) { color: var(--text); background: var(--surface-hover); }
+        .trend-subtab.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow-xs);
+        }
+
         /* 트렌드 탭: 차트 + 사이드바 그리드 */
         .trend-layout {
             display: grid;
@@ -1578,9 +1608,13 @@
         </div>
 
         <div id="trend" class="tab-content" role="tabpanel">
-            <div class="notice" style="margin-top: var(--sp-4);">
+            <div class="trend-subtabs" role="tablist" aria-label="순위 변화 지표 선택">
+                <button class="trend-subtab active" type="button" data-metric="tier" onclick="switchTrendMetric('tier')" role="tab">🏆 Tier Points 변화</button>
+                <button class="trend-subtab" type="button" data-metric="reward" onclick="switchTrendMetric('reward')" role="tab">🎁 Reward Points 변화</button>
+            </div>
+            <div class="notice" id="trendNotice" style="margin-top: var(--sp-3);">
                 <span class="notice__icon" aria-hidden="true">📈</span>
-                <div>각 모임 시점까지의 누적 <strong>Tier Points</strong>로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.</div>
+                <div id="trendNoticeBody">각 모임 시점까지의 누적 <strong>Tier Points</strong>로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.</div>
             </div>
             <div class="trend-layout">
                 <div class="chart-container trend-layout__chart">
@@ -1655,7 +1689,10 @@
         let gameData = [];
         let filteredData = [];
         let rankingTrendChart = null;
-        let cumulativeByDate = [];   // [{ dateKey, label, ranks: {player: rank} }]
+        let cumulativeByDate = [];          // 활성 지표의 시리즈 (= tier 또는 reward)
+        let cumulativeByDateTier = [];      // [{ dateKey, label, ranks: {player: rank} }]
+        let cumulativeByDateReward = [];
+        let trendMetric = 'tier';            // 'tier' | 'reward'
         let allTrackedPlayers = [];
         let selectedPlayers = new Set();
         let lastDataLoadAt = null;
@@ -2885,17 +2922,16 @@
         // 각 모임 날짜 기준으로 누적 Reward Points를 다시 계산하고 순위를 산출.
         // ============================================================
 
-        function buildCumulativeRankingSeries() {
-            cumulativeByDate = [];
-            allTrackedPlayers = [];
-            if (gameData.length === 0) return;
+        // 누적 순위 시리즈 계산 (지표 함수 + 0 floor 여부 인자화)
+        // deltaFn: 한 record에서 누적할 값 (recordTierDelta 또는 recordRewardDelta)
+        // floorAtZero: true면 누적값을 0 미만으로 떨어뜨리지 않음 (Reward Points 특성)
+        function computeCumulativeRanking(deltaFn, floorAtZero) {
+            const result = [];
+            if (gameData.length === 0) return result;
 
             const dateKeys = Array.from(new Set(
                 gameData.map(r => localDateKey(r.date))
             )).sort();
-
-            const playerSet = new Set(gameData.map(r => r.player));
-            allTrackedPlayers = Array.from(playerSet).sort();
 
             const cumulative = {};
             allTrackedPlayers.forEach(p => { cumulative[p] = 0; });
@@ -2904,32 +2940,90 @@
                 gameData
                     .filter(r => localDateKey(r.date) === dateKey)
                     .forEach(r => {
-                        // Tier Points 기준 순위 변화 — 게임 점수만 누적 (출석/교환 제외)
-                        cumulative[r.player] += recordTierDelta(r);
+                        cumulative[r.player] += deltaFn(r);
                     });
 
-                // 순위 산출: Tier Points (음수 허용) 내림차순. 동률은 같은 순위.
+                // 순위 산출: 값 내림차순, 동률은 같은 순위.
                 const ordered = allTrackedPlayers
-                    .map(p => ({ player: p, tier: cumulative[p] }))
-                    .sort((a, b) => b.tier - a.tier);
+                    .map(p => ({
+                        player: p,
+                        value: floorAtZero ? Math.max(0, cumulative[p]) : cumulative[p]
+                    }))
+                    .sort((a, b) => b.value - a.value);
 
                 const ranks = {};
                 let currentRank = 0;
-                let lastTier = null;
+                let lastValue = null;
                 ordered.forEach((entry, idx) => {
-                    if (entry.tier !== lastTier) {
+                    if (entry.value !== lastValue) {
                         currentRank = idx + 1;
-                        lastTier = entry.tier;
+                        lastValue = entry.value;
                     }
                     ranks[entry.player] = currentRank;
                 });
 
-                cumulativeByDate.push({
+                result.push({
                     dateKey,
                     label: formatShortDateLabel(dateKey),
                     ranks
                 });
             });
+
+            return result;
+        }
+
+        function buildCumulativeRankingSeries() {
+            cumulativeByDateTier = [];
+            cumulativeByDateReward = [];
+            cumulativeByDate = [];
+            allTrackedPlayers = [];
+            if (gameData.length === 0) return;
+
+            const playerSet = new Set(gameData.map(r => r.player));
+            allTrackedPlayers = Array.from(playerSet).sort();
+
+            // 두 지표 모두 미리 계산 (서브탭 전환 시 즉시 표시)
+            cumulativeByDateTier   = computeCumulativeRanking(recordTierDelta,   false);
+            cumulativeByDateReward = computeCumulativeRanking(recordRewardDelta, true);
+            cumulativeByDate = trendMetric === 'reward' ? cumulativeByDateReward : cumulativeByDateTier;
+        }
+
+        // 서브탭 전환: 활성 지표 변경 + 차트/사이드바 라벨 갱신
+        function switchTrendMetric(metric) {
+            if (metric !== 'tier' && metric !== 'reward') return;
+            trendMetric = metric;
+            cumulativeByDate = metric === 'reward' ? cumulativeByDateReward : cumulativeByDateTier;
+
+            // 서브탭 active 상태 토글
+            document.querySelectorAll('.trend-subtab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.metric === metric);
+            });
+
+            // 안내 문구 업데이트
+            const noticeEl = document.getElementById('trendNoticeBody');
+            if (noticeEl) {
+                noticeEl.innerHTML = metric === 'reward'
+                    ? '각 모임 시점까지의 누적 <strong>Reward Points</strong>로 정한 순위 변화입니다. 출석 보너스·사용한 포인트·교환이 모두 반영되며 음수는 0으로 처리됩니다.'
+                    : '각 모임 시점까지의 누적 <strong>Tier Points</strong>로 정한 순위 변화입니다. 가장 오른쪽 점이 현재 순위입니다.';
+            }
+
+            // 사이드바 옵션의 순위 라벨이 지표에 따라 달라지므로 재초기화
+            const prevSelected = new Set(selectedPlayers);
+            initializeChartPlayers();
+            // 이전 선택 상태 복원
+            const checkboxes = document.querySelectorAll('#playerMultiselectList input[type="checkbox"]');
+            selectedPlayers.clear();
+            checkboxes.forEach(cb => {
+                cb.checked = prevSelected.has(cb.value);
+                if (cb.checked) selectedPlayers.add(cb.value);
+            });
+            const allBox = document.getElementById('playerSelectAll');
+            if (allBox) {
+                allBox.checked = selectedPlayers.size === checkboxes.length;
+                allBox.indeterminate = selectedPlayers.size > 0 && selectedPlayers.size < checkboxes.length;
+            }
+            updatePlayerMultiselectLabel();
+            updateRankingTrendChart();
         }
 
         function initializeChartPlayers() {
