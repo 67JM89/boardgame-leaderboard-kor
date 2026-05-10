@@ -1,6 +1,6 @@
 # 보드게임 리더보드 대시보드 / Boardgame Leaderboard Dashboard
 
-**[🎲 Live Demo](https://sung-jungmin.github.io/boardgame-leaderboard-kor/)**
+**[🎲 Live Demo](https://67jm89.github.io/boardgame-leaderboard-kor/)** (🔒 Private — collaborator만 접속 가능)
 
 ---
 
@@ -205,4 +205,4 @@ Free to use, modify, and distribute.
 문제를 발견하거나 기능을 제안하고 싶다면, GitHub Issues를 통해 연락주세요.  
 If you find any issues or have feature suggestions, please reach out via GitHub Issues.
 
-**Repository:** [sung-jungmin/boardgame-leaderboard-kor](https://github.com/sung-jungmin/boardgame-leaderboard-kor)
+**Repository:** [67JM89/boardgame-leaderboard-kor](https://github.com/67JM89/boardgame-leaderboard-kor) (Private, GitHub Team)
