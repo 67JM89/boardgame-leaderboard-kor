@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.0">
+    <meta name="app-version" content="v8.1">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -227,6 +227,7 @@
                 radial-gradient(900px 500px at 100% 0%, rgba(139, 92, 246, 0.08), transparent 65%),
                 var(--bg);
             background-attachment: fixed;
+            overflow-x: hidden;          /* V8.1: 페이지 가로 스크롤 차단 */
         }
 
         ::selection { background: var(--primary-soft-2); color: var(--text); }
@@ -898,8 +899,21 @@
             width: 100%;
             max-height: 88vh;
             overflow-y: auto;
+            overflow-x: hidden;          /* V8.1: 가로 스크롤 차단 */
+            box-sizing: border-box;       /* V8.1: padding이 width 안에 포함되도록 */
             box-shadow: var(--shadow-xl);
             animation: slideUp var(--dur-slow) var(--ease-out);
+        }
+        /* V8.1: 모달 내부 모든 요소가 부모 폭을 넘지 않도록 안전장치 */
+        .modal-content * {
+            max-width: 100%;
+        }
+        .modal-content .profile,
+        .modal-content .rank-hero,
+        .modal-content .mini-stats,
+        .modal-content .pr-grid,
+        .modal-content .composition-grid {
+            min-width: 0;
         }
 
         @keyframes slideUp {
@@ -2578,7 +2592,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.0</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.1</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
