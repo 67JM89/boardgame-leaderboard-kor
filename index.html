@@ -482,6 +482,37 @@
             letter-spacing: -0.01em;
         }
 
+        .stat-card-status {
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            padding: 2px 8px;
+            border-radius: var(--r-pill);
+            line-height: 1.4;
+        }
+        .stat-card-status:empty { display: none; }
+        .stat-card-status--solo {
+            color: var(--primary);
+            background: var(--primary-soft);
+        }
+        .stat-card-status--tie {
+            color: var(--accent-600);
+            background: rgba(139, 92, 246, 0.10);
+        }
+        [data-theme="dark"] .stat-card-status--tie {
+            color: var(--accent-400);
+            background: rgba(167, 139, 250, 0.14);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .stat-card-status--tie {
+                color: var(--accent-400);
+                background: rgba(167, 139, 250, 0.14);
+            }
+        }
+
         /* ============== Tabs ============== */
         .tabs {
             display: flex;
@@ -1429,18 +1460,22 @@
             <div class="stat-card">
                 <div class="stat-card-label" id="overallWinnerLabel"><span aria-hidden="true">👑</span> 모든 게임 1위</div>
                 <div class="stat-card-value" id="overallWinner">-</div>
+                <div class="stat-card-status" id="overallWinnerStatus"></div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-label"><span aria-hidden="true">📈</span> 가장 많이 플레이</div>
                 <div class="stat-card-value" id="mostActivPlayer">-</div>
+                <div class="stat-card-status" id="mostActivPlayerStatus"></div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-label"><span aria-hidden="true">⬆️</span> 최고 승점</div>
                 <div class="stat-card-value" id="maxWinPlayer">-</div>
+                <div class="stat-card-status" id="maxWinPlayerStatus"></div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-label"><span aria-hidden="true">🔥</span> 최장 연승</div>
                 <div class="stat-card-value" id="bestStreakPlayer">-</div>
+                <div class="stat-card-status" id="bestStreakPlayerStatus"></div>
             </div>
         </div>
 
@@ -1735,6 +1770,28 @@
         function signedPoint(value, decimals = 1) {
             if (value > 0) return '+' + value.toFixed(decimals);
             return value.toFixed(decimals);
+        }
+
+        // 동률 처리: 최댓값을 가진 모든 항목 + 공동 여부 반환
+        function getTopWithTies(items, valueGetter) {
+            if (!items || items.length === 0) return { players: [], value: null, isTie: false };
+            const sorted = items.slice().sort((a, b) => valueGetter(b) - valueGetter(a));
+            const topValue = valueGetter(sorted[0]);
+            const tied = sorted.filter(it => valueGetter(it) === topValue);
+            return {
+                players: tied.map(it => it.name),
+                value: topValue,
+                isTie: tied.length > 1
+            };
+        }
+
+        // status 라벨 렌더링 헬퍼 (공동/단독)
+        function renderRankStatus(elId, isTie, show = true) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (!show) { el.textContent = ''; el.className = 'stat-card-status'; return; }
+            el.textContent = isTie ? '공동 1위' : '단독 1위';
+            el.className = 'stat-card-status ' + (isTie ? 'stat-card-status--tie' : 'stat-card-status--solo');
         }
 
         // ============================================================
@@ -2323,45 +2380,47 @@
             document.getElementById('totalRecords').textContent = filteredData.filter(r => r.isGame).length;
             document.getElementById('totalPlayDates').textContent = playDates.size;
 
-            // 헤더 1위 카드: Tier Points 기준 (= 리더보드 정렬 기준과 동일)
+            // 1위 카드: Tier Points 기준 (= 리더보드 정렬 기준과 동일)
             const sortedAll = sortedPlayers(filteredData);
-            const winner = sortedAll[0];
-            document.getElementById('overallWinner').textContent = winner
-                ? winner.name + ' (' + winner.tier.toFixed(1) + ')'
+            const tierTop = getTopWithTies(sortedAll, p => p.tier);
+            document.getElementById('overallWinner').textContent = tierTop.players.length > 0
+                ? tierTop.players.join(', ') + ' (' + tierTop.value.toFixed(1) + ')'
                 : '-';
             document.getElementById('overallWinnerLabel').textContent =
                 gameFilter ? '👑 ' + gameFilter + ' 1위' : '👑 모든 게임 1위';
+            renderRankStatus('overallWinnerStatus', tierTop.isTie, tierTop.players.length > 0);
 
             const stats = calculatePlayerStats(filteredData);
 
+            // 가장 많이 플레이
             const playerGameCount = {};
             filteredData.filter(r => r.isGame).forEach(record => {
                 playerGameCount[record.player] = (playerGameCount[record.player] || 0) + 1;
             });
-            const mostActivePlayer = Object.entries(playerGameCount).sort((a, b) => b[1] - a[1])[0];
-            document.getElementById('mostActivPlayer').textContent = mostActivePlayer
-                ? mostActivePlayer[0] + ' (' + mostActivePlayer[1] + '게임)'
+            const activeArr = Object.entries(playerGameCount).map(([name, count]) => ({ name, count }));
+            const activeTop = getTopWithTies(activeArr, p => p.count);
+            document.getElementById('mostActivPlayer').textContent = activeTop.players.length > 0
+                ? activeTop.players.join(', ') + ' (' + activeTop.value + '게임)'
                 : '-';
+            renderRankStatus('mostActivPlayerStatus', activeTop.isTie, activeTop.players.length > 0);
 
-            let maxWin = -Infinity, maxWinPlayer = '-';
-            Object.entries(stats).forEach(([player, s]) => {
-                if (s.totalWin > maxWin) { maxWin = s.totalWin; maxWinPlayer = player; }
-            });
-            document.getElementById('maxWinPlayer').textContent = maxWinPlayer === '-'
-                ? '-' : maxWinPlayer + (maxWin > 0 ? ' (+' + maxWin.toFixed(1) + ')' : '');
+            // 최고 승점
+            const winArr = Object.entries(stats).map(([name, s]) => ({ name, totalWin: s.totalWin }));
+            const winTop = getTopWithTies(winArr, p => p.totalWin);
+            document.getElementById('maxWinPlayer').textContent = winTop.players.length > 0
+                ? winTop.players.join(', ') + (winTop.value > 0 ? ' (+' + winTop.value.toFixed(1) + ')' : '')
+                : '-';
+            renderRankStatus('maxWinPlayerStatus', winTop.isTie, winTop.players.length > 0);
 
             // 최장 연승
             const streaks = calculateStreaks(filteredData);
-            let bestLongest = 0, bestStreakPlayer = '-';
-            Object.entries(streaks).forEach(([player, st]) => {
-                if (st.longest > bestLongest) { bestLongest = st.longest; bestStreakPlayer = player; }
-            });
-            const streakEl = document.getElementById('bestStreakPlayer');
-            if (streakEl) {
-                streakEl.textContent = bestLongest >= 2
-                    ? bestStreakPlayer + ' (' + bestLongest + '연승)'
-                    : '-';
-            }
+            const streakArr = Object.entries(streaks).map(([name, st]) => ({ name, longest: st.longest }));
+            const streakTop = getTopWithTies(streakArr, p => p.longest);
+            const hasStreak = streakTop.value !== null && streakTop.value >= 2;
+            document.getElementById('bestStreakPlayer').textContent = hasStreak
+                ? streakTop.players.join(', ') + ' (' + streakTop.value + '연승)'
+                : '-';
+            renderRankStatus('bestStreakPlayerStatus', streakTop.isTie, hasStreak);
         }
 
         function getRankBadgeClass(rank, totalPlayers) {
