@@ -1005,6 +1005,283 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* ============================================================
+           플레이어 프로필 모달 — 새 컴포넌트들
+           ============================================================ */
+        .profile { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+        .profile-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: var(--sp-3) var(--sp-4);
+        }
+        .profile-card__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--sp-2);
+        }
+        .profile-card__title {
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+            font-size: var(--fs-base);
+        }
+        .profile-card__sub {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+        }
+
+        /* MINI STATS — 4개 작은 카드 */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--sp-2);
+        }
+        @media (max-width: 480px) {
+            .mini-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        .mini-stat {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 10px var(--sp-3);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .mini-stat__label {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .mini-stat__value {
+            font-family: var(--font-num);
+            font-size: var(--fs-xl);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        .mini-stat__unit {
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-medium);
+            color: var(--text-muted);
+            margin-left: 2px;
+        }
+        .mini-stat__sub {
+            font-size: 10px;
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+            min-height: 14px;
+        }
+
+        /* SPARKLINE — Tier 변화 추이 */
+        .sparkline {
+            display: block;
+            width: 100%;
+            height: 56px;
+            color: var(--text-muted);
+        }
+        .sparkline--empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 56px;
+            color: var(--text-subtle);
+            font-size: var(--fs-sm);
+        }
+
+        /* RECENT FORM — 최근 N경기 결과 칩 */
+        .recent-form-wrap {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 10px var(--sp-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--sp-3);
+            flex-wrap: wrap;
+        }
+        .recent-form-label {
+            font-size: var(--fs-sm);
+            color: var(--text-muted);
+            font-weight: var(--fw-medium);
+        }
+        .recent-form {
+            display: flex;
+            gap: 4px;
+        }
+        .form-pip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: var(--r-sm);
+            font-size: 11px;
+            font-weight: var(--fw-bold);
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+            cursor: help;
+        }
+        .form-pip--win     { background: linear-gradient(135deg, var(--gold-from), var(--gold-to)); color: #422006; }
+        .form-pip--podium  { background: linear-gradient(135deg, var(--silver-from), var(--silver-to)); color: #1f2937; }
+        .form-pip--podium3 { background: linear-gradient(135deg, var(--bronze-from), var(--bronze-to)); }
+        .form-pip--lose    { background: var(--bg-muted); color: var(--text-muted); }
+        .form-pip--penalty { background: linear-gradient(135deg, #fb7185, #e11d48); }
+        .form-pip--neutral { background: var(--bg-muted); color: var(--text-subtle); }
+
+        /* NEXT GOALS — 다음 목표 진행도 */
+        .next-goals {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-2);
+        }
+        .next-goal {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 10px var(--sp-3);
+        }
+        .next-goal__head {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            margin-bottom: 6px;
+        }
+        .next-goal__icon { font-size: 16px; line-height: 1; }
+        .next-goal__name {
+            flex: 1;
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+        }
+        .next-goal__pct {
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-bold);
+            color: var(--primary);
+            font-variant-numeric: tabular-nums;
+        }
+        .next-goal__bar {
+            height: 6px;
+            background: var(--bg-muted);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .next-goal__fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+            border-radius: 3px;
+            transition: width var(--dur-slow) var(--ease-out);
+        }
+        .next-goal__sub {
+            font-size: 10px;
+            color: var(--text-subtle);
+            margin-top: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* COMPOSITION — Tier/Reward 2-column */
+        .composition-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--sp-3);
+        }
+        @media (max-width: 600px) {
+            .composition-grid { grid-template-columns: 1fr; }
+        }
+        .composition {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .composition__row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: var(--fs-sm);
+            color: var(--text-muted);
+            padding: 4px 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .composition__row span:last-child { font-weight: var(--fw-semibold); }
+        .composition__row--total {
+            border-top: 1px solid var(--border);
+            margin-top: 2px;
+            padding-top: 8px;
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+        }
+        .composition__row--meta {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            padding-top: 2px;
+        }
+
+        /* GAME PERFORMANCE — 게임별 막대 */
+        .gp-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .gp-row {
+            display: grid;
+            grid-template-columns: minmax(80px, 1.6fr) minmax(60px, 2fr) auto auto;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: 8px 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            font-size: var(--fs-sm);
+        }
+        .gp-name {
+            color: var(--text);
+            font-weight: var(--fw-medium);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .gp-bar {
+            height: 8px;
+            background: var(--bg-muted);
+            border-radius: 4px;
+            overflow: hidden;
+            min-width: 40px;
+        }
+        .gp-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width var(--dur-slow) var(--ease-out);
+        }
+        .gp-fill--pos  { background: linear-gradient(90deg, var(--success-400), var(--success-600)); }
+        .gp-fill--neg  { background: linear-gradient(90deg, var(--danger-400), var(--danger-600)); }
+        .gp-fill--zero { background: var(--bg-muted); }
+        .gp-total {
+            font-weight: var(--fw-bold);
+            font-variant-numeric: tabular-nums;
+            min-width: 48px;
+            text-align: right;
+        }
+        .gp-meta {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        @media (max-width: 480px) {
+            .gp-row { grid-template-columns: 1fr auto; gap: 6px; }
+            .gp-bar { display: none; }
+            .gp-meta { font-size: 10px; }
+        }
+
         /* 모달 - 성취 배지 */
         .achievements-grid {
             display: grid;
@@ -1883,71 +2160,88 @@
             { id: 'first_win', tier: 'common', icon: '🎯', name: '첫 승',
               description: '처음으로 1위를 차지했습니다',
               check: s => s.wins >= 1,
-              progress: s => `${s.wins}/1승` },
+              progress: s => `${s.wins}/1승`,
+              progressPct: s => Math.min(1, s.wins / 1) },
             { id: 'wins_10', tier: 'common', icon: '🏆', name: '10승 달성',
               description: '10번 1위',
               check: s => s.wins >= 10,
-              progress: s => `${s.wins}/10승` },
+              progress: s => `${s.wins}/10승`,
+              progressPct: s => Math.min(1, s.wins / 10) },
             { id: 'wins_25', tier: 'rare', icon: '🥇', name: '25승 달성',
               description: '25번 1위 (실력자)',
               check: s => s.wins >= 25,
-              progress: s => `${s.wins}/25승` },
+              progress: s => `${s.wins}/25승`,
+              progressPct: s => Math.min(1, s.wins / 25) },
             { id: 'wins_50', tier: 'epic', icon: '👑', name: '50승 달성',
               description: '50번 1위 (전설급)',
               check: s => s.wins >= 50,
-              progress: s => `${s.wins}/50승` },
+              progress: s => `${s.wins}/50승`,
+              progressPct: s => Math.min(1, s.wins / 50) },
             { id: 'streak_3', tier: 'common', icon: '🔥', name: '3연승',
               description: '3게임 연속 1위',
               check: s => s.longestStreak >= 3,
-              progress: s => `최장 ${s.longestStreak}연승` },
+              progress: s => `최장 ${s.longestStreak}연승`,
+              progressPct: s => Math.min(1, s.longestStreak / 3) },
             { id: 'streak_5', tier: 'rare', icon: '🔥', name: '5연승',
               description: '5게임 연속 1위 (대단)',
               check: s => s.longestStreak >= 5,
-              progress: s => `최장 ${s.longestStreak}연승` },
+              progress: s => `최장 ${s.longestStreak}연승`,
+              progressPct: s => Math.min(1, s.longestStreak / 5) },
             { id: 'streak_10', tier: 'legendary', icon: '⚡', name: '10연승 신',
               description: '10게임 연속 1위 (불가능에 가까운)',
               check: s => s.longestStreak >= 10,
-              progress: s => `최장 ${s.longestStreak}연승` },
+              progress: s => `최장 ${s.longestStreak}연승`,
+              progressPct: s => Math.min(1, s.longestStreak / 10) },
             { id: 'tier_50', tier: 'common', icon: '💎', name: 'Tier 50',
               description: 'Tier Points 50점 돌파',
               check: s => s.tier >= 50,
-              progress: s => `${s.tier.toFixed(0)}/50` },
+              progress: s => `${s.tier.toFixed(0)}/50`,
+              progressPct: s => Math.min(1, Math.max(0, s.tier) / 50) },
             { id: 'tier_100', tier: 'rare', icon: '💎', name: 'Tier 100',
               description: 'Tier Points 100점 돌파',
               check: s => s.tier >= 100,
-              progress: s => `${s.tier.toFixed(0)}/100` },
+              progress: s => `${s.tier.toFixed(0)}/100`,
+              progressPct: s => Math.min(1, Math.max(0, s.tier) / 100) },
             { id: 'tier_200', tier: 'epic', icon: '💠', name: 'Tier 200',
               description: 'Tier Points 200점 돌파',
               check: s => s.tier >= 200,
-              progress: s => `${s.tier.toFixed(0)}/200` },
+              progress: s => `${s.tier.toFixed(0)}/200`,
+              progressPct: s => Math.min(1, Math.max(0, s.tier) / 200) },
             { id: 'variety_5', tier: 'common', icon: '🎮', name: '다재다능',
               description: '5종류 이상의 게임 플레이',
               check: s => s.uniqueGames >= 5,
-              progress: s => `${s.uniqueGames}/5종` },
+              progress: s => `${s.uniqueGames}/5종`,
+              progressPct: s => Math.min(1, s.uniqueGames / 5) },
             { id: 'variety_10', tier: 'rare', icon: '🎲', name: '게임 마니아',
               description: '10종류 이상의 게임 플레이',
               check: s => s.uniqueGames >= 10,
-              progress: s => `${s.uniqueGames}/10종` },
+              progress: s => `${s.uniqueGames}/10종`,
+              progressPct: s => Math.min(1, s.uniqueGames / 10) },
             { id: 'attendance_10', tier: 'common', icon: '📅', name: '꾸준한 출석',
               description: '10회 이상 모임 참여',
               check: s => s.uniquePlayDates >= 10,
-              progress: s => `${s.uniquePlayDates}/10회` },
+              progress: s => `${s.uniquePlayDates}/10회`,
+              progressPct: s => Math.min(1, s.uniquePlayDates / 10) },
             { id: 'attendance_25', tier: 'rare', icon: '🗓️', name: '단골 출석',
               description: '25회 이상 모임 참여',
               check: s => s.uniquePlayDates >= 25,
-              progress: s => `${s.uniquePlayDates}/25회` },
+              progress: s => `${s.uniquePlayDates}/25회`,
+              progressPct: s => Math.min(1, s.uniquePlayDates / 25) },
             { id: 'first_redeem', tier: 'common', icon: '🎁', name: '첫 교환',
               description: 'Reward Points로 첫 교환',
               check: s => s.redeemCount >= 1,
-              progress: s => `${s.redeemCount}회` },
+              progress: s => `${s.redeemCount}회`,
+              progressPct: s => s.redeemCount >= 1 ? 1 : 0 },
             { id: 'high_winrate', tier: 'rare', icon: '📊', name: '승률 50%+',
               description: '10게임 이상에서 승률 50% 이상',
               check: s => s.games >= 10 && (s.wins / s.games) >= 0.5,
-              progress: s => s.games < 10 ? `${s.games}/10게임` : `승률 ${Math.round(s.wins / s.games * 100)}%` },
+              progress: s => s.games < 10 ? `${s.games}/10게임` : `승률 ${Math.round(s.wins / s.games * 100)}%`,
+              progressPct: s => s.games < 10 ? Math.min(1, s.games / 10) * 0.5 : Math.min(1, (s.wins / s.games) / 0.5) },
             { id: 'iron_will', tier: 'epic', icon: '🛡️', name: '강철 멘탈',
               description: '연속 5게임 무감점',
               check: s => s.maxNoLossStreak >= 5,
-              progress: s => `최장 ${s.maxNoLossStreak}게임 무감점` }
+              progress: s => `최장 ${s.maxNoLossStreak}게임 무감점`,
+              progressPct: s => Math.min(1, s.maxNoLossStreak / 5) }
         ];
 
         function computePlayerAchievementStats(playerName) {
@@ -1994,6 +2288,160 @@
                 uniqueGames, uniquePlayDates, redeemCount,
                 longestStreak, maxNoLossStreak
             };
+        }
+
+        // 플레이어의 시간순 누적 Tier Points 시리즈 (스파크라인용)
+        function computePlayerTierTrend(playerName) {
+            const records = gameData.filter(r => r.player === playerName && r.isGame)
+                .sort((a, b) => a.date - b.date || a.id - b.id);
+            let cum = 0;
+            return records.map(r => {
+                cum += r.win + r.loss;
+                return { date: r.date, value: cum };
+            });
+        }
+
+        function renderTierSparkline(playerName, w = 220, h = 56) {
+            const trend = computePlayerTierTrend(playerName);
+            if (trend.length < 2) {
+                return `<div class="sparkline sparkline--empty">데이터가 부족합니다</div>`;
+            }
+            const values = trend.map(t => t.value);
+            const min = Math.min(0, ...values);
+            const max = Math.max(0, ...values);
+            const range = max - min || 1;
+            const padX = 2, padY = 4;
+            const innerW = w - padX * 2;
+            const innerH = h - padY * 2;
+            const dx = innerW / (trend.length - 1);
+            const points = trend.map((t, i) => {
+                const x = padX + i * dx;
+                const y = padY + innerH - ((t.value - min) / range) * innerH;
+                return [x, y];
+            });
+            const pointsStr = points.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+            const last = values[values.length - 1];
+            const stroke = last > 0 ? '#10b981' : last < 0 ? '#ef4444' : '#94a3b8';
+            const fill   = last > 0 ? 'rgba(16,185,129,0.14)' : last < 0 ? 'rgba(239,68,68,0.14)' : 'rgba(148,163,184,0.10)';
+            // 0선
+            const zeroY = padY + innerH - ((0 - min) / range) * innerH;
+            const areaPoints = `${padX},${h - padY} ${pointsStr} ${(padX + innerW).toFixed(1)},${(h - padY).toFixed(1)}`;
+            const lastPt = points[points.length - 1];
+            return `
+                <svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Tier Points 변화">
+                    ${(zeroY > padY && zeroY < h - padY) ? `<line x1="${padX}" y1="${zeroY.toFixed(1)}" x2="${(padX + innerW).toFixed(1)}" y2="${zeroY.toFixed(1)}" stroke="currentColor" stroke-opacity="0.18" stroke-dasharray="2 3"/>` : ''}
+                    <polygon points="${areaPoints}" fill="${fill}"/>
+                    <polyline points="${pointsStr}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="${lastPt[0].toFixed(1)}" cy="${lastPt[1].toFixed(1)}" r="3" fill="${stroke}" stroke="var(--surface)" stroke-width="2"/>
+                </svg>
+            `;
+        }
+
+        // 최근 N경기의 결과 (1위=금, 2-3위=동, 4위 이하=회색, 감점 있음=빨강)
+        function renderRecentForm(playerName, n = 8) {
+            const games = gameData.filter(r => r.player === playerName && r.isGame)
+                .sort((a, b) => b.date - a.date || b.id - a.id)
+                .slice(0, n)
+                .reverse(); // 최근→오래된 순으로 표시 (왼→오)
+            if (games.length === 0) return '';
+            const pips = games.map(r => {
+                let cls = 'form-pip--neutral', label = '-', title = r.game;
+                if (r.loss < 0) {
+                    cls = 'form-pip--penalty'; label = '−';
+                    title = `${r.game} (감점 ${r.loss.toFixed(1)})`;
+                } else if (r.rank === 1 && r.win > 0) {
+                    cls = 'form-pip--win'; label = '1';
+                    title = `${r.game} (1위 +${r.win.toFixed(1)})`;
+                } else if (r.rank === 2) {
+                    cls = 'form-pip--podium'; label = '2';
+                    title = `${r.game} (2위)`;
+                } else if (r.rank === 3) {
+                    cls = 'form-pip--podium3'; label = '3';
+                    title = `${r.game} (3위)`;
+                } else {
+                    cls = 'form-pip--lose'; label = String(r.rank || '·');
+                    title = `${r.game} (${r.rank || '?'}위)`;
+                }
+                return `<span class="form-pip ${cls}" title="${escapeHtml(title)}">${label}</span>`;
+            }).join('');
+            return `
+                <div class="recent-form-wrap">
+                    <div class="recent-form-label">최근 ${games.length}경기</div>
+                    <div class="recent-form">${pips}</div>
+                </div>
+            `;
+        }
+
+        // 다음 목표: 미달성 배지 중 진행률 가장 높은 N개
+        function renderNextGoals(playerName, n = 3) {
+            const stats = computePlayerAchievementStats(playerName);
+            const locked = ACHIEVEMENTS
+                .filter(a => !a.check(stats))
+                .map(a => ({ ...a, pct: a.progressPct(stats) }))
+                .filter(a => a.pct > 0)
+                .sort((a, b) => b.pct - a.pct)
+                .slice(0, n);
+            if (locked.length === 0) {
+                return ''; // 모든 배지 달성한 사람이거나 시작 안 한 경우
+            }
+            const items = locked.map(a => {
+                const pct = Math.round(a.pct * 100);
+                return `
+                    <div class="next-goal">
+                        <div class="next-goal__head">
+                            <span class="next-goal__icon">${a.icon}</span>
+                            <span class="next-goal__name">${escapeHtml(a.name)}</span>
+                            <span class="next-goal__pct">${pct}%</span>
+                        </div>
+                        <div class="next-goal__bar"><div class="next-goal__fill" style="width:${pct}%"></div></div>
+                        <div class="next-goal__sub">${escapeHtml(a.progress(stats))}</div>
+                    </div>
+                `;
+            }).join('');
+            return `
+                <h3 style="margin-top: var(--sp-5);">🎯 다음 목표 <span class="badge-soft">가까운 ${locked.length}개</span></h3>
+                <div class="next-goals">${items}</div>
+            `;
+        }
+
+        // 게임별 성적 — 막대 그래프 형태로 모든 게임 표시
+        function renderGamePerformanceBars(playerName) {
+            const records = gameData.filter(r => r.player === playerName && r.isGame);
+            if (records.length === 0) return '';
+            const byGame = {};
+            records.forEach(r => {
+                if (!byGame[r.game]) byGame[r.game] = { game: r.game, total: 0, games: 0, wins: 0 };
+                const g = byGame[r.game];
+                g.total += r.win + r.loss;
+                g.games++;
+                if (r.win > 0 && r.rank === 1) g.wins++;
+            });
+            const rows = Object.values(byGame).map(g => ({
+                ...g,
+                avgPerGame: g.total / g.games,
+                winRate: g.games > 0 ? Math.round((g.wins / g.games) * 100) : 0
+            })).sort((a, b) => b.total - a.total);
+
+            const maxAbs = Math.max(1, ...rows.map(r => Math.abs(r.total)));
+
+            const barRows = rows.map(g => {
+                const pctOfMax = (Math.abs(g.total) / maxAbs) * 100;
+                const isPos = g.total > 0, isNeg = g.total < 0;
+                const barCls = isPos ? 'gp__fill--pos' : isNeg ? 'gp__fill--neg' : 'gp__fill--zero';
+                const totalCls = pointClass(g.total);
+                return `
+                    <div class="gp-row">
+                        <div class="gp-name">${escapeHtml(g.game)}</div>
+                        <div class="gp-bar"><div class="gp-fill ${barCls}" style="width:${pctOfMax.toFixed(1)}%"></div></div>
+                        <div class="gp-total ${totalCls}">${signedPoint(g.total)}</div>
+                        <div class="gp-meta">${g.games}게임 · ${g.winRate}%</div>
+                    </div>
+                `;
+            }).join('');
+            return `
+                <h3 style="margin-top: var(--sp-5);">🎮 게임별 성적</h3>
+                <div class="gp-list">${barRows}</div>
+            `;
         }
 
         function renderAchievementsHTML(playerName) {
@@ -3105,14 +3553,15 @@
                 }).join('');
 
             const html = `
-                <div class="game-stats">
+                <div class="profile">
+                    <!-- HERO: 순위 + Tier + Reward -->
                     <div class="rank-hero ${currentRank === 1 ? 'rank-hero--gold' : currentRank === 2 ? 'rank-hero--silver' : currentRank === 3 ? 'rank-hero--bronze' : ''}">
                         <div class="rank-hero__rank">
                             <span class="rank-hero__num">${currentRank > 0 ? currentRank : '-'}</span>
                             <span class="rank-hero__suffix">위</span>
                         </div>
                         <div class="rank-hero__meta">
-                            <div class="rank-hero__label">현재 순위 (Tier 기준)</div>
+                            <div class="rank-hero__label">현재 순위</div>
                             <div class="rank-hero__sub">${percentileLabel}</div>
                         </div>
                         <div class="rank-hero__points">
@@ -3122,69 +3571,84 @@
                         </div>
                     </div>
 
-                    <h3>🏆 Tier Points 구성 <span class="badge-soft">순위 결정</span></h3>
-                    <div class="stats-section">
-                        <div class="stats-row">
-                            <span class="stats-label">누적 승점</span>
-                            <span class="stats-value ${pointClass(totalWin)}">${signedPoint(totalWin)}</span>
+                    <!-- MINI STATS: 4 cards -->
+                    <div class="mini-stats">
+                        <div class="mini-stat">
+                            <div class="mini-stat__label">총 게임</div>
+                            <div class="mini-stat__value">${totalGamesAll}</div>
                         </div>
-                        <div class="stats-row">
-                            <span class="stats-label">누적 감점</span>
-                            <span class="stats-value ${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${totalLoss === 0 ? '0.0' : totalLoss.toFixed(1)}</span>
+                        <div class="mini-stat">
+                            <div class="mini-stat__label">승률</div>
+                            <div class="mini-stat__value">${winRateAll}<span class="mini-stat__unit">%</span></div>
+                            <div class="mini-stat__sub">${winsAll}승</div>
                         </div>
-                        <div class="stats-row" style="border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px;">
-                            <span class="stats-label" style="font-weight: var(--fw-semibold);">= Tier Points</span>
-                            <span class="stats-value ${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</span>
+                        <div class="mini-stat">
+                            <div class="mini-stat__label">출석</div>
+                            <div class="mini-stat__value">${attendanceCount}<span class="mini-stat__unit">회</span></div>
                         </div>
-                        <div class="stats-row">
-                            <span class="stats-label">게임당 평균</span>
-                            <span class="stats-value ${pointClass(totalAvgPerGame)}">${signedPoint(totalAvgPerGame)}</span>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: var(--sp-5);">🎁 Reward Points 구성 <span class="badge-soft">교환 가능</span></h3>
-                    <div class="stats-section">
-                        <div class="stats-row">
-                            <span class="stats-label">Tier Points (게임 점수)</span>
-                            <span class="stats-value ${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">📅 누적 출석 보너스 <span class="badge-soft">${attendanceCount}회</span></span>
-                            <span class="stats-value ${pointClass(totalAttendance)}">${totalAttendance > 0 ? '+' + totalAttendance.toFixed(1) : totalAttendance.toFixed(1)}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">🎁 사용한 포인트 / 교환</span>
-                            <span class="stats-value ${totalRedeem < 0 ? 'points-negative' : 'points-neutral'}">${totalRedeem === 0 ? '0.0' : totalRedeem.toFixed(1)}</span>
-                        </div>
-                        <div class="stats-row" style="border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px;">
-                            <span class="stats-label" style="font-weight: var(--fw-semibold);">= Reward Points <span style="color: var(--text-subtle); font-weight: var(--fw-medium); font-size: var(--fs-xs);">(최소 0)</span></span>
-                            <span class="stats-value ${reward > 0 ? 'points-positive' : 'points-neutral'}">${reward.toFixed(1)}</span>
+                        <div class="mini-stat">
+                            <div class="mini-stat__label">최장 연승</div>
+                            <div class="mini-stat__value ${streakInfo.longest >= 2 ? 'points-positive' : ''}">${streakInfo.longest >= 1 ? streakInfo.longest : '-'}<span class="mini-stat__unit">${streakInfo.longest >= 1 ? '연승' : ''}</span></div>
+                            <div class="mini-stat__sub">${streakInfo.current >= 1 ? '현재 ' + streakInfo.current + '연승' : '·'}</div>
                         </div>
                     </div>
 
-                    <h3 style="margin-top: var(--sp-5);">🏆 전체 전적</h3>
-                    <div class="stats-section">
-                        <div class="stats-row">
-                            <span class="stats-label">총 게임 수</span>
-                            <span class="stats-value">${totalGamesAll}</span>
+                    <!-- SPARKLINE: Tier 변화 추이 -->
+                    <div class="profile-card">
+                        <div class="profile-card__head">
+                            <span class="profile-card__title">📈 Tier Points 변화</span>
+                            <span class="profile-card__sub">시간 순 누적</span>
                         </div>
-                        <div class="stats-row">
-                            <span class="stats-label">승리 / 승률</span>
-                            <span class="stats-value">${winsAll} <span style="color: var(--text-subtle); font-weight: var(--fw-medium);">(${winRateAll}%)</span></span>
+                        ${renderTierSparkline(playerName)}
+                    </div>
+
+                    <!-- RECENT FORM: 최근 N경기 결과 -->
+                    ${renderRecentForm(playerName)}
+
+                    <!-- NEXT GOALS: 다음 목표 -->
+                    ${renderNextGoals(playerName)}
+
+                    <!-- COMPOSITION: Tier + Reward 2-column -->
+                    <div class="composition-grid">
+                        <div class="profile-card">
+                            <div class="profile-card__head">
+                                <span class="profile-card__title">🏆 Tier Points 구성</span>
+                                <span class="badge-soft">순위 결정</span>
+                            </div>
+                            <div class="composition">
+                                <div class="composition__row"><span>누적 승점</span><span class="${pointClass(totalWin)}">${signedPoint(totalWin)}</span></div>
+                                <div class="composition__row"><span>누적 감점</span><span class="${totalLoss < 0 ? 'points-negative' : 'points-neutral'}">${totalLoss === 0 ? '0.0' : totalLoss.toFixed(1)}</span></div>
+                                <div class="composition__row composition__row--total"><span>= Tier Points</span><span class="${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</span></div>
+                                <div class="composition__row composition__row--meta"><span>게임당 평균</span><span class="${pointClass(totalAvgPerGame)}">${signedPoint(totalAvgPerGame)}</span></div>
+                            </div>
                         </div>
-                        <div class="stats-row">
-                            <span class="stats-label">🔥 최장 연승</span>
-                            <span class="stats-value ${streakInfo.longest >= 2 ? 'points-positive' : ''}">${streakInfo.longest >= 1 ? streakInfo.longest + '연승' : '-'}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">현재 연승</span>
-                            <span class="stats-value ${streakInfo.current >= 1 ? 'points-positive' : 'points-neutral'}">${streakInfo.current >= 1 ? streakInfo.current + '연승' : '-'}</span>
+                        <div class="profile-card">
+                            <div class="profile-card__head">
+                                <span class="profile-card__title">🎁 Reward Points 구성</span>
+                                <span class="badge-soft">교환 가능</span>
+                            </div>
+                            <div class="composition">
+                                <div class="composition__row"><span>Tier Points</span><span class="${pointClass(tierTotal)}">${tierTotal.toFixed(1)}</span></div>
+                                <div class="composition__row"><span>📅 출석 보너스</span><span class="${pointClass(totalAttendance)}">${totalAttendance > 0 ? '+' + totalAttendance.toFixed(1) : totalAttendance.toFixed(1)}</span></div>
+                                <div class="composition__row"><span>🎁 사용 / 교환</span><span class="${totalRedeem < 0 ? 'points-negative' : 'points-neutral'}">${totalRedeem === 0 ? '0.0' : totalRedeem.toFixed(1)}</span></div>
+                                <div class="composition__row composition__row--total"><span>= Reward Points</span><span class="${reward > 0 ? 'points-positive' : 'points-neutral'}">${reward.toFixed(1)}</span></div>
+                                <div class="composition__row composition__row--meta"><span style="color: var(--text-subtle);">최소 0 (음수면 0)</span><span></span></div>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- GAME PERFORMANCE: 게임별 막대 -->
+                    ${renderGamePerformanceBars(playerName)}
+
+                    <!-- MONTHLY STATS: 월별 통계 -->
+                    <h3 style="margin-top: var(--sp-5);">📅 월별 통계</h3>
+                    <div class="stats-section">${monthlyStatsHtml}</div>
+
+                    <!-- ACHIEVEMENTS: 성취 배지 -->
                     ${renderAchievementsHTML(playerName)}
 
-                    <h3 style="margin-top: var(--sp-5);">📜 포인트 히스토리 <span class="badge-soft">최근 ${recentHistory.length}건</span></h3>
+                    <!-- ACTIVITY: 최근 활동 -->
+                    <h3 style="margin-top: var(--sp-5);">📜 최근 활동 <span class="badge-soft">최근 ${recentHistory.length}건</span></h3>
                     <div class="point-history">
                         ${recentHistory.map(h => {
                             const sign = h.delta > 0 ? '+' : '';
@@ -3199,46 +3663,7 @@
                             `;
                         }).join('') || '<div class="empty-state" style="padding: var(--sp-4);">기록이 없습니다</div>'}
                     </div>
-
-                    <h3 style="margin-top: var(--space-20);">📅 월별 통계</h3>
-                    <div class="stats-section">${monthlyStatsHtml}</div>
-
-                    <h3 style="margin-top: var(--space-20);">📊 게임별 성적</h3>
-                    ${best ? `<div class="game-stat-item best">
-                        <span class="game-stat-label">✨ 가장 잘하는 게임</span>
-                        <span><strong>${escapeHtml(best.game)}</strong> (<span class="${pointClass(best.avgPerGame)}">게임당 ${best.avgPerGame.toFixed(1)}점</span>)</span>
-                    </div>` : ''}
-                    ${worst && worst !== best ? `<div class="game-stat-item worst">
-                        <span class="game-stat-label">⚠️ 가장 못하는 게임</span>
-                        <span><strong>${escapeHtml(worst.game)}</strong> (<span class="${pointClass(worst.avgPerGame)}">게임당 ${worst.avgPerGame.toFixed(1)}점</span>)</span>
-                    </div>` : ''}
                 </div>
-
-                <h3>🎮 모든 게임별 포인트</h3>
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>게임</th>
-                            <th>포인트</th>
-                            <th>플레이 수</th>
-                            <th>평균</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sortedGames.map(g => {
-                            const totalClass = g.total < 0 ? 'points-negative' : g.total > 0 ? 'points-positive' : 'points-neutral';
-                            const avgClass = g.avgPerGame < 0 ? 'points-negative' : g.avgPerGame > 0 ? 'points-positive' : 'points-neutral';
-                            return `
-                                <tr>
-                                    <td>${escapeHtml(g.game)}</td>
-                                    <td><span class="${totalClass}">${g.total.toFixed(1)}</span></td>
-                                    <td>${g.games}</td>
-                                    <td><span class="${avgClass}">${g.avgPerGame.toFixed(1)}</span></td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
             `;
 
             document.getElementById('modalPlayerName').innerHTML =
