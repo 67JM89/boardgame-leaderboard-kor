@@ -3185,7 +3185,7 @@
             return `<span class="player-avatar" aria-hidden="true" style="background:${bg};">${escapeHtml(playerInitial(name))}</span>`;
         }
 
-        // 컬럼: 순위 | 플레이어 | Tier | Reward | RUN! | 게임 수 | 총 승점 | 총 감점 | 사용한 포인트 | 승리 | 승률
+        // 컬럼: 순위 | 플레이어 | Tier | Reward | 게임 수 | 총 승점 | 총 감점 | RUN! | 사용한 포인트 | 승리 | 승률
         function renderLeaderboardRows(sorted) {
             return sorted.map((player, idx) => {
                 const rankClass = getRankBadgeClass(idx + 1, sorted.length);
@@ -3210,10 +3210,10 @@
                         <td><span class="player-name" data-player="${escapeHtml(player.name)}">${avatarHTML(player.name)}${escapeHtml(player.name)}</span></td>
                         <td><span class="${tierClass}">${tier.toFixed(1)}</span></td>
                         <td><span class="${rewardClass}">${reward.toFixed(1)}</span></td>
-                        <td><span class="${runClass}">${runText}</span></td>
                         <td>${player.games}</td>
                         <td><span class="${winClass}">${winText}</span></td>
                         <td><span class="${lossClass}">${lossText}</span></td>
+                        <td><span class="${runClass}">${runText}</span></td>
                         <td><span class="${redeemClass}">${redeemText}</span></td>
                         <td>${player.wins}</td>
                         <td>${player.winRatePct}%</td>
@@ -3227,10 +3227,10 @@
             { key: 'name',      label: '플레이어' },
             { key: 'tier',      label: 'Tier' },
             { key: 'reward',    label: 'Reward' },
-            { key: 'run',       label: '🏃 RUN!' },
             { key: 'games',     label: '게임 수' },
             { key: 'totalWin',  label: '총 승점' },
             { key: 'totalLoss', label: '총 감점' },
+            { key: 'run',       label: '🏃 RUN!' },
             { key: 'totalRedeem', label: '사용한 포인트' },
             { key: 'wins',      label: '승리' },
             { key: 'winRate',   label: '승률' }
