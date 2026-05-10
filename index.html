@@ -674,6 +674,16 @@
         .leaderboard-table tbody tr:hover { background-color: var(--surface-hover); }
         .leaderboard-table tbody tr:last-child td { border-bottom: none; }
 
+        /* 플레이 히스토리: 같은 날짜끼리 묶이도록 그룹별 살짝 배경 교차 */
+        .leaderboard-table tbody tr.history-row--a { background-color: transparent; }
+        .leaderboard-table tbody tr.history-row--b { background-color: rgba(59, 130, 246, 0.04); }
+        .leaderboard-table tbody tr.history-row--a:hover,
+        .leaderboard-table tbody tr.history-row--b:hover { background-color: var(--surface-hover); }
+        @media (prefers-color-scheme: dark) {
+            .leaderboard-table tbody tr.history-row--b { background-color: rgba(96, 165, 250, 0.06); }
+        }
+        [data-theme="dark"] .leaderboard-table tbody tr.history-row--b { background-color: rgba(96, 165, 250, 0.06); }
+
         /* ============== Rank badge ============== */
         .rank-badge {
             display: inline-flex;
@@ -2564,23 +2574,30 @@
                 return;
             }
 
+            // 날짜 그룹마다 배경색 살짝 교차 — 같은 날짜끼리 묶여 보이도록
+            let prevDateKey = null;
+            let groupIdx = 0;
             tbody.innerHTML = display.map(record => {
+                const dateKey = localDateKey(record.date);
+                if (dateKey !== prevDateKey) {
+                    groupIdx = 1 - groupIdx;
+                    prevDateKey = dateKey;
+                }
+                const groupClass = groupIdx === 0 ? 'history-row--a' : 'history-row--b';
+
                 const reward = rewardByRecordId[record.id];
                 const rewardClass = reward > 0 ? 'points-positive' : 'points-neutral';
 
                 let rankBadge = '<span class="rank-mark rank-mark--neutral" aria-label="기록 없음">–</span>';
                 if (record.isGame) {
                     if (record.win > 0) {
-                        // 승점 있음 → 메달/순위 배지
                         const sessionRecords = gameData.filter(r => r.sessionId === record.sessionId);
                         const totalPlayers = sessionRecords.length;
                         const rankClass = getRankBadgeClass(record.rank, totalPlayers);
                         rankBadge = `<span class="rank-badge ${rankClass}" style="width: 26px; height: 26px; font-size: 12px;">${record.rank}</span>`;
                     } else if (record.loss < 0) {
-                        // 감점 있음 → 레드카드
                         rankBadge = `<span class="rank-mark rank-mark--penalty" title="감점 ${record.loss.toFixed(1)}" aria-label="감점">🟥</span>`;
                     } else {
-                        // 점수 없음 → 회색 마이너스
                         rankBadge = `<span class="rank-mark rank-mark--neutral" aria-label="점수 없음">➖</span>`;
                     }
                 }
@@ -2595,20 +2612,18 @@
                         : '<span class="points-negative">' + record.loss.toFixed(1) + '</span>';
                     gameLabel = escapeHtml(record.game);
                 } else if (record.isAttendance) {
-                    // 출석/참여 보너스 — 게임 이름 그대로 보여주되 보너스 아이콘 prefix
                     const bonus = record.attendBonus;
                     gainDisplay = bonus === 0
                         ? '<span class="points-neutral">+0.0</span>'
                         : '<span class="points-positive">+' + bonus.toFixed(1) + '</span>';
                     lossDisplay = '<span class="points-neutral">-</span>';
                     const icon = record.game === 'HSM Running Club' || record.game === 'HSM Running' ? '🏃' : '📅';
-                    gameLabel = '<em style="color: var(--color-text-secondary);">' + icon + ' ' + escapeHtml(record.game) + '</em>';
+                    gameLabel = '<em style="color: var(--text-subtle);">' + icon + ' ' + escapeHtml(record.game) + '</em>';
                 } else if (record.isRedeem) {
-                    // 순수 교환/사용 행 (게임 이름 비어있음)
                     const used = record.redeem + record.exchange;
                     gainDisplay = '<span class="points-neutral">-</span>';
                     lossDisplay = '<span class="points-negative">' + used.toFixed(1) + '</span>';
-                    gameLabel = '<em style="color: var(--color-text-secondary);">🎁 포인트 사용</em>';
+                    gameLabel = '<em style="color: var(--text-subtle);">🎁 포인트 사용</em>';
                 } else {
                     gainDisplay = '<span class="points-neutral">-</span>';
                     lossDisplay = '<span class="points-neutral">-</span>';
@@ -2616,7 +2631,7 @@
                 }
 
                 return `
-                    <tr>
+                    <tr class="${groupClass}">
                         <td>${record.date.toLocaleDateString('ko-KR')}</td>
                         <td>${gameLabel}</td>
                         <td><span class="player-name" data-player="${escapeHtml(record.player)}">${avatarHTML(record.player)}${escapeHtml(record.player)}</span></td>
