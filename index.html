@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.2">
+    <meta name="app-version" content="v8.3">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -2378,6 +2378,74 @@
         /* 공유 버튼: 새로고침/테마 토글과 같은 btn-icon 스타일 사용 */
         .btn-icon-share { /* placeholder for future tweaks */ }
 
+        /* V8.3: 리더보드 군별 컬럼 음영
+           - Tier 군 (cols 3, 4, 5): violet wash
+           - 활동 군 (cols 6, 7, 8): 음영 없음 (기본 배경)
+           - Reward 군 (cols 9, 10, 11): blue wash
+           - #historyTable은 컬럼 구조가 달라서 제외 */
+        .leaderboard-table:not(#historyTable) thead th:nth-child(3),
+        .leaderboard-table:not(#historyTable) thead th:nth-child(4),
+        .leaderboard-table:not(#historyTable) thead th:nth-child(5),
+        .leaderboard-table:not(#historyTable) tbody td:nth-child(3),
+        .leaderboard-table:not(#historyTable) tbody td:nth-child(4),
+        .leaderboard-table:not(#historyTable) tbody td:nth-child(5) {
+            background-color: rgba(139, 92, 246, 0.06);  /* Tier — violet wash */
+        }
+        .leaderboard-table:not(#historyTable) thead th:nth-child(9),
+        .leaderboard-table:not(#historyTable) thead th:nth-child(10),
+        .leaderboard-table:not(#historyTable) thead th:nth-child(11),
+        .leaderboard-table:not(#historyTable) tbody td:nth-child(9),
+        .leaderboard-table:not(#historyTable) tbody td:nth-child(10),
+        .leaderboard-table:not(#historyTable) tbody td:nth-child(11) {
+            background-color: rgba(59, 130, 246, 0.06);  /* Reward — blue wash */
+        }
+        /* 다크 모드에서 wash 알파 살짝 올려 가독성 보강 */
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) thead th:nth-child(3),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) thead th:nth-child(4),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) thead th:nth-child(5),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) tbody td:nth-child(3),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) tbody td:nth-child(4),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) tbody td:nth-child(5) {
+            background-color: rgba(167, 139, 250, 0.10);
+        }
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) thead th:nth-child(9),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) thead th:nth-child(10),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) thead th:nth-child(11),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) tbody td:nth-child(9),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) tbody td:nth-child(10),
+        [data-theme="dark"] .leaderboard-table:not(#historyTable) tbody td:nth-child(11) {
+            background-color: rgba(96, 165, 250, 0.10);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) thead th:nth-child(3),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) thead th:nth-child(4),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) thead th:nth-child(5),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) tbody td:nth-child(3),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) tbody td:nth-child(4),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) tbody td:nth-child(5) {
+                background-color: rgba(167, 139, 250, 0.10);
+            }
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) thead th:nth-child(9),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) thead th:nth-child(10),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) thead th:nth-child(11),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) tbody td:nth-child(9),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) tbody td:nth-child(10),
+            :root:not([data-theme="light"]) .leaderboard-table:not(#historyTable) tbody td:nth-child(11) {
+                background-color: rgba(96, 165, 250, 0.10);
+            }
+        }
+        /* Hover 시 군 음영을 덮어쓰고 동일하게 highlight (row 전체) */
+        .leaderboard-table:not(#historyTable) tbody tr:hover td {
+            background-color: var(--surface-hover);
+        }
+        /* Sortable 헤더 hover는 column wash 보다 우선 (specificity 보강) */
+        .leaderboard-table:not(#historyTable) thead th.sortable:hover {
+            background-color: var(--primary-soft);
+        }
+        /* 모바일: 4·5·10·11번(디테일)이 display:none 이므로 음영된 셀은 3(Tier)·9(Reward)만 남음.
+           nth-child는 DOM 위치 기준이라 hidden 셀도 카운트 → 결과적으로 모바일에서는
+           헤드라인 점수(Tier, Reward) 2개만 wash되어 의미 그룹 시각적 강조 유지. */
+
         /* V8: 챔피언십 (ELO + 시즌 + 명예의 전당) */
         .season-grid {
             display: grid;
@@ -2595,7 +2663,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.2</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.3</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
