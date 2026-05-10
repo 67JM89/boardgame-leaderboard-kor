@@ -3485,11 +3485,22 @@
                     setTimeout(() => loadFromGitHub({ silent }), 500);
                     return;
                 }
-                const url = GITHUB_DATA_URL + '?_=' + Date.now();   // 캐시 우회
-                const response = await fetch(url, { cache: 'no-store' });
-                if (!response.ok) throw new Error('HTTP ' + response.status);
+                // 현재 문서 위치를 기준으로 명시적으로 URL 구성 (Private Pages 랜덤 서브도메인 대응)
+                const baseUrl = new URL(GITHUB_DATA_URL, window.location.href);
+                baseUrl.searchParams.set('_', Date.now());
+                const url = baseUrl.toString();
+                console.log('🔗 데이터 fetch URL:', url);
+                const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+                console.log('📡 응답:', response.status, response.statusText, 'Content-Type:', response.headers.get('content-type'));
+                if (!response.ok) throw new Error('HTTP ' + response.status + ' from ' + url);
+                const contentType = response.headers.get('content-type') || '';
+                // HTML이 돌아오면 (auth redirect 등) xlsx로 파싱하지 말 것
+                if (contentType.includes('text/html')) {
+                    throw new Error('서버가 xlsx 대신 HTML을 반환했습니다 (인증/리다이렉트 문제일 수 있음). Content-Type: ' + contentType);
+                }
                 const lastModifiedHeader = response.headers.get('last-modified');
                 const arrayBuffer = await response.arrayBuffer();
+                console.log('📦 받은 바이트 수:', arrayBuffer.byteLength);
                 const rows = parseWorkbookSafely(arrayBuffer);
                 applyData(ingestRows(rows));
                 setLastUpdated(lastModifiedHeader ? new Date(lastModifiedHeader) : new Date());
@@ -3497,7 +3508,7 @@
                 console.log('✅ GitHub 데이터 로드 완료 (' + gameData.length + '개 기록)');
             } catch (error) {
                 console.error('❌ GitHub 데이터 로드 실패:', error);
-                if (!silent) showToast('GitHub 데이터 로드 실패. 파일 업로드로 시도해보세요.', 'error');
+                if (!silent) showToast('데이터 로드 실패: ' + error.message, 'error', 5000);
             }
         }
 
