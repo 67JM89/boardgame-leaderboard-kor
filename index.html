@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.4">
+    <meta name="app-version" content="v9.5">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self'; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -202,6 +202,51 @@
             --danger:  var(--danger-400);
             --color-tier:   var(--accent-400);
             --color-reward: var(--brand-400);
+        }
+
+        /* V9.5: Claude 컬러 테마 — Anthropic 브랜드 영감 (크림 배경 + 코랄/오렌지 액센트) */
+        [data-theme="claude"] {
+            color-scheme: light;
+            /* Background — cream/warm */
+            --bg:            #F5F4ED;
+            --bg-elev:       #FFFFFF;
+            --bg-subtle:     #FAF9F2;
+            --bg-muted:      #E8E6DC;
+            --surface:       #FFFFFF;
+            --surface-2:     #FAF9F2;
+            --surface-hover: #F0EEE3;
+            --border:        rgba(56, 35, 13, 0.10);
+            --border-strong: rgba(56, 35, 13, 0.22);
+            /* Text — 따뜻한 dark brown */
+            --text:          #2C1810;
+            --text-muted:    #6B5847;
+            --text-subtle:   #8B7763;
+            /* Primary — Claude coral/orange */
+            --primary:        #C96442;
+            --primary-hover:  #B85332;
+            --primary-soft:   rgba(201, 100, 66, 0.10);
+            --primary-soft-2: rgba(201, 100, 66, 0.18);
+            --on-primary:     #FFFFFF;
+            /* Semantic — 톤다운된 따뜻한 색 */
+            --success: #4D7C3F;
+            --danger:  #B84030;
+            --warning: #D4A047;
+            /* 카테고리 컬러 — Tier=darker coral, Reward=dusty blue */
+            --color-tier:   #A85940;
+            --color-reward: #2D5F8B;
+            /* Shadow — 따뜻한 brown 베이스 */
+            --shadow-xs: 0 1px 2px rgba(56, 35, 13, 0.04);
+            --shadow-sm: 0 1px 3px rgba(56, 35, 13, 0.06), 0 1px 2px rgba(56, 35, 13, 0.04);
+            --shadow-md: 0 4px 12px -2px rgba(56, 35, 13, 0.08), 0 2px 4px -2px rgba(56, 35, 13, 0.04);
+            --shadow-lg: 0 12px 32px -8px rgba(56, 35, 13, 0.14), 0 4px 12px -4px rgba(56, 35, 13, 0.08);
+            --shadow-xl: 0 24px 48px -12px rgba(56, 35, 13, 0.20);
+        }
+        /* Claude 테마 — body 배경 그라디언트도 따뜻한 톤으로 */
+        [data-theme="claude"] body {
+            background:
+                radial-gradient(1200px 600px at 0% -10%, rgba(201, 100, 66, 0.08), transparent 60%),
+                radial-gradient(900px 500px at 100% 0%, rgba(212, 160, 71, 0.06), transparent 65%),
+                var(--bg);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -599,6 +644,49 @@
         .tab-button--help.active {
             color: var(--accent-500);
         }
+
+        /* V9.5: 테마 스위처 팝오버 */
+        .theme-switcher { position: relative; display: inline-block; }
+        .theme-popover {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 168px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-md);
+            box-shadow: var(--shadow-lg);
+            padding: 4px;
+            z-index: 50;
+            animation: fadeUp var(--dur-base) var(--ease-out);
+        }
+        .theme-popover[hidden] { display: none; }
+        .theme-popover__item {
+            display: grid;
+            grid-template-columns: 22px 1fr 16px;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            font-size: var(--fs-sm);
+            text-align: left;
+            cursor: pointer;
+            border-radius: var(--r-sm);
+            transition: background var(--dur-fast) var(--ease-out);
+        }
+        .theme-popover__item:hover { background: var(--surface-hover); }
+        .theme-popover__icon { font-size: 16px; line-height: 1; }
+        .theme-popover__check { opacity: 0; color: var(--primary); font-weight: var(--fw-bold); }
+        .theme-popover__item.active {
+            color: var(--primary);
+            font-weight: var(--fw-semibold);
+            background: var(--primary-soft);
+        }
+        .theme-popover__item.active .theme-popover__check { opacity: 1; }
 
         /* V8.5: 모바일용 분석 탭 오버플로우 메뉴 */
         .tab-overflow {
@@ -3431,7 +3519,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.4</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.5</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3440,9 +3528,33 @@
                 <button class="btn btn-icon" id="refreshBtn" type="button" title="데이터 새로고침" aria-label="데이터 새로고침">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path><path d="M3 21v-5h5"></path></svg>
                 </button>
-                <button class="btn btn-icon" id="themeToggle" type="button" title="테마 변경" aria-label="테마 변경">
-                    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
-                </button>
+                <div class="theme-switcher">
+                    <button class="btn btn-icon" id="themeToggle" type="button" title="테마 변경" aria-haspopup="menu" aria-expanded="false">
+                        <span id="themeIcon" aria-hidden="true" style="font-size:16px; line-height:1;">🎨</span>
+                    </button>
+                    <div class="theme-popover" id="themePopover" role="menu" hidden>
+                        <button class="theme-popover__item" type="button" role="menuitem" data-theme-value="claude">
+                            <span class="theme-popover__icon" aria-hidden="true">🎨</span>
+                            <span class="theme-popover__label">Claude</span>
+                            <span class="theme-popover__check" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="theme-popover__item" type="button" role="menuitem" data-theme-value="system">
+                            <span class="theme-popover__icon" aria-hidden="true">🖥️</span>
+                            <span class="theme-popover__label">시스템</span>
+                            <span class="theme-popover__check" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="theme-popover__item" type="button" role="menuitem" data-theme-value="dark">
+                            <span class="theme-popover__icon" aria-hidden="true">🌙</span>
+                            <span class="theme-popover__label">다크</span>
+                            <span class="theme-popover__check" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="theme-popover__item" type="button" role="menuitem" data-theme-value="light">
+                            <span class="theme-popover__icon" aria-hidden="true">☀️</span>
+                            <span class="theme-popover__label">라이트</span>
+                            <span class="theme-popover__check" aria-hidden="true">✓</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -4358,41 +4470,92 @@
         }
 
         // ============================================================
-        // 테마 (light / dark)
+        // V9.5: 4-테마 시스템 (Claude / 시스템 / 다크 / 라이트)
         // ============================================================
+        const THEME_VALUES = ['claude', 'system', 'dark', 'light'];
+        const THEME_ICONS  = { claude: '🎨', system: '🖥️', dark: '🌙', light: '☀️' };
+        const THEME_DEFAULT = 'claude';
+
         function getStoredTheme() {
-            try { return localStorage.getItem(THEME_STORAGE_KEY); } catch { return null; }
+            try {
+                const v = localStorage.getItem(THEME_STORAGE_KEY);
+                if (THEME_VALUES.includes(v)) return v;
+                return THEME_DEFAULT;  // 최초 방문 / 비정상 값 → Claude 테마
+            } catch { return THEME_DEFAULT; }
         }
         function storeTheme(value) {
             try { localStorage.setItem(THEME_STORAGE_KEY, value); } catch { /* noop */ }
         }
         function applyTheme(theme) {
-            // theme: 'light' | 'dark' | null(=system)
             const root = document.documentElement;
-            if (theme === 'light' || theme === 'dark') {
+            if (theme === 'claude' || theme === 'dark' || theme === 'light') {
                 root.setAttribute('data-theme', theme);
             } else {
+                // 'system' → data-theme 제거 → prefers-color-scheme 활성
                 root.removeAttribute('data-theme');
             }
             updateThemeIcon();
         }
         function currentEffectiveTheme() {
             const stored = document.documentElement.getAttribute('data-theme');
-            if (stored === 'light' || stored === 'dark') return stored;
+            if (stored === 'claude') return 'claude';
+            if (stored === 'dark') return 'dark';
+            if (stored === 'light') return 'light';
+            // system: media query 따라감
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
-        function toggleTheme() {
-            const next = currentEffectiveTheme() === 'dark' ? 'light' : 'dark';
-            storeTheme(next);
-            applyTheme(next);
-        }
         function updateThemeIcon() {
-            const icon = document.getElementById('themeIcon');
-            if (!icon) return;
-            const isDark = currentEffectiveTheme() === 'dark';
-            icon.innerHTML = isDark
-                ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
-                : '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>';
+            const iconEl = document.getElementById('themeIcon');
+            const stored = getStoredTheme();
+            if (iconEl) iconEl.textContent = THEME_ICONS[stored] || '🎨';
+            // 팝오버 active 표시
+            document.querySelectorAll('.theme-popover__item').forEach(item => {
+                item.classList.toggle('active', item.dataset.themeValue === stored);
+            });
+        }
+
+        // 팝오버 토글 + 항목 선택
+        function toggleThemePopover(evt) {
+            if (evt) evt.stopPropagation();
+            const popover = document.getElementById('themePopover');
+            const btn = document.getElementById('themeToggle');
+            if (!popover) return;
+            const opening = popover.hasAttribute('hidden');
+            if (opening) {
+                popover.removeAttribute('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+                setTimeout(() => document.addEventListener('click', closeThemePopoverOnOutside), 0);
+            } else {
+                closeThemePopover();
+            }
+        }
+        function closeThemePopover() {
+            const popover = document.getElementById('themePopover');
+            const btn = document.getElementById('themeToggle');
+            if (popover) popover.setAttribute('hidden', '');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+            document.removeEventListener('click', closeThemePopoverOnOutside);
+        }
+        function closeThemePopoverOnOutside(e) {
+            if (e.target.closest('.theme-switcher')) return;
+            closeThemePopover();
+        }
+        function setTheme(value) {
+            if (!THEME_VALUES.includes(value)) value = THEME_DEFAULT;
+            storeTheme(value);
+            applyTheme(value);
+            closeThemePopover();
+            if (typeof rankingTrendChart !== 'undefined' && rankingTrendChart) {
+                updateRankingTrendChart();
+            }
+        }
+
+        // 호환성용 — 옛 toggleTheme 호출 잔존 시 fallback (cycle)
+        function toggleTheme() {
+            const cur = getStoredTheme();
+            const idx = THEME_VALUES.indexOf(cur);
+            const next = THEME_VALUES[(idx + 1) % THEME_VALUES.length];
+            setTheme(next);
         }
 
         // ============================================================
@@ -7777,10 +7940,11 @@
             } catch { /* noop */ }
 
             // 3) 버튼 와이어업
+            // V9.5: 테마 버튼 → 팝오버 열기, 팝오버 항목 → setTheme
             const themeBtn = document.getElementById('themeToggle');
-            if (themeBtn) themeBtn.addEventListener('click', () => {
-                toggleTheme();
-                if (rankingTrendChart) updateRankingTrendChart();
+            if (themeBtn) themeBtn.addEventListener('click', (evt) => toggleThemePopover(evt));
+            document.querySelectorAll('.theme-popover__item').forEach(item => {
+                item.addEventListener('click', () => setTheme(item.dataset.themeValue));
             });
             const refreshBtn = document.getElementById('refreshBtn');
             if (refreshBtn) refreshBtn.addEventListener('click', () => {
@@ -7836,13 +8000,24 @@
         }
 
         // ============================================================
-        // V9.2: Spotify 미니 플레이어 — lazy iframe + 상태 기억
+        // V9.5: Spotify 미니 플레이어 — 매번 다른 플레이리스트 (Mix) + 자동 열림
         // ============================================================
-        // 기본 BGM: Spotify의 인기 Lofi 플레이리스트 (Lofi Beats)
-        // 다른 플레이리스트로 바꾸려면: 아래 ID를 Spotify URL에서 복사한 값으로 교체
-        // 예: https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn  →  '37i9dQZF1DWWQRwui0ExPn'
-        const SPOTIFY_DEFAULT_PLAYLIST = '37i9dQZF1DWWQRwui0ExPn'; // Lofi Beats
-        const SPOTIFY_OPEN_KEY = 'boardgame-leaderboard:spotifyOpen';
+        // 큐레이션된 Spotify 공식 플레이리스트 풀. 매 페이지 로드 시 랜덤 선택.
+        // 추가/교체하려면 Spotify에서 플레이리스트 URL 복사 → /playlist/ 뒤 ID만 갈아끼움.
+        const SPOTIFY_PLAYLISTS = [
+            { id: '37i9dQZF1DWWQRwui0ExPn', name: '🎧 Lofi Beats' },
+            { id: '37i9dQZF1DXcBWIGoYBM5M', name: '🔥 Today\'s Top Hits' },
+            { id: '37i9dQZF1DX4sWSpwq3LiO', name: '🎹 Peaceful Piano' },
+            { id: '37i9dQZF1DWZeKCadgRdKQ', name: '🧠 Deep Focus' },
+            { id: '37i9dQZF1DWVqfgj8NZEp1', name: '☕ Coffee Table Jazz' },
+            { id: '37i9dQZF1DX1H4LbvY4OJi', name: '😊 Happy Hits' },
+        ];
+        // 세션 단위로 "사용자가 닫음" 추적 (탭 닫으면 리셋 → 새 방문 시 다시 자동 열림)
+        const SPOTIFY_DISMISSED_KEY = 'spotifyDismissedThisSession';
+
+        function pickRandomSpotifyPlaylist() {
+            return SPOTIFY_PLAYLISTS[Math.floor(Math.random() * SPOTIFY_PLAYLISTS.length)];
+        }
 
         function setupSpotifyPlayer() {
             const player = document.getElementById('spotifyPlayer');
@@ -7851,13 +8026,17 @@
             const panel = document.getElementById('spotifyPanel');
             if (!player || !toggle || !panel) return;
 
+            // 매 페이지 로드마다 다른 플레이리스트 (Mix)
+            const playlist = pickRandomSpotifyPlaylist();
+
             const ensureIframe = () => {
                 if (panel.querySelector('iframe')) return;
                 const iframe = document.createElement('iframe');
-                iframe.src = 'https://open.spotify.com/embed/playlist/' + SPOTIFY_DEFAULT_PLAYLIST + '?utm_source=generator';
+                // ?autoplay=1은 브라우저 정책으로 사실상 차단되지만, 플레이어는 준비 상태로 표시됨
+                iframe.src = 'https://open.spotify.com/embed/playlist/' + playlist.id + '?utm_source=generator&autoplay=1';
                 iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
                 iframe.setAttribute('loading', 'lazy');
-                iframe.setAttribute('title', 'Spotify BGM 플레이어');
+                iframe.setAttribute('title', 'Spotify BGM — ' + playlist.name);
                 panel.appendChild(iframe);
             };
 
@@ -7865,24 +8044,32 @@
                 ensureIframe();
                 player.classList.add('expanded', 'is-playing');
                 toggle.setAttribute('aria-label', '음악 플레이어 닫기');
-                try { localStorage.setItem(SPOTIFY_OPEN_KEY, '1'); } catch {}
             };
             const closePanel = () => {
                 player.classList.remove('expanded', 'is-playing');
                 toggle.setAttribute('aria-label', '음악 플레이어 열기');
-                try { localStorage.removeItem(SPOTIFY_OPEN_KEY); } catch {}
+                // 사용자가 명시적으로 닫으면 이번 탭 세션 동안 자동 열기 안 함
+                try { sessionStorage.setItem(SPOTIFY_DISMISSED_KEY, '1'); } catch {}
             };
 
             toggle.addEventListener('click', () => {
                 if (player.classList.contains('expanded')) closePanel();
-                else openPanel();
+                else {
+                    // 사용자가 다시 열면 dismiss 해제
+                    try { sessionStorage.removeItem(SPOTIFY_DISMISSED_KEY); } catch {}
+                    openPanel();
+                }
             });
             if (closeBtn) closeBtn.addEventListener('click', closePanel);
 
-            // 이전 세션에서 열어두었으면 자동 복원
-            try {
-                if (localStorage.getItem(SPOTIFY_OPEN_KEY) === '1') openPanel();
-            } catch {}
+            // V9.5: 자동 열림 — 이번 탭 세션에서 사용자가 dismiss하지 않았으면 자동 펼침
+            // (브라우저가 실제 autoplay는 막아도, 한 번 클릭이면 재생 시작 가능한 상태로 노출)
+            let dismissed = false;
+            try { dismissed = sessionStorage.getItem(SPOTIFY_DISMISSED_KEY) === '1'; } catch {}
+            if (!dismissed) {
+                // 페이지 로드 후 500ms 지연 — 다른 UI가 먼저 그려진 뒤 부드럽게 등장
+                setTimeout(openPanel, 500);
+            }
         }
 
         if (document.readyState === 'loading') {
