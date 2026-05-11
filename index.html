@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.9">
+    <meta name="app-version" content="v9.0">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -2344,6 +2344,39 @@
         .insights-carousel.fading .insights-carousel__icon {
             opacity: 0;
         }
+        /* V9.0: 캐러셀 네비게이션 (화살표 + 점) */
+        .insights-carousel__nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .insights-carousel__arrow {
+            width: 26px;
+            height: 26px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            border-radius: var(--r-pill);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out),
+                        border-color var(--dur-fast) var(--ease-out),
+                        transform var(--dur-fast) var(--ease-out);
+        }
+        .insights-carousel__arrow:hover {
+            background: var(--primary);
+            color: var(--on-primary);
+            border-color: var(--primary);
+            transform: scale(1.08);
+        }
+        .insights-carousel__arrow:active {
+            transform: scale(0.94);
+        }
         .insights-carousel__dots {
             display: flex;
             gap: 5px;
@@ -2367,8 +2400,10 @@
             border-radius: 4px;
         }
         @media (max-width: 480px) {
-            .insights-carousel { padding: var(--sp-2) var(--sp-3); }
+            .insights-carousel { padding: var(--sp-2) var(--sp-3); gap: var(--sp-2); }
             .insights-carousel__text { font-size: var(--fs-sm); }
+            .insights-carousel__nav { gap: 4px; }
+            .insights-carousel__arrow { width: 24px; height: 24px; }
         }
 
         /* B. 최근 세션 요약 카드 */
@@ -3201,7 +3236,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.9</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.0</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3278,11 +3313,19 @@
             </div>
         </div>
 
-        <!-- V8.5: 자동 인사이트 캐러셀 — 데이터에서 회전 표시 -->
+        <!-- V8.5+: 자동 인사이트 캐러셀 — V9.0에서 prev/next 화살표 추가 -->
         <section id="insightsCarousel" class="insights-carousel" hidden aria-label="자동 인사이트" aria-live="polite">
             <span class="insights-carousel__icon" id="insightsCarouselIcon" aria-hidden="true">💡</span>
             <div class="insights-carousel__text" id="insightsCarouselText"></div>
-            <div class="insights-carousel__dots" id="insightsCarouselDots" role="tablist"></div>
+            <div class="insights-carousel__nav">
+                <button class="insights-carousel__arrow" id="insightsCarouselPrev" type="button" aria-label="이전 인사이트" title="이전">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="insights-carousel__dots" id="insightsCarouselDots" role="tablist"></div>
+                <button class="insights-carousel__arrow" id="insightsCarouselNext" type="button" aria-label="다음 인사이트" title="다음">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
         </section>
 
         <!-- V6: 최근 세션 요약 카드 (B) -->
@@ -6423,10 +6466,31 @@
                     startInsightTimer();
                 });
             });
+            // V9.0: prev/next 화살표
+            const prevBtn = document.getElementById('insightsCarouselPrev');
+            const nextBtn = document.getElementById('insightsCarouselNext');
+            if (prevBtn) prevBtn.onclick = () => goInsight(-1);
+            if (nextBtn) nextBtn.onclick = () => goInsight(1);
+            // 화살표는 1개일 때 의미 없으므로 숨김
+            const navEl = carousel.querySelector('.insights-carousel__nav');
+            if (navEl) {
+                const single = insightsList.length <= 1;
+                if (prevBtn) prevBtn.style.display = single ? 'none' : '';
+                if (nextBtn) nextBtn.style.display = single ? 'none' : '';
+            }
             // Hover pause
             carousel.onmouseenter = () => { insightsHovered = true; };
             carousel.onmouseleave = () => { insightsHovered = false; };
             startInsightTimer();
+        }
+
+        // V9.0: 화살표/키보드로 인사이트 이동 (cyclic)
+        function goInsight(direction) {
+            if (insightsList.length === 0) return;
+            const n = insightsList.length;
+            insightsIdx = ((insightsIdx + direction) % n + n) % n;
+            renderCurrentInsight(true);
+            startInsightTimer();  // 사용자 조작 후 타이머 재시작
         }
 
         function renderCurrentInsight(animate) {

@@ -12,8 +12,8 @@ A single-page dashboard for tracking & analyzing small-group boardgame results. 
 
 ```
 boardgame-leaderboard-kor/
-├── index.html              # 메인 대시보드 (현재 활성 버전)
-├── index.v2~v8.html        # 이전 버전 스냅샷 (참고용)
+├── index.html              # 메인 대시보드 (현재 활성 버전, v9.0+)
+├── index.v2.html ~ v8.html # 이전 버전 스냅샷 (참고용)
 ├── data/
 │   └── board.xlsx          # 게임 플레이 기록 (master data)
 ├── .github/
@@ -51,12 +51,33 @@ boardgame-leaderboard-kor/
 - 🏷️ **헤더 버전 칩** (`v8.6` 등) — 캐시 디버깅용
 
 ### 🏅 V8 — 챔피언십 & 인사이트
-- 🏆 **챔피언십 탭**: 시즌(분기별) 챔피언 → 명예의 전당(공동 1위 지원) → ELO Top 10
-- 💡 **자동 인사이트 캐러셀**: 데이터에서 발견한 1줄 사실 회전 (6.5초 간격)
+- 🏆 **챔피언십 탭**: 시즌(분기별) 챔피언 배너 → 명예의 전당(공동 1위 지원) → ELO Top 10
+- 💡 **자동 인사이트 캐러셀**: 데이터에서 발견한 1줄 사실 회전 (6.5초 간격, prev/next 화살표 + 점 indicator)
   - 예: "Julia님이 이번 달 Tier +12.5 상승", "Catan은 최근 30일 최다 플레이"
 - ⚡ **Personal Records**: 플레이어 모달에 게임별 단일 세션 최고 기록
 - 📊 **모바일 분석 탭 압축**: 4개 분석 탭 → `📊 분석` 드롭다운으로 압축
 - 🎨 **컬럼 군별 음영**: Tier=보라 wash / Reward=파랑 wash로 시각 그룹 강조
+- 📅 **세션 디테일 모달** (V8.7): 히스토리 날짜 / 최근 모임 카드 클릭 → 그날의 모든 게임 + 종합 1위 표시
+- 🎉 **성취 잠금해제 토스트** (V8.7): 새 배지 달성 시 화려한 토스트 (legendary는 펄스 glow)
+- 🎲 **게임 프로필 모달** (V8.8): 어디든 게임명 클릭 → All-time 1위 + Top 5 + 월별 추세 + 최근 세션
+- 💎 **Tier 성취 4단계화** (V8.9): 진입 장벽 완화 — Tier 10/30/60/100 (legendary 신설)
+
+### 🔗 데이터 탐색 모델 (V8.8) / Navigation Graph
+
+3축 그래프 구조로 서로 자유롭게 점프 가능:
+
+```
+플레이어 모달  ◀──클릭──▶  게임 프로필 모달
+     ▲                          ▲
+     │  클릭                클릭 │
+     ▼                          ▼
+   세션 디테일 모달 ◀──── 날짜
+```
+
+- 어디든 **플레이어 이름** 클릭 → 플레이어 모달 (Tier 변화, 게임별 성적, Personal Records, 성취 배지)
+- 어디든 **게임 이름** 클릭 → 게임 프로필 모달 (All-time 1위, Top 5, 월별 추세, 최근 세션)
+- **날짜** 클릭 → 세션 디테일 모달 (그날의 모든 게임 + 출석/교환)
+- 모달끼리 서로 점프 가능 (모달 내 다른 엔티티 클릭 → 해당 모달로 이동)
 
 ### 🔒 보안 / Security
 - **CSP** (Content Security Policy): jsDelivr CDN만 허용
