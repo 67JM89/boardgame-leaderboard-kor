@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.7">
+    <meta name="app-version" content="v8.8">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -1962,6 +1962,159 @@
         /*     Rank Change Arrows (E), Count-up (D)                      */
         /* ============================================================ */
 
+        /* V8.8: 게임 프로필 모달 — 게임명 클릭 시 펼치는 게임 전용 모달 */
+        .game-name {
+            cursor: pointer;
+            transition: color var(--dur-fast) var(--ease-out);
+            text-decoration: none;
+        }
+        .game-name:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        .game-profile__hero {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--sp-3);
+            background: linear-gradient(135deg, var(--primary-soft), var(--surface-2));
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: var(--sp-4);
+            margin-bottom: var(--sp-4);
+        }
+        @media (max-width: 480px) {
+            .game-profile__hero { grid-template-columns: 1fr; gap: var(--sp-2); padding: var(--sp-3); }
+        }
+        .game-profile__hero-item {
+            text-align: center;
+        }
+        .game-profile__hero-label {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: var(--fw-semibold);
+            margin-bottom: 4px;
+        }
+        .game-profile__hero-value {
+            font-size: var(--fs-2xl);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+        }
+        .game-profile__hero-sub {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            margin-top: 2px;
+        }
+        .game-profile__champion {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3) var(--sp-4);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), var(--surface));
+            border: 1px solid var(--gold-to);
+            border-radius: var(--r-md);
+            margin-bottom: var(--sp-4);
+        }
+        .game-profile__champion-icon { font-size: 32px; line-height: 1; }
+        .game-profile__champion-body { flex: 1; min-width: 0; }
+        .game-profile__champion-label {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: var(--fw-semibold);
+        }
+        .game-profile__champion-name {
+            font-size: var(--fs-lg);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            margin: 2px 0;
+        }
+        .game-profile__champion-points {
+            font-size: var(--fs-sm);
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+        .game-profile h3 {
+            margin: var(--sp-5) 0 var(--sp-2) 0;
+            font-size: var(--fs-md);
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+        }
+        .game-profile__top-players {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .game-profile__top-row {
+            display: grid;
+            grid-template-columns: 26px 1fr auto auto;
+            align-items: center;
+            gap: var(--sp-2);
+            padding: 6px var(--sp-3);
+            background: var(--surface-2);
+            border-radius: var(--r-sm);
+            font-size: var(--fs-sm);
+        }
+        .game-profile__top-rank {
+            font-weight: var(--fw-bold);
+            color: var(--text-muted);
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .game-profile__top-bar {
+            grid-column: 1 / -1;
+            height: 4px;
+            background: var(--bg-muted);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+        .game-profile__top-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+            border-radius: 2px;
+        }
+        .game-profile__monthly-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 70px;
+            padding: var(--sp-2);
+            background: var(--surface-2);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+        }
+        .game-profile__month-bar {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            position: relative;
+        }
+        .game-profile__month-bar-fill {
+            width: 100%;
+            background: linear-gradient(180deg, var(--brand-500), var(--brand-700));
+            border-radius: 2px 2px 0 0;
+            min-height: 2px;
+            transition: all var(--dur-base) var(--ease-out);
+        }
+        .game-profile__month-bar-fill:hover {
+            background: linear-gradient(180deg, var(--accent-500), var(--accent-700));
+        }
+        .game-profile__month-bar-label {
+            font-size: 9px;
+            color: var(--text-subtle);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
         /* V8.7: 세션 디테일 모달 — 한 날짜의 모든 게임 펼침 */
         .session-modal__meta {
             display: flex;
@@ -3048,7 +3201,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.7</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.8</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -4743,7 +4896,7 @@
                 const sorted = sortedPlayers(gameRecords);
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = `
-                    <h2>${escapeHtml(game)}</h2>
+                    <h2><span class="game-name" data-game="${escapeHtml(game)}">${escapeHtml(game)}</span></h2>
                     <div class="table-wrap">
                         <div class="table-scroll">
                             <table class="leaderboard-table">
@@ -4860,7 +5013,8 @@
                     lossDisplay = record.loss === 0
                         ? '<span class="points-neutral">-0.0</span>'
                         : '<span class="points-negative">' + record.loss.toFixed(1) + '</span>';
-                    gameLabel = escapeHtml(record.game);
+                    // V8.8: 게임명을 클릭 가능하게
+                    gameLabel = '<span class="game-name" data-game="' + escapeHtml(record.game) + '">' + escapeHtml(record.game) + '</span>';
                 } else if (record.isAttendance) {
                     const bonus = record.attendBonus;
                     gainDisplay = bonus === 0
@@ -5636,6 +5790,230 @@
         }
 
         // ============================================================
+        // V8.8: 게임 프로필 모달 — 게임명 클릭 시 상세
+        // ============================================================
+        function computeGameStats(gameName) {
+            const records = gameData.filter(r => r.isGame && r.game === gameName);
+            if (records.length === 0) return null;
+
+            const sessions = new Set(records.map(r => r.sessionId));
+            const players = new Set(records.map(r => r.player));
+
+            // 플레이어별 stats: tier, games, wins
+            const byPlayer = {};
+            records.forEach(r => {
+                if (!byPlayer[r.player]) {
+                    byPlayer[r.player] = { games: 0, wins: 0, tier: 0, firstDate: r.date, lastDate: r.date };
+                }
+                const p = byPlayer[r.player];
+                p.games++;
+                if (r.win > 0) p.wins++;
+                p.tier += (r.win + r.loss);
+                if (r.date < p.firstDate) p.firstDate = r.date;
+                if (r.date > p.lastDate) p.lastDate = r.date;
+            });
+
+            // All-time 1위 = 이 게임에서 누적 Tier 가장 높은 플레이어
+            const arr = Object.entries(byPlayer).map(([name, s]) => ({ name, ...s }));
+            arr.sort((a, b) => b.tier - a.tier || b.wins - a.wins || b.games - a.games);
+            const champion = arr[0] || null;
+
+            // 가장 많이 플레이한 사람 Top 5 (게임 수 기준)
+            const mostPlayed = arr.slice().sort((a, b) => b.games - a.games).slice(0, 5);
+            const maxGames = mostPlayed[0] ? mostPlayed[0].games : 0;
+
+            // 평균 세션 크기 (세션별 참가자 수)
+            const sessionSizes = {};
+            records.forEach(r => {
+                sessionSizes[r.sessionId] = (sessionSizes[r.sessionId] || 0) + 1;
+            });
+            const avgSize = Object.values(sessionSizes).reduce((s, n) => s + n, 0) / sessions.size;
+
+            // 월별 세션 수 (시간 추세)
+            const monthlySessions = {};
+            const sessionsByDate = new Set();
+            records.forEach(r => {
+                const key = localMonthKey(r.date) + '|' + r.sessionId;
+                if (sessionsByDate.has(key)) return;
+                sessionsByDate.add(key);
+                const m = localMonthKey(r.date);
+                monthlySessions[m] = (monthlySessions[m] || 0) + 1;
+            });
+            const monthlyArr = Object.entries(monthlySessions)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .slice(-12);  // 최근 12개월
+            const maxMonth = Math.max(...monthlyArr.map(([_, c]) => c), 1);
+
+            // 첫/마지막 플레이 날짜
+            const allDates = records.map(r => r.date).sort((a, b) => a - b);
+            const firstDate = allDates[0];
+            const lastDate = allDates[allDates.length - 1];
+
+            // 최근 5세션 우승자
+            const sessionList = Array.from(sessions).map(sid => {
+                const sRecs = records.filter(r => r.sessionId === sid);
+                const winner = sRecs.find(r => r.rank === 1);
+                return {
+                    sessionId: sid,
+                    date: sRecs[0].date,
+                    winner: winner ? winner.player : null,
+                    winnerPoints: winner ? winner.win : 0,
+                    size: sRecs.length
+                };
+            }).sort((a, b) => b.date - a.date).slice(0, 5);
+
+            return {
+                gameName,
+                sessionsCount: sessions.size,
+                playersCount: players.size,
+                avgSize,
+                champion,
+                mostPlayed,
+                maxGames,
+                firstDate,
+                lastDate,
+                monthlyArr,
+                maxMonth,
+                recentSessions: sessionList,
+                totalRecords: records.length
+            };
+        }
+
+        function openGameModal(gameName) {
+            const stats = computeGameStats(gameName);
+            if (!stats) return;
+
+            const topPlayersHTML = stats.mostPlayed.map((p, idx) => {
+                const pct = stats.maxGames > 0 ? (p.games / stats.maxGames) * 100 : 0;
+                return `
+                    <div class="game-profile__top-row">
+                        <div class="game-profile__top-rank">${idx + 1}</div>
+                        <div><span class="player-name" data-player="${escapeHtml(p.name)}">${avatarHTML(p.name)}${escapeHtml(p.name)}</span></div>
+                        <div style="color: var(--text-muted); font-variant-numeric: tabular-nums;">${p.games}게임</div>
+                        <div style="color: ${p.tier > 0 ? 'var(--success)' : p.tier < 0 ? 'var(--danger)' : 'var(--text-subtle)'}; font-variant-numeric: tabular-nums; font-weight: var(--fw-semibold);">${p.tier > 0 ? '+' : ''}${p.tier.toFixed(1)}</div>
+                        <div class="game-profile__top-bar"><div class="game-profile__top-bar-fill" style="width: ${pct}%"></div></div>
+                    </div>
+                `;
+            }).join('');
+
+            const monthlyHTML = stats.monthlyArr.length > 0
+                ? `<div class="game-profile__monthly-bars">${
+                    stats.monthlyArr.map(([m, count]) => {
+                        const pct = (count / stats.maxMonth) * 100;
+                        const label = m.replace('-', '/').slice(2);
+                        return `
+                            <div class="game-profile__month-bar" title="${m}: ${count}세션">
+                                <div class="game-profile__month-bar-fill" style="height: ${pct}%"></div>
+                                <div class="game-profile__month-bar-label">${label}</div>
+                            </div>
+                        `;
+                    }).join('')
+                }</div>`
+                : '';
+
+            const recentHTML = stats.recentSessions.map(s => {
+                const dateKey = localDateKey(s.date);
+                return `
+                    <div class="game-profile__top-row" style="cursor: pointer;" data-session-date="${escapeHtml(dateKey)}" title="이 세션 자세히 보기">
+                        <div class="game-profile__top-rank">📅</div>
+                        <div style="font-size: var(--fs-sm); color: var(--text-muted);">${s.date.toLocaleDateString('ko-KR')}</div>
+                        <div>${s.winner ? '🥇 <span class="player-name" data-player="' + escapeHtml(s.winner) + '">' + escapeHtml(s.winner) + '</span>' : '<span style="color:var(--text-subtle);">우승자 없음</span>'}</div>
+                        <div style="color: var(--success); font-variant-numeric: tabular-nums; font-weight: var(--fw-semibold);">${s.winnerPoints > 0 ? '+' + s.winnerPoints.toFixed(1) : '-'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            const championHTML = stats.champion ? `
+                <div class="game-profile__champion">
+                    <div class="game-profile__champion-icon" aria-hidden="true">👑</div>
+                    <div class="game-profile__champion-body">
+                        <div class="game-profile__champion-label">All-time 1위 (이 게임 누적 Tier)</div>
+                        <div class="game-profile__champion-name"><span class="player-name" data-player="${escapeHtml(stats.champion.name)}">${escapeHtml(stats.champion.name)}</span></div>
+                        <div class="game-profile__champion-points">${stats.champion.tier > 0 ? '+' : ''}${stats.champion.tier.toFixed(1)} Tier · ${stats.champion.wins}승 / ${stats.champion.games}게임</div>
+                    </div>
+                </div>
+            ` : '';
+
+            const html = `
+                <div class="game-profile">
+                    <div class="game-profile__hero">
+                        <div class="game-profile__hero-item">
+                            <div class="game-profile__hero-label">총 세션</div>
+                            <div class="game-profile__hero-value">${stats.sessionsCount}</div>
+                            <div class="game-profile__hero-sub">${stats.totalRecords}건 기록</div>
+                        </div>
+                        <div class="game-profile__hero-item">
+                            <div class="game-profile__hero-label">참가자</div>
+                            <div class="game-profile__hero-value">${stats.playersCount}</div>
+                            <div class="game-profile__hero-sub">유니크 플레이어</div>
+                        </div>
+                        <div class="game-profile__hero-item">
+                            <div class="game-profile__hero-label">평균 세션 크기</div>
+                            <div class="game-profile__hero-value">${stats.avgSize.toFixed(1)}</div>
+                            <div class="game-profile__hero-sub">명/세션</div>
+                        </div>
+                    </div>
+
+                    ${championHTML}
+
+                    <h3>👥 가장 많이 플레이한 사람 Top 5</h3>
+                    <div class="game-profile__top-players">${topPlayersHTML || '<div class="empty-state">데이터 없음</div>'}</div>
+
+                    ${stats.monthlyArr.length > 0 ? `
+                        <h3>📈 월별 플레이 추세 <span class="badge-soft">최근 ${stats.monthlyArr.length}개월</span></h3>
+                        ${monthlyHTML}
+                    ` : ''}
+
+                    <h3>🕒 최근 세션 ${stats.recentSessions.length}개</h3>
+                    <div class="game-profile__top-players">${recentHTML || '<div class="empty-state">데이터 없음</div>'}</div>
+
+                    <div class="notice" style="margin-top: var(--sp-4);">
+                        <span class="notice__icon" aria-hidden="true">📅</span>
+                        <div>
+                            <strong>첫 플레이:</strong> ${stats.firstDate.toLocaleDateString('ko-KR')} ·
+                            <strong>마지막 플레이:</strong> ${stats.lastDate.toLocaleDateString('ko-KR')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 모달 재사용 (playerModal)
+            document.getElementById('modalPlayerName').innerHTML =
+                '<span aria-hidden="true">🎲</span><span style="margin-left:8px;">' + escapeHtml(gameName) + '</span>';
+            document.getElementById('modalBody').innerHTML = html;
+            const modal = document.getElementById('playerModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            // 내부 플레이어 이름 클릭 → 플레이어 모달
+            document.querySelectorAll('#modalBody .player-name[data-player]').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const p = el.dataset.player;
+                    closeModal();
+                    setTimeout(() => openPlayerModal(p), 80);
+                });
+            });
+            // 최근 세션 행 클릭 → 세션 디테일 모달
+            document.querySelectorAll('#modalBody [data-session-date]').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    if (e.target.closest('.player-name')) return; // 플레이어 이름 클릭은 따로
+                    const d = el.dataset.sessionDate;
+                    closeModal();
+                    setTimeout(() => openSessionModal(d), 80);
+                });
+            });
+        }
+
+        // V8.8: 전역 game-name 클릭 위임 — 어떤 곳이든 .game-name[data-game] 클릭 시 게임 모달
+        // 부모 핸들러들이 e.target.closest('.game-name') 체크로 자기 동작을 skip해야 함
+        document.addEventListener('click', (e) => {
+            const gameEl = e.target.closest('.game-name[data-game]');
+            if (gameEl) {
+                openGameModal(gameEl.dataset.game);
+            }
+        });
+
+        // ============================================================
         // V8.7: 세션 디테일 모달 — 한 날짜의 모든 게임 펼침
         // ============================================================
         function openSessionModal(dateKey) {
@@ -5703,7 +6081,7 @@
                     return `
                         <div class="session-game">
                             <div class="session-game__head">
-                                <div class="session-game__title">🎲 ${escapeHtml(s.game)}</div>
+                                <div class="session-game__title">🎲 <span class="game-name" data-game="${escapeHtml(s.game)}">${escapeHtml(s.game)}</span></div>
                                 <div class="session-game__count">${total}명 참가</div>
                             </div>
                             <table class="session-game__table">
@@ -6132,7 +6510,7 @@
                 const playerCount = session.length;
                 return `
                     <div class="recent-session-game" data-session-date="${escapeHtml(latestDateKey)}" style="cursor:pointer;" title="클릭하여 이 모임의 모든 게임 보기">
-                        <div class="recent-session-game__name">${escapeHtml(game)}</div>
+                        <div class="recent-session-game__name"><span class="game-name" data-game="${escapeHtml(game)}">${escapeHtml(game)}</span></div>
                         <div class="recent-session-game__winner">
                             <span aria-hidden="true">🥇</span>
                             <span><strong>${escapeHtml(winnerName)}</strong> · ${playerCount}명 참가</span>
@@ -6144,9 +6522,12 @@
                     </div>
                 `;
             }).join('');
-            // V8.7: 게임 카드 클릭 → 세션 디테일
+            // V8.7: 게임 카드 클릭 → 세션 디테일 (단, 게임명 클릭은 제외 — 게임 모달로)
             gamesEl.querySelectorAll('[data-session-date]').forEach(el => {
-                el.addEventListener('click', () => openSessionModal(el.dataset.sessionDate));
+                el.addEventListener('click', (event) => {
+                    if (event.target.closest('.game-name')) return;  // V8.8: 게임명은 전역 핸들러로
+                    openSessionModal(el.dataset.sessionDate);
+                });
             });
             card.hidden = false;
         }
@@ -6370,7 +6751,7 @@
                 <div class="h2h-game-list">
                     ${sortedGames.map(([game, s]) => `
                         <div class="h2h-game-card">
-                            <div class="h2h-game-card__name">${escapeHtml(game)}</div>
+                            <div class="h2h-game-card__name"><span class="game-name" data-game="${escapeHtml(game)}">${escapeHtml(game)}</span></div>
                             <div class="h2h-game-card__row">
                                 <span>${escapeHtml(p1)} 승</span>
                                 <span class="h2h-game-card__count" style="color: var(--brand-500);">${s.p1Wins}</span>
@@ -6486,7 +6867,8 @@
             // sortedPlayers에 없는 플레이어도 뒤에 붙이기
             const allOrdered = [...sorted, ...players.filter(p => !sorted.includes(p))];
 
-            const head = '<tr><th></th>' + games.map(g => `<th>${escapeHtml(g)}</th>`).join('') + '</tr>';
+            // V8.8: 히트맵 컬럼 헤더 게임명도 클릭 가능
+            const head = '<tr><th></th>' + games.map(g => `<th><span class="game-name" data-game="${escapeHtml(g)}">${escapeHtml(g)}</span></th>`).join('') + '</tr>';
             const rows = allOrdered.map(player => {
                 const cells = games.map(game => {
                     const c = matrix[player] && matrix[player][game];
