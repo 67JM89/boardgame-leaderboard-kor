@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.6">
+    <meta name="app-version" content="v9.7">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://open.spotify.com https://open.spotifycdn.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self' https://open.spotify.com; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -20,6 +20,9 @@
     <link rel="stylesheet" as="style" crossorigin="anonymous"
           integrity="sha384-f9iEnfDmuRSuBrXQjpPibejnfJMrZ2yI+715EjxlzBsPFIpaD1NxMh1MIzthxtCh"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <!-- V9.7: Fraunces (Tiempos 대체 — Claude 테마 serif 제목용) -->
+    <link rel="stylesheet" crossorigin="anonymous"
+          href="https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5/index.min.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
             integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw"
             crossorigin="anonymous"></script>
@@ -204,49 +207,98 @@
             --color-reward: var(--brand-400);
         }
 
-        /* V9.5: Claude 컬러 테마 — Anthropic 브랜드 영감 (크림 배경 + 코랄/오렌지 액센트) */
+        /* V9.7: Claude 컬러 테마 — Anthropic 브랜드 실측 기반 정밀 보정
+           기준: anthropic.com 의 cream 배경(#F5F0E8 류) + 코랄 오렌지(#CC785C 류) + Tiempos serif 무드
+           폰트: Tiempos 무료 대체로 Fraunces(가변) 사용 — 제목/숫자에만 적용 */
         [data-theme="claude"] {
             color-scheme: light;
-            /* Background — cream/warm */
-            --bg:            #F5F4ED;
+            /* Background — Anthropic 시그니처 크림 (살짝 노란 톤) */
+            --bg:            #F5F0E8;
             --bg-elev:       #FFFFFF;
-            --bg-subtle:     #FAF9F2;
-            --bg-muted:      #E8E6DC;
+            --bg-subtle:     #FAF6EE;
+            --bg-muted:      #E8E1D2;
             --surface:       #FFFFFF;
-            --surface-2:     #FAF9F2;
-            --surface-hover: #F0EEE3;
-            --border:        rgba(56, 35, 13, 0.10);
-            --border-strong: rgba(56, 35, 13, 0.22);
-            /* Text — 따뜻한 dark brown */
-            --text:          #2C1810;
-            --text-muted:    #6B5847;
-            --text-subtle:   #8B7763;
-            /* Primary — Claude coral/orange */
-            --primary:        #C96442;
-            --primary-hover:  #B85332;
-            --primary-soft:   rgba(201, 100, 66, 0.10);
-            --primary-soft-2: rgba(201, 100, 66, 0.18);
+            --surface-2:     #FAF6EE;
+            --surface-hover: #EFE9DD;
+            --border:        rgba(31, 30, 29, 0.10);
+            --border-strong: rgba(31, 30, 29, 0.22);
+            /* Text — 따뜻한 near-black (brown 톤 줄임 → 더 anthropic.com스러움) */
+            --text:          #1F1E1D;
+            --text-muted:    #5C5854;
+            --text-subtle:   #8B8680;
+            /* Primary — Anthropic 코랄 (정확값에 더 가까운 #CC785C) */
+            --primary:        #CC785C;
+            --primary-hover:  #B86A4F;
+            --primary-soft:   rgba(204, 120, 92, 0.10);
+            --primary-soft-2: rgba(204, 120, 92, 0.20);
             --on-primary:     #FFFFFF;
-            /* Semantic — 톤다운된 따뜻한 색 */
+            /* Semantic */
             --success: #4D7C3F;
             --danger:  #B84030;
             --warning: #D4A047;
-            /* 카테고리 컬러 — Tier=darker coral, Reward=dusty blue */
-            --color-tier:   #A85940;
-            --color-reward: #2D5F8B;
-            /* Shadow — 따뜻한 brown 베이스 */
-            --shadow-xs: 0 1px 2px rgba(56, 35, 13, 0.04);
-            --shadow-sm: 0 1px 3px rgba(56, 35, 13, 0.06), 0 1px 2px rgba(56, 35, 13, 0.04);
-            --shadow-md: 0 4px 12px -2px rgba(56, 35, 13, 0.08), 0 2px 4px -2px rgba(56, 35, 13, 0.04);
-            --shadow-lg: 0 12px 32px -8px rgba(56, 35, 13, 0.14), 0 4px 12px -4px rgba(56, 35, 13, 0.08);
-            --shadow-xl: 0 24px 48px -12px rgba(56, 35, 13, 0.20);
+            /* 카테고리 컬러 — Tier=coral, Reward=dusty teal-blue (코랄과 보색) */
+            --color-tier:   #B05C42;
+            --color-reward: #3E6478;
+            /* Shadow — 따뜻하지만 차분한 톤 */
+            --shadow-xs: 0 1px 2px rgba(31, 30, 29, 0.04);
+            --shadow-sm: 0 1px 3px rgba(31, 30, 29, 0.06), 0 1px 2px rgba(31, 30, 29, 0.04);
+            --shadow-md: 0 4px 14px -2px rgba(31, 30, 29, 0.08), 0 2px 4px -2px rgba(31, 30, 29, 0.04);
+            --shadow-lg: 0 14px 36px -10px rgba(31, 30, 29, 0.14), 0 4px 12px -4px rgba(31, 30, 29, 0.08);
+            --shadow-xl: 0 28px 56px -14px rgba(31, 30, 29, 0.22);
+            /* Radius — 약간 더 generous (Anthropic은 살짝 부드러운 corner) */
+            --r-md: 12px;
+            --r-lg: 16px;
+            --r-xl: 24px;
         }
-        /* Claude 테마 — body 배경 그라디언트도 따뜻한 톤으로 */
+        /* Claude 테마 — 배경 그라디언트 (warm radial wash) */
         [data-theme="claude"] body {
             background:
-                radial-gradient(1200px 600px at 0% -10%, rgba(201, 100, 66, 0.08), transparent 60%),
+                radial-gradient(1200px 600px at 0% -10%, rgba(204, 120, 92, 0.10), transparent 60%),
                 radial-gradient(900px 500px at 100% 0%, rgba(212, 160, 71, 0.06), transparent 65%),
                 var(--bg);
+        }
+        /* Claude 테마 typography — 제목과 큰 숫자에 Fraunces (serif) 적용 */
+        [data-theme="claude"] h1,
+        [data-theme="claude"] h2,
+        [data-theme="claude"] .modal-title,
+        [data-theme="claude"] .rank-hero__num,
+        [data-theme="claude"] .game-profile__hero-value,
+        [data-theme="claude"] .session-modal__meta-value,
+        [data-theme="claude"] .recent-session-card__title,
+        [data-theme="claude"] .hof-card__title,
+        [data-theme="claude"] .season-card__champion {
+            font-family: 'Fraunces Variable', 'Fraunces', 'Tiempos', ui-serif, Georgia, serif;
+            font-weight: 500;
+            letter-spacing: -0.015em;
+            font-feature-settings: 'ss01', 'ss02';
+        }
+        /* Claude 테마 — 헤더 H1은 좀 더 두껍게 + opsz 슬라이드 */
+        [data-theme="claude"] h1 {
+            font-weight: 600;
+            font-variation-settings: 'opsz' 120, 'SOFT' 30;
+            letter-spacing: -0.025em;
+        }
+        /* Claude 테마 — Anthropic 시그니처 "/" 스타일 표시 (버전 칩에 살짝 첨가) */
+        [data-theme="claude"] .version-chip::before {
+            content: '/';
+            margin-right: 3px;
+            opacity: 0.7;
+            font-weight: var(--fw-bold);
+        }
+        /* Claude 테마 — Subtitle은 살짝 italic Fraunces */
+        [data-theme="claude"] .app-header__subtitle {
+            font-family: 'Fraunces Variable', 'Fraunces', ui-serif, serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: var(--fs-base);
+            color: var(--text-muted);
+        }
+        /* Claude 테마 — primary 버튼은 살짝 코랄 그라디언트 */
+        [data-theme="claude"] .btn-primary {
+            background: linear-gradient(135deg, #D9866A, #CC785C);
+        }
+        [data-theme="claude"] .btn-primary:hover {
+            background: linear-gradient(135deg, #CC785C, #B86A4F);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -3519,7 +3571,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.6</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.7</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
