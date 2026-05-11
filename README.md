@@ -1,6 +1,6 @@
 # 🎲 보드게임 리더보드 / Boardgame Leaderboard
 
-**[🔗 Live](https://67jm89.github.io/boardgame-leaderboard-kor/)** &nbsp;·&nbsp; 🔒 **Private Pages** (GitHub Enterprise, collaborator + 로그인 필요)
+**[🔗 Live](https://67jm89.github.io/boardgame-leaderboard-kor/)** &nbsp;·&nbsp; 🌐 **Public Pages** — 로그인 없이 누구나 접속 가능
 
 소규모 보드게임 모임의 결과를 기록·분석하는 단일 페이지 대시보드. 로컬 Excel(`data/board.xlsx`) → GitHub Pages 자동 배포 워크플로우로 운영됩니다.
 
@@ -83,7 +83,7 @@ boardgame-leaderboard-kor/
 - **CSP** (Content Security Policy): jsDelivr CDN만 허용
 - **SRI** (Subresource Integrity): CDN 파일 변조 자동 차단
 - **SHA-256 해시 비밀번호** (XLSX 업로드 보호, 5회 실패 시 5분 잠금)
-- **Private Pages** (GitHub Enterprise): 로그인한 collaborator만 접근
+- **Public Pages**: 로그인 없이 누구나 접속 (단, XLSX 업로드는 SHA-256 해시 비밀번호로 보호)
 
 ---
 
@@ -106,9 +106,10 @@ git push origin main
 ```
 
 ### End User (친구들)
-- GitHub 로그인 + 저장소 collaborator 권한 필요 (Private repo)
-- 페이지 첫 접속 시 GitHub 인증 → `refactored-giggle-XXXX.pages.github.io` 로 자동 리다이렉트 (정상)
+- **로그인 불필요** — URL만 알면 누구나 접속 (Public Pages)
 - 새 버전 배포되면 90초 내 우측 하단 배너 자동 표시 → "새로고침" 클릭
+- 좌측 하단 🎵 버튼으로 BGM 토글 (Spotify 미니 플레이어)
+- 모바일에서도 정상 동작
 
 ---
 
@@ -184,8 +185,8 @@ Reward Points = Tier + 출석 보너스 − 사용한 포인트 − 교환
 
 ## ⚠️ 주의 사항 / Cautions
 
-- **Private repo**: collaborator 권한 없으면 페이지 접근 불가. 코드/데이터도 외부 비공개.
-- **GitHub Enterprise 구독 필수**: Private Pages 기능은 Enterprise plan에서만 활성. Team plan은 Pages를 Public로만 노출.
+- **Public Pages**: URL을 아는 사람은 누구나 페이지 + `data/board.xlsx` 열람 가능 (플레이어 이름·점수 포함). 민감 정보 미포함 가정으로 운영.
+- **Repo Visibility는 별개**: Pages가 Public이어도 repo 자체는 Private/Public 어느 쪽도 가능 (현재 설정에 따라).
 - **하드 리프레시 불필요**: V7부터 자동 업데이트 감지 배너가 새 버전을 알림. (그래도 안 보이면 `Ctrl+Shift+R`)
 - **데이터는 Excel 마스터**: 모든 통계는 `data/board.xlsx`에서 파싱. 다른 곳에서 직접 수정 X.
 
@@ -196,9 +197,9 @@ Reward Points = Tier + 출석 보너스 − 사용한 포인트 − 교환
 이 프로젝트는 **회사 업무에서 자주 보는 GitHub 패턴**을 1인 환경에서 학습하기 위한 케이스 스터디입니다:
 
 - Organization 운영 (`67JM89`)
-- Team → Enterprise plan 업그레이드 (Private Pages 활성)
+- Team → Enterprise plan 업그레이드 (Private Pages 학습용 — 현재는 Public 운영)
 - Repo 이전 (`sung-jungmin` → `67JM89`) + 자동 redirect
-- Private Pages + auth 서브도메인 (`refactored-giggle-*`)
+- Private Pages 운영 후 Public 전환 결정 (랜덤 인증 서브도메인 `refactored-giggle-*` → 정규 `*.github.io` URL)
 - GitHub Actions / CODEOWNERS / Dependabot
 - Branch Protection (계획)
 - Environments + Secrets (계획)
@@ -213,4 +214,4 @@ Reward Points = Tier + 출석 보너스 − 사용한 포인트 − 교환
 
 Issues 탭으로 연락 / Reach out via GitHub Issues.
 
-**Repository:** [67JM89/boardgame-leaderboard-kor](https://github.com/67JM89/boardgame-leaderboard-kor) (Private, GitHub Enterprise)
+**Repository:** [67JM89/boardgame-leaderboard-kor](https://github.com/67JM89/boardgame-leaderboard-kor) · Public Pages
