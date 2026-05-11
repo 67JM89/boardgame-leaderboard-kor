@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.6">
+    <meta name="app-version" content="v8.7">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -1962,6 +1962,199 @@
         /*     Rank Change Arrows (E), Count-up (D)                      */
         /* ============================================================ */
 
+        /* V8.7: 세션 디테일 모달 — 한 날짜의 모든 게임 펼침 */
+        .session-modal__meta {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            margin-bottom: var(--sp-4);
+            padding: var(--sp-3) var(--sp-4);
+            background: linear-gradient(135deg, var(--primary-soft), var(--surface-2));
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .session-modal__meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .session-modal__meta-label {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: var(--fw-semibold);
+        }
+        .session-modal__meta-value {
+            font-size: var(--fs-lg);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+        .session-game {
+            margin-bottom: var(--sp-4);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            overflow: hidden;
+        }
+        .session-game__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+        }
+        .session-game__title {
+            font-size: var(--fs-md);
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+        }
+        .session-game__count {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            background: var(--bg-subtle);
+            padding: 2px 8px;
+            border-radius: var(--r-pill);
+            font-weight: var(--fw-medium);
+        }
+        .session-game__table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .session-game__table td {
+            padding: 8px var(--sp-4);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--fs-sm);
+        }
+        .session-game__table tr:last-child td { border-bottom: none; }
+        .session-game__table tr:hover td { background: var(--surface-hover); }
+        .session-game__rank {
+            width: 40px;
+            text-align: center;
+        }
+        .session-game__points {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: var(--fw-semibold);
+            width: 80px;
+        }
+        .session-attendance {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: var(--sp-3) var(--sp-4);
+            margin-bottom: var(--sp-4);
+        }
+        .session-attendance__title {
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-semibold);
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .session-attendance__list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .session-attendance__chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--bg-subtle);
+            border-radius: var(--r-pill);
+            font-size: var(--fs-xs);
+            color: var(--text);
+        }
+        /* 히스토리 날짜 셀 클릭 가능 표시 */
+        .leaderboard-table#historyTable tbody td:first-child {
+            cursor: pointer;
+            transition: color var(--dur-fast) var(--ease-out);
+        }
+        .leaderboard-table#historyTable tbody tr:hover td:first-child {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        /* V8.7: 성취 잠금해제 토스트 — tier별 다른 비주얼 */
+        .achievement-toast {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-md);
+            padding: var(--sp-3) var(--sp-4);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            max-width: 380px;
+            margin-bottom: var(--sp-2);
+            transform: translateX(120%);
+            transition: transform var(--dur-slow) var(--ease-out),
+                        opacity var(--dur-base) var(--ease-out);
+            opacity: 0;
+            pointer-events: auto;
+        }
+        .achievement-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .achievement-toast.fade-out {
+            opacity: 0;
+            transform: translateX(40%);
+        }
+        .achievement-toast--legendary {
+            background: linear-gradient(135deg, #ec4899, #f59e0b);
+            color: #fff;
+            border-color: transparent;
+            animation: achievementGlow 1.6s ease-in-out infinite;
+        }
+        @keyframes achievementGlow {
+            0%, 100% { box-shadow: var(--shadow-lg); }
+            50%      { box-shadow: var(--shadow-lg), 0 0 32px rgba(236, 72, 153, 0.55); }
+        }
+        .achievement-toast--epic {
+            background: linear-gradient(135deg, #f97316, #eab308);
+            color: #fff;
+            border-color: transparent;
+        }
+        .achievement-toast--rare {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: #fff;
+            border-color: transparent;
+        }
+        .achievement-toast__icon {
+            font-size: 38px;
+            line-height: 1;
+            flex-shrink: 0;
+            animation: achievementPop 0.6s var(--ease-out);
+        }
+        @keyframes achievementPop {
+            0%   { transform: scale(0) rotate(-12deg); }
+            55%  { transform: scale(1.25) rotate(8deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+        .achievement-toast__body { flex: 1; min-width: 0; }
+        .achievement-toast__player {
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            opacity: 0.9;
+        }
+        .achievement-toast__title {
+            font-size: var(--fs-base);
+            font-weight: var(--fw-bold);
+            margin: 2px 0;
+        }
+        .achievement-toast__desc {
+            font-size: var(--fs-xs);
+            opacity: 0.92;
+            line-height: 1.4;
+        }
+
         /* V8.5: 자동 인사이트 캐러셀 — 데이터에서 발견한 1줄 사실들 회전 */
         .insights-carousel {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.04), var(--surface));
@@ -2855,7 +3048,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.6</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.7</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3950,6 +4143,8 @@
             buildCumulativeRankingSeries();
             initializeChartPlayers();
             updateDashboard();
+            // V8.7: 새 배지 잠금해제 감지 + 토스트 (데이터 로드 1초 후 — 페이지 안정화 대기)
+            setTimeout(() => detectAndShowNewAchievements(), 1000);
         }
 
         // ============================================================
@@ -4686,7 +4881,7 @@
                 }
 
                 return `
-                    <tr class="${groupClass}">
+                    <tr class="${groupClass}" data-session-date="${escapeHtml(dateKey)}">
                         <td>${record.date.toLocaleDateString('ko-KR')}</td>
                         <td>${gameLabel}</td>
                         <td><span class="player-name" data-player="${escapeHtml(record.player)}">${avatarHTML(record.player)}${escapeHtml(record.player)}</span></td>
@@ -4698,6 +4893,15 @@
                 `;
             }).join('');
             bindPlayerNameClicks(tbody);
+            // V8.7: 첫 컬럼(날짜) 클릭 → 세션 디테일 모달
+            tbody.querySelectorAll('tr[data-session-date]').forEach(tr => {
+                const dateCell = tr.querySelector('td:first-child');
+                if (!dateCell) return;
+                dateCell.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openSessionModal(tr.dataset.sessionDate);
+                });
+            });
         }
 
         // ============================================================
@@ -5432,6 +5636,226 @@
         }
 
         // ============================================================
+        // V8.7: 세션 디테일 모달 — 한 날짜의 모든 게임 펼침
+        // ============================================================
+        function openSessionModal(dateKey) {
+            const dateRecords = gameData.filter(r => localDateKey(r.date) === dateKey);
+            if (dateRecords.length === 0) return;
+
+            const gameRecords = dateRecords.filter(r => r.isGame);
+            const attendanceRecords = dateRecords.filter(r => r.isAttendance);
+            const redemptionRecords = dateRecords.filter(r => r.isRedeem);
+
+            // 세션ID(=게임)별 그룹
+            const sessions = {};
+            gameRecords.forEach(r => {
+                if (!sessions[r.sessionId]) sessions[r.sessionId] = { game: r.game, records: [] };
+                sessions[r.sessionId].records.push(r);
+            });
+            Object.values(sessions).forEach(s => {
+                s.records.sort((a, b) => (a.rank || 99) - (b.rank || 99));
+            });
+
+            // 통계
+            const uniquePlayers = new Set(dateRecords.map(r => r.player));
+            const gameCount = Object.keys(sessions).length;
+            const dateObj = dateRecords[0].date;
+            const dateLabel = dateObj.toLocaleDateString('ko-KR', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+
+            // 그날의 종합 우승자 (Tier 변동 합 최대)
+            const tierByPlayer = {};
+            gameRecords.forEach(r => {
+                tierByPlayer[r.player] = (tierByPlayer[r.player] || 0) + r.win + r.loss;
+            });
+            const overallWinner = Object.entries(tierByPlayer)
+                .sort((a, b) => b[1] - a[1])[0];
+
+            // 세션 카드들
+            const sessionsHTML = Object.values(sessions)
+                .sort((a, b) => a.game.localeCompare(b.game))
+                .map(s => {
+                    const total = s.records.length;
+                    const playerRows = s.records.map(r => {
+                        const points = r.win + r.loss;
+                        const pointsClass = points > 0 ? 'points-positive' : points < 0 ? 'points-negative' : 'points-neutral';
+                        const pointsText = points === 0
+                            ? '0.0'
+                            : (points > 0 ? '+' : '') + points.toFixed(1);
+                        let rankBadge;
+                        if (r.win > 0) {
+                            const rankClass = getRankBadgeClass(r.rank, total);
+                            rankBadge = `<span class="rank-badge ${rankClass}" style="width:24px;height:24px;font-size:11px;">${r.rank}</span>`;
+                        } else if (r.loss < 0) {
+                            rankBadge = '<span class="rank-mark rank-mark--penalty" title="감점" aria-label="감점">🟥</span>';
+                        } else {
+                            rankBadge = '<span class="rank-mark rank-mark--neutral" aria-label="점수 없음">–</span>';
+                        }
+                        return `
+                            <tr>
+                                <td class="session-game__rank">${rankBadge}</td>
+                                <td><span class="player-name" data-player="${escapeHtml(r.player)}">${avatarHTML(r.player)}${escapeHtml(r.player)}</span></td>
+                                <td class="session-game__points ${pointsClass}">${pointsText}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    return `
+                        <div class="session-game">
+                            <div class="session-game__head">
+                                <div class="session-game__title">🎲 ${escapeHtml(s.game)}</div>
+                                <div class="session-game__count">${total}명 참가</div>
+                            </div>
+                            <table class="session-game__table">
+                                <tbody>${playerRows}</tbody>
+                            </table>
+                        </div>
+                    `;
+                }).join('');
+
+            // 출석 chips
+            const attendanceHTML = attendanceRecords.length > 0
+                ? `<div class="session-attendance">
+                       <div class="session-attendance__title">📅 출석 / 활동</div>
+                       <div class="session-attendance__list">${
+                           attendanceRecords.map(r => {
+                               const icon = (r.game === 'HSM Running Club' || r.game === 'HSM Running') ? '🏃' : '✅';
+                               const bonus = r.attendBonus > 0 ? ` (+${r.attendBonus.toFixed(1)})` : '';
+                               return `<span class="session-attendance__chip">${icon} <span class="player-name" data-player="${escapeHtml(r.player)}" style="cursor:pointer;">${escapeHtml(r.player)}</span>${bonus}</span>`;
+                           }).join('')
+                       }</div>
+                   </div>`
+                : '';
+
+            const redemptionHTML = redemptionRecords.length > 0
+                ? `<div class="session-attendance">
+                       <div class="session-attendance__title">🎁 포인트 사용 / 교환</div>
+                       <div class="session-attendance__list">${
+                           redemptionRecords.map(r => {
+                               const used = r.redeem + r.exchange;
+                               return `<span class="session-attendance__chip">🎁 <span class="player-name" data-player="${escapeHtml(r.player)}" style="cursor:pointer;">${escapeHtml(r.player)}</span> (${used.toFixed(1)})</span>`;
+                           }).join('')
+                       }</div>
+                   </div>`
+                : '';
+
+            const html = `
+                <div class="session-modal__meta">
+                    <div class="session-modal__meta-item">
+                        <div class="session-modal__meta-label">참가자</div>
+                        <div class="session-modal__meta-value">${uniquePlayers.size}명</div>
+                    </div>
+                    <div class="session-modal__meta-item">
+                        <div class="session-modal__meta-label">게임 수</div>
+                        <div class="session-modal__meta-value">${gameCount}판</div>
+                    </div>
+                    ${overallWinner && overallWinner[1] > 0 ? `
+                        <div class="session-modal__meta-item">
+                            <div class="session-modal__meta-label">🏅 종합 1위</div>
+                            <div class="session-modal__meta-value">${escapeHtml(overallWinner[0])} <span style="font-size:var(--fs-sm); color:var(--success); margin-left:4px;">+${overallWinner[1].toFixed(1)}</span></div>
+                        </div>
+                    ` : ''}
+                </div>
+                ${sessionsHTML || '<div class="empty-state">이 날짜에 게임 기록이 없습니다</div>'}
+                ${attendanceHTML}
+                ${redemptionHTML}
+            `;
+
+            // playerModal 재사용
+            document.getElementById('modalPlayerName').innerHTML =
+                '<span aria-hidden="true">📅</span><span style="margin-left:8px;">' + escapeHtml(dateLabel) + '</span>';
+            document.getElementById('modalBody').innerHTML = html;
+            const modal = document.getElementById('playerModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            // 내부 플레이어 이름 클릭 → 플레이어 모달로 점프 (세션 모달 닫기 후)
+            document.querySelectorAll('#modalBody .player-name[data-player]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const p = el.dataset.player;
+                    closeModal();
+                    setTimeout(() => openPlayerModal(p), 80);
+                });
+            });
+        }
+
+        // ============================================================
+        // V8.7: 성취 잠금해제 토스트 — 새로 달성한 배지 알림
+        // ============================================================
+        const ACHIEVEMENT_STORAGE_KEY = 'boardgame-leaderboard:achievements-snapshot';
+
+        function getAchievementSnapshot() {
+            try {
+                return JSON.parse(localStorage.getItem(ACHIEVEMENT_STORAGE_KEY) || '{}');
+            } catch { return {}; }
+        }
+        function saveAchievementSnapshot(snapshot) {
+            try {
+                localStorage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot));
+            } catch { /* quota 등 무시 */ }
+        }
+
+        function detectAndShowNewAchievements() {
+            const stored = getAchievementSnapshot();
+            const current = {};
+            const newUnlocks = [];
+
+            const players = Array.from(new Set(gameData.map(r => r.player))).filter(Boolean);
+            players.forEach(player => {
+                const stats = computePlayerAchievementStats(player);
+                const earned = ACHIEVEMENTS.filter(a => a.check(stats)).map(a => a.id);
+                current[player] = earned;
+                const prevEarned = stored[player] || [];
+                earned.forEach(id => {
+                    if (!prevEarned.includes(id)) {
+                        const ach = ACHIEVEMENTS.find(a => a.id === id);
+                        if (ach) newUnlocks.push({ player, achievement: ach });
+                    }
+                });
+            });
+
+            // 첫 방문 (저장된 스냅샷 없음): 토스트 스팸 방지 — 표시 안 하고 baseline만 저장
+            const isFirstVisit = Object.keys(stored).length === 0;
+            saveAchievementSnapshot(current);
+            if (isFirstVisit) return;
+
+            // 토스트는 stagger로 표시 (max 5개)
+            const limit = 5;
+            newUnlocks.slice(0, limit).forEach((u, idx) => {
+                setTimeout(() => showAchievementUnlockToast(u.player, u.achievement), idx * 900);
+            });
+            if (newUnlocks.length > limit) {
+                setTimeout(() => {
+                    showToast('+' + (newUnlocks.length - limit) + '개 배지 추가 잠금해제 🎉', 'success', 3000);
+                }, limit * 900);
+            }
+        }
+
+        function showAchievementUnlockToast(player, ach) {
+            const host = document.getElementById('toastHost');
+            if (!host) return;
+            const toast = document.createElement('div');
+            toast.className = 'achievement-toast achievement-toast--' + (ach.tier || 'common');
+            toast.setAttribute('role', 'status');
+            toast.innerHTML = `
+                <div class="achievement-toast__icon" aria-hidden="true">${ach.icon}</div>
+                <div class="achievement-toast__body">
+                    <div class="achievement-toast__player">${escapeHtml(player)}</div>
+                    <div class="achievement-toast__title">🎉 ${escapeHtml(ach.name)} 잠금해제!</div>
+                    <div class="achievement-toast__desc">${escapeHtml(ach.description)}</div>
+                </div>
+            `;
+            host.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+            // 클릭 시 해당 플레이어 모달
+            toast.addEventListener('click', () => openPlayerModal(player));
+            toast.style.cursor = 'pointer';
+        }
+
+        // ============================================================
         // V8.5: 자동 인사이트 카드 (회전 캐러셀)
         // 데이터에서 발견한 흥미로운 1줄 사실들을 5~7초 간격으로 회전 표시.
         // ============================================================
@@ -5694,6 +6118,10 @@
                 year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
             });
             dateEl.textContent = dateLabel;
+            // V8.7: 날짜 칩 클릭 → 세션 디테일
+            dateEl.style.cursor = 'pointer';
+            dateEl.title = '클릭하여 이 모임의 모든 게임 보기';
+            dateEl.onclick = () => openSessionModal(latestDateKey);
 
             const gameNames = Object.keys(sessions).sort();
             gamesEl.innerHTML = gameNames.map(game => {
@@ -5703,7 +6131,7 @@
                 const winnerPoints = winner ? winner.win : 0;
                 const playerCount = session.length;
                 return `
-                    <div class="recent-session-game">
+                    <div class="recent-session-game" data-session-date="${escapeHtml(latestDateKey)}" style="cursor:pointer;" title="클릭하여 이 모임의 모든 게임 보기">
                         <div class="recent-session-game__name">${escapeHtml(game)}</div>
                         <div class="recent-session-game__winner">
                             <span aria-hidden="true">🥇</span>
@@ -5716,6 +6144,10 @@
                     </div>
                 `;
             }).join('');
+            // V8.7: 게임 카드 클릭 → 세션 디테일
+            gamesEl.querySelectorAll('[data-session-date]').forEach(el => {
+                el.addEventListener('click', () => openSessionModal(el.dataset.sessionDate));
+            });
             card.hidden = false;
         }
 
