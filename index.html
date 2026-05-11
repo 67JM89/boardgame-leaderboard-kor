@@ -9,9 +9,9 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.5">
+    <meta name="app-version" content="v9.6">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self'; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://open.spotify.com https://open.spotifycdn.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self' https://open.spotify.com; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
     <title>보드게임 리더보드</title>
@@ -3519,7 +3519,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.5</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.6</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -8019,6 +8019,10 @@
             return SPOTIFY_PLAYLISTS[Math.floor(Math.random() * SPOTIFY_PLAYLISTS.length)];
         }
 
+        // V9.6: Spotify IFrame API controller (autoplay 우회용)
+        let spotifyController = null;
+        let spotifyAutoPlayed = false;
+
         function setupSpotifyPlayer() {
             const player = document.getElementById('spotifyPlayer');
             const toggle = document.getElementById('spotifyToggle');
@@ -8029,45 +8033,121 @@
             // 매 페이지 로드마다 다른 플레이리스트 (Mix)
             const playlist = pickRandomSpotifyPlaylist();
 
-            const ensureIframe = () => {
-                if (panel.querySelector('iframe')) return;
-                const iframe = document.createElement('iframe');
-                // ?autoplay=1은 브라우저 정책으로 사실상 차단되지만, 플레이어는 준비 상태로 표시됨
-                iframe.src = 'https://open.spotify.com/embed/playlist/' + playlist.id + '?utm_source=generator&autoplay=1';
-                iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
-                iframe.setAttribute('loading', 'lazy');
-                iframe.setAttribute('title', 'Spotify BGM — ' + playlist.name);
-                panel.appendChild(iframe);
+            // V9.6: Spotify IFrame API 로 embed 컨트롤러 생성 → 첫 사용자 인터랙션 시 .play() 호출
+            const ensureEmbed = () => {
+                if (panel.querySelector('iframe, div[data-spotify-placeholder]')) return;
+                const placeholder = document.createElement('div');
+                placeholder.setAttribute('data-spotify-placeholder', '');
+                placeholder.style.width = '100%';
+                placeholder.style.minHeight = '152px';
+                panel.appendChild(placeholder);
+
+                const buildWithApi = (IFrameAPI) => {
+                    try {
+                        IFrameAPI.createController(placeholder, {
+                            width: '100%',
+                            height: 152,
+                            uri: 'spotify:playlist:' + playlist.id
+                        }, (controller) => {
+                            spotifyController = controller;
+                            // 첫 사용자 상호작용 시 자동 재생 (브라우저 autoplay 정책 우회)
+                            armAutoPlayOnFirstInteraction();
+                        });
+                    } catch (e) {
+                        console.warn('Spotify IFrame API 실패, fallback iframe 사용', e);
+                        useFallbackIframe();
+                    }
+                };
+
+                const useFallbackIframe = () => {
+                    placeholder.innerHTML = '';
+                    const iframe = document.createElement('iframe');
+                    iframe.src = 'https://open.spotify.com/embed/playlist/' + playlist.id + '?utm_source=generator';
+                    iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+                    iframe.setAttribute('loading', 'lazy');
+                    iframe.setAttribute('title', 'Spotify BGM — ' + playlist.name);
+                    iframe.style.width = '100%';
+                    iframe.style.height = '152px';
+                    iframe.style.border = '0';
+                    placeholder.appendChild(iframe);
+                };
+
+                if (window.SpotifyIframeApi) {
+                    buildWithApi(window.SpotifyIframeApi);
+                } else {
+                    // API 콜백 등록
+                    window.onSpotifyIframeApiReady = (IFrameAPI) => {
+                        window.SpotifyIframeApi = IFrameAPI;
+                        buildWithApi(IFrameAPI);
+                    };
+                    // 스크립트 미주입이면 주입
+                    if (!document.querySelector('script[data-spotify-api]')) {
+                        const s = document.createElement('script');
+                        s.src = 'https://open.spotify.com/embed/iframe-api/v1';
+                        s.async = true;
+                        s.setAttribute('data-spotify-api', '');
+                        s.onerror = () => {
+                            console.warn('Spotify IFrame API 로드 실패 — fallback iframe 사용');
+                            useFallbackIframe();
+                        };
+                        document.head.appendChild(s);
+                    }
+                    // 4초 타임아웃: API가 영영 안 뜨면 fallback
+                    setTimeout(() => {
+                        if (!spotifyController && !placeholder.querySelector('iframe')) {
+                            useFallbackIframe();
+                        }
+                    }, 4000);
+                }
+            };
+
+            // 첫 클릭/터치/키 입력 시 .play() — 브라우저 autoplay 정책 우회의 핵심
+            const armAutoPlayOnFirstInteraction = () => {
+                if (spotifyAutoPlayed) return;
+                const tryPlay = () => {
+                    if (spotifyAutoPlayed || !spotifyController) return;
+                    spotifyAutoPlayed = true;
+                    try { spotifyController.play(); } catch {}
+                    ['click', 'keydown', 'touchstart'].forEach(evt =>
+                        document.removeEventListener(evt, tryPlay, true));
+                };
+                ['click', 'keydown', 'touchstart'].forEach(evt =>
+                    document.addEventListener(evt, tryPlay, { once: true, capture: true }));
             };
 
             const openPanel = () => {
-                ensureIframe();
+                ensureEmbed();
                 player.classList.add('expanded', 'is-playing');
                 toggle.setAttribute('aria-label', '음악 플레이어 닫기');
             };
             const closePanel = () => {
                 player.classList.remove('expanded', 'is-playing');
                 toggle.setAttribute('aria-label', '음악 플레이어 열기');
-                // 사용자가 명시적으로 닫으면 이번 탭 세션 동안 자동 열기 안 함
+                // 컨트롤러로 일시정지
+                try { if (spotifyController) spotifyController.pause(); } catch {}
                 try { sessionStorage.setItem(SPOTIFY_DISMISSED_KEY, '1'); } catch {}
             };
 
             toggle.addEventListener('click', () => {
                 if (player.classList.contains('expanded')) closePanel();
                 else {
-                    // 사용자가 다시 열면 dismiss 해제
                     try { sessionStorage.removeItem(SPOTIFY_DISMISSED_KEY); } catch {}
                     openPanel();
+                    // 토글 클릭도 사용자 인터랙션이므로 즉시 재생 시도
+                    setTimeout(() => {
+                        if (spotifyController && !spotifyAutoPlayed) {
+                            spotifyAutoPlayed = true;
+                            try { spotifyController.play(); } catch {}
+                        }
+                    }, 300);
                 }
             });
             if (closeBtn) closeBtn.addEventListener('click', closePanel);
 
-            // V9.5: 자동 열림 — 이번 탭 세션에서 사용자가 dismiss하지 않았으면 자동 펼침
-            // (브라우저가 실제 autoplay는 막아도, 한 번 클릭이면 재생 시작 가능한 상태로 노출)
+            // V9.5+: 자동 열림 — dismiss 안 했으면 자동 펼침
             let dismissed = false;
             try { dismissed = sessionStorage.getItem(SPOTIFY_DISMISSED_KEY) === '1'; } catch {}
             if (!dismissed) {
-                // 페이지 로드 후 500ms 지연 — 다른 UI가 먼저 그려진 뒤 부드럽게 등장
                 setTimeout(openPanel, 500);
             }
         }
