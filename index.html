@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v8.8">
+    <meta name="app-version" content="v8.9">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -3201,7 +3201,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.8</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v8.9</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3479,7 +3479,7 @@
                         <li><strong>등급:</strong> 일반(파랑) · 레어(보라) · 에픽(주황) · 전설(핑크 글로우)</li>
                         <li>달성한 배지는 컬러 / 미달성은 회색 + 진행률 표시</li>
                         <li><strong>다음 목표</strong> 섹션은 가까운 3개를 스텝형 progress bar로 보여줌</li>
-                        <li>카테고리: 승리(1·3·10·20승) / 연승(2·3·5) / Tier(20·50·100) / 다양성 / 출석 / 승률 / 🎢 위험감수자(감점) / 🛍️ 교환 장려</li>
+                        <li>카테고리: 승리(1·3·10·20승) / 연승(2·3·5) / Tier(10·30·60·100) / 다양성 / 출석 / 승률 / 🎢 위험감수자(감점) / 🛍️ 교환 장려</li>
                     </ul>
                 </section>
 
@@ -3714,15 +3714,18 @@
               description: '5게임 연속 승점 획득 (전설)',
               current: s => s.longestStreak, target: 5, unit: '연승' },
 
-            // ── Tier Points ──────────────────────────────────────────────
-            { id: 'tier_20', category: '💎 Tier', tier: 'common', icon: '💎', name: 'Tier 20',
-              description: 'Tier Points 20점 돌파',
-              current: s => Math.max(0, s.tier), target: 20, unit: '' },
-            { id: 'tier_50', category: '💎 Tier', tier: 'rare', icon: '💎', name: 'Tier 50',
-              description: 'Tier Points 50점 돌파',
-              current: s => Math.max(0, s.tier), target: 50, unit: '' },
-            { id: 'tier_100', category: '💎 Tier', tier: 'epic', icon: '💠', name: 'Tier 100',
-              description: 'Tier Points 100점 돌파',
+            // ── Tier Points (V8.9: 진입장벽 완화 — 10/30/60/100) ──────────
+            { id: 'tier_10', category: '💎 Tier', tier: 'common', icon: '💎', name: 'Tier 10',
+              description: 'Tier Points 10점 돌파',
+              current: s => Math.max(0, s.tier), target: 10, unit: '' },
+            { id: 'tier_30', category: '💎 Tier', tier: 'rare', icon: '💎', name: 'Tier 30',
+              description: 'Tier Points 30점 돌파',
+              current: s => Math.max(0, s.tier), target: 30, unit: '' },
+            { id: 'tier_60', category: '💎 Tier', tier: 'epic', icon: '💠', name: 'Tier 60',
+              description: 'Tier Points 60점 돌파',
+              current: s => Math.max(0, s.tier), target: 60, unit: '' },
+            { id: 'tier_100', category: '💎 Tier', tier: 'legendary', icon: '✨', name: 'Tier 100',
+              description: 'Tier Points 100점 돌파 (전설)',
               current: s => Math.max(0, s.tier), target: 100, unit: '' },
 
             // ── Variety (게임 종류) ───────────────────────────────────────
