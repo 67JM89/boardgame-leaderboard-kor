@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.0">
+    <meta name="app-version" content="v9.1">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -2234,6 +2234,85 @@
             text-decoration: underline;
         }
 
+        /* V9.1: 컨페티 — legendary 배지 unlock 시 색종이 비 */
+        .confetti-host {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            overflow: hidden;
+        }
+        .confetti-particle {
+            position: absolute;
+            top: -24px;
+            width: 8px;
+            height: 14px;
+            border-radius: 1px;
+            opacity: 0.95;
+            animation: confettiFall var(--dur, 2.4s) cubic-bezier(0.16, 0.5, 0.5, 1) forwards;
+            transform-origin: center;
+        }
+        @keyframes confettiFall {
+            0% {
+                transform: translate3d(0, -24px, 0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate3d(var(--drift, 0), 105vh, 0) rotate(var(--rot, 720deg));
+                opacity: 0;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .confetti-host { display: none; }
+        }
+
+        /* V9.1: "내 플레이어" — 리더보드 행 강조 + 별 칩 */
+        .leaderboard-table tbody tr.row-favorite {
+            box-shadow: inset 3px 0 0 var(--warning-500);
+        }
+        .leaderboard-table tbody tr.row-favorite td:first-child {
+            position: relative;
+        }
+        .fav-star-chip {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: var(--fs-sm);
+            line-height: 1;
+            vertical-align: middle;
+            animation: favTwinkle 2.6s ease-in-out infinite;
+        }
+        @keyframes favTwinkle {
+            0%, 100% { transform: scale(1) rotate(0); filter: brightness(1); }
+            50%      { transform: scale(1.12) rotate(8deg); filter: brightness(1.2); }
+        }
+        .fav-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--r-pill);
+            color: var(--text-muted);
+            font: inherit;
+            font-size: var(--fs-sm);
+            cursor: pointer;
+            transition: all var(--dur-base) var(--ease-out);
+        }
+        .fav-toggle:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        .fav-toggle.is-fav {
+            background: linear-gradient(135deg, var(--warning-500), var(--gold-to));
+            color: #1a202c;
+            border-color: var(--gold-to);
+            font-weight: var(--fw-semibold);
+        }
+        .fav-toggle.is-fav:hover {
+            background: linear-gradient(135deg, var(--warning-400), var(--warning-500));
+        }
+
         /* V8.7: 성취 잠금해제 토스트 — tier별 다른 비주얼 */
         .achievement-toast {
             background: var(--surface);
@@ -3236,7 +3315,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.0</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.1</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3307,7 +3386,7 @@
                 <div class="stat-card-status" id="maxWinPlayerStatus"></div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-label"><span aria-hidden="true">🔥</span> 최장 연승</div>
+                <div class="stat-card-label"><span aria-hidden="true" id="bestStreakIcon">🔥</span> 최장 연승</div>
                 <div class="stat-card-value" id="bestStreakPlayer">-</div>
                 <div class="stat-card-status" id="bestStreakPlayerStatus"></div>
             </div>
@@ -4793,6 +4872,11 @@
             document.getElementById('bestStreakPlayer').textContent = hasStreak
                 ? streakTop.players.join(', ') + ' (' + streakTop.value + '연승)'
                 : '-';
+            // V9.1: 연승 길이에 따라 불꽃 강도
+            const streakIconEl = document.getElementById('bestStreakIcon');
+            if (streakIconEl) {
+                streakIconEl.textContent = hasStreak ? streakFireIntensity(streakTop.value) : '🔥';
+            }
             renderRankStatus('bestStreakPlayerStatus', streakTop.isTie, hasStreak);
         }
 
@@ -4847,10 +4931,14 @@
                 const lossText = player.totalLoss === 0 ? '0.0' : player.totalLoss.toFixed(1);
                 const runText  = run === 0 ? '0.0' : '+' + run.toFixed(1);
                 const changeBadge = showRankChange ? rankChangeBadge(player.name) : '';
+                // V9.1: 즐겨찾기 플레이어면 별 + 행 강조
+                const isFav = getFavoritePlayer() === player.name;
+                const favStar = isFav ? '<span class="fav-star-chip" aria-label="내 플레이어">⭐</span>' : '';
+                const rowClass = isFav ? ' class="row-favorite"' : '';
                 return `
-                    <tr>
+                    <tr${rowClass}>
                         <td><span class="rank-badge ${rankClass}">${idx + 1}</span>${changeBadge}</td>
-                        <td><span class="player-name" data-player="${escapeHtml(player.name)}">${avatarHTML(player.name)}${escapeHtml(player.name)}</span></td>
+                        <td><span class="player-name" data-player="${escapeHtml(player.name)}">${avatarHTML(player.name)}${escapeHtml(player.name)}</span>${favStar}</td>
                         <td><span class="${tierClass}">${tier.toFixed(1)}</span></td>
                         <td><span class="${winClass}">${winText}</span></td>
                         <td><span class="${lossClass}">${lossText}</span></td>
@@ -5298,6 +5386,10 @@
                     `;
                 }).join('');
 
+            // V9.1: 즐겨찾기 상태
+            const isCurrentFav = getFavoritePlayer() === playerName;
+            const escapedPlayerName = escapeHtml(playerName);
+
             const html = `
                 <div class="profile">
                     <!-- HERO: 순위 + Tier + Reward -->
@@ -5315,6 +5407,13 @@
                             <div class="rank-hero__pt ${tierTotal === 0 ? 'col-zero' : 'col-tier'}">${tierTotal.toFixed(1)}</div>
                             <div class="rank-hero__sub" style="margin-top: 4px;">🎁 Reward <span class="${reward === 0 ? 'col-zero' : 'col-reward'}" style="font-weight: var(--fw-semibold);">${reward.toFixed(1)}</span></div>
                         </div>
+                    </div>
+
+                    <!-- V9.1: 내 플레이어 토글 -->
+                    <div style="margin-top: var(--sp-3); text-align: center;">
+                        <button class="fav-toggle ${isCurrentFav ? 'is-fav' : ''}" id="favPlayerToggle" type="button" onclick='handleFavoriteToggle(${JSON.stringify(playerName)})' title="내 플레이어로 설정하면 리더보드에서 별표 + 좌측 강조로 표시됩니다">
+                            ${isCurrentFav ? '⭐ 내 플레이어' : '☆ 내 플레이어로 설정'}
+                        </button>
                     </div>
 
                     <!-- MINI STATS: 4 cards -->
@@ -6203,6 +6302,75 @@
         }
 
         // ============================================================
+        // V9.1: 컨페티 — legendary 잠금해제 시 색종이 비
+        // ============================================================
+        function fireConfetti() {
+            // prefers-reduced-motion 존중
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const palette = ['#fde047', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444', '#a78bfa'];
+            const count = 60;
+            const container = document.createElement('div');
+            container.className = 'confetti-host';
+            container.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti-particle';
+                p.style.left = (Math.random() * 100) + '%';
+                p.style.backgroundColor = palette[Math.floor(Math.random() * palette.length)];
+                p.style.setProperty('--drift', (Math.random() * 280 - 140) + 'px');
+                p.style.setProperty('--rot', (Math.random() * 1440 - 720) + 'deg');
+                p.style.setProperty('--dur', (1.8 + Math.random() * 1.6) + 's');
+                p.style.animationDelay = (Math.random() * 0.5) + 's';
+                // 일부는 원형으로 다양성 추가
+                if (Math.random() < 0.25) p.style.borderRadius = '50%';
+                container.appendChild(p);
+            }
+            document.body.appendChild(container);
+            setTimeout(() => container.remove(), 4200);
+        }
+
+        // ============================================================
+        // V9.1: 연승 불꽃 강도 — 연승 길이에 따라 🔥 갯수 (1~4)
+        // ============================================================
+        function streakFireIntensity(streakValue) {
+            if (!streakValue || streakValue < 2) return '🔥';
+            if (streakValue <= 3) return '🔥';
+            if (streakValue <= 5) return '🔥🔥';
+            if (streakValue <= 8) return '🔥🔥🔥';
+            return '🔥🔥🔥🔥';
+        }
+
+        // ============================================================
+        // V9.1: 내 플레이어 (즐겨찾기) — 별 토글, 로컬 저장
+        // ============================================================
+        const FAV_PLAYER_KEY = 'boardgame-leaderboard:favoritePlayer';
+        function getFavoritePlayer() {
+            try { return localStorage.getItem(FAV_PLAYER_KEY); } catch { return null; }
+        }
+        function setFavoritePlayer(name) {
+            try {
+                if (name) localStorage.setItem(FAV_PLAYER_KEY, name);
+                else localStorage.removeItem(FAV_PLAYER_KEY);
+            } catch {}
+        }
+        function handleFavoriteToggle(playerName) {
+            const current = getFavoritePlayer();
+            const becomingFav = current !== playerName;
+            setFavoritePlayer(becomingFav ? playerName : null);
+            // 모달 내 버튼 상태 갱신
+            const btn = document.getElementById('favPlayerToggle');
+            if (btn) {
+                btn.classList.toggle('is-fav', becomingFav);
+                btn.textContent = becomingFav ? '⭐ 내 플레이어' : '☆ 내 플레이어로 설정';
+            }
+            // 리더보드 별 표시 갱신
+            updateOverallLeaderboard();
+            updateGameLeaderboards();
+            updateMonthLeaderboards();
+            showToast(becomingFav ? `⭐ ${playerName}을(를) 내 플레이어로 설정` : '☆ 내 플레이어 해제됨', 'success', 1800);
+        }
+
+        // ============================================================
         // V8.7: 성취 잠금해제 토스트 — 새로 달성한 배지 알림
         // ============================================================
         const ACHIEVEMENT_STORAGE_KEY = 'boardgame-leaderboard:achievements-snapshot';
@@ -6257,6 +6425,10 @@
         function showAchievementUnlockToast(player, ach) {
             const host = document.getElementById('toastHost');
             if (!host) return;
+            // V9.1: legendary 잠금해제 시 컨페티
+            if (ach.tier === 'legendary') {
+                fireConfetti();
+            }
             const toast = document.createElement('div');
             toast.className = 'achievement-toast achievement-toast--' + (ach.tier || 'common');
             toast.setAttribute('role', 'status');
