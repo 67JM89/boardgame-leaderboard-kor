@@ -4642,7 +4642,8 @@
             const barRows = rows.map(g => {
                 const pctOfMax = (Math.abs(g.total) / maxAbs) * 100;
                 const isPos = g.total > 0, isNeg = g.total < 0;
-                const barCls = isPos ? 'gp__fill--pos' : isNeg ? 'gp__fill--neg' : 'gp__fill--zero';
+                // V9.8.1 fix: CSS는 .gp-fill--pos 형태인데 JS가 .gp__fill--pos 로 만들어 색이 안 입혀지던 버그
+                const barCls = isPos ? 'gp-fill--pos' : isNeg ? 'gp-fill--neg' : 'gp-fill--zero';
                 const totalCls = pointClass(g.total);
                 return `
                     <div class="gp-row">
