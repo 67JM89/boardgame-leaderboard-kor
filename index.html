@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.7">
+    <meta name="app-version" content="v9.8">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://open.spotify.com https://open.spotifycdn.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self' https://open.spotify.com; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -3563,6 +3563,214 @@
                 text-decoration: none !important;
             }
         }
+
+        /* ============================================================ */
+        /* V9.8: UX polish — filter chips, FAB, tab indicator, hints     */
+        /* ============================================================ */
+
+        /* --- Active filter chips: 현재 활성화된 필터를 시각적으로 표시 --- */
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--sp-2);
+            align-items: center;
+            margin: calc(var(--sp-3) * -1) 0 var(--sp-4);  /* 툴바와 살짝 붙임 */
+            min-height: 0;
+        }
+        .filter-chips:empty { display: none; }
+        .filter-chips__label {
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            font-weight: var(--fw-medium);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-right: 2px;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px 4px 10px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            border: 1px solid transparent;
+            border-radius: var(--r-pill);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            cursor: default;
+            animation: chipPop var(--dur-base) var(--ease-out);
+        }
+        @keyframes chipPop {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+        .filter-chip__icon { font-size: 11px; opacity: 0.9; }
+        .filter-chip__value { color: var(--text); font-weight: var(--fw-semibold); }
+        .filter-chip__clear {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            margin-left: 2px;
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            border-radius: 50%;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            transition: background var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out);
+        }
+        .filter-chip__clear:hover {
+            background: var(--primary);
+            color: var(--on-primary);
+        }
+        .filter-chip--clear-all {
+            background: transparent;
+            color: var(--text-subtle);
+            border: 1px dashed var(--border-strong);
+            padding: 4px 12px;
+            cursor: pointer;
+            font-weight: var(--fw-medium);
+            transition: color var(--dur-fast) var(--ease-out),
+                        border-color var(--dur-fast) var(--ease-out),
+                        background var(--dur-fast) var(--ease-out);
+        }
+        .filter-chip--clear-all:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.06);
+        }
+
+        /* --- Scroll-to-top FAB: 600px 이상 스크롤 시 우측 하단 등장 --- */
+        .scroll-top-fab {
+            position: fixed;
+            bottom: var(--sp-6);
+            right: var(--sp-6);
+            z-index: 60;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.85);
+            pointer-events: none;
+            transition: opacity var(--dur-slow) var(--ease-out),
+                        transform var(--dur-slow) var(--ease-out),
+                        background var(--dur-fast) var(--ease-out),
+                        color var(--dur-fast) var(--ease-out);
+        }
+        .scroll-top-fab.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .scroll-top-fab:hover {
+            background: var(--primary);
+            color: var(--on-primary);
+            border-color: var(--primary);
+        }
+        .scroll-top-fab:active { transform: translateY(0) scale(0.92); }
+        .scroll-top-fab:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 3px;
+        }
+        /* Spotify player가 좌측에 있어 충돌 없음 — 우측 하단 단독 */
+        @media (max-width: 480px) {
+            .scroll-top-fab {
+                bottom: var(--sp-4);
+                right: var(--sp-4);
+                width: 40px;
+                height: 40px;
+            }
+        }
+        @media print {
+            .scroll-top-fab { display: none !important; }
+        }
+
+        /* --- Tab active 살짝 강조 (active pill에 하이라이트 도트) --- */
+        .tab-button.active {
+            position: relative;
+            font-weight: var(--fw-semibold);
+        }
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--primary);
+            opacity: 0.85;
+        }
+        /* Claude 테마 — 도트 슬래시 모티프와 일관성 위해 살짝 더 두껍게 */
+        [data-theme="claude"] .tab-button.active::after {
+            width: 14px;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        /* --- 클릭 가능한 플레이어 행 affordance (커서 + 살짝 nudge) --- */
+        .leaderboard-table tbody tr {
+            cursor: pointer;
+        }
+        .leaderboard-table tbody tr:hover .player-name {
+            color: var(--primary);
+        }
+        /* History 테이블에서는 행 클릭은 세션 모달로 가니까 동일하게 */
+        #historyTable tbody tr[data-session-date] { cursor: pointer; }
+
+        /* --- 키보드 단축키 힌트 (subtle, 데스크탑만) --- */
+        .kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border: 1px solid var(--border-strong);
+            border-bottom-width: 2px;
+            border-radius: 4px;
+            background: var(--bg-subtle);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: var(--fw-semibold);
+            line-height: 1;
+        }
+
+        /* --- 표 좌우 스크롤 페이드 hint (모바일 가독성) --- */
+        .table-scroll {
+            position: relative;
+        }
+        .table-scroll::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 28px;
+            pointer-events: none;
+            background: linear-gradient(to left, var(--surface), transparent);
+            opacity: 0;
+            transition: opacity var(--dur-base) var(--ease-out);
+        }
+        .table-scroll.has-overflow::after { opacity: 0.9; }
+        @media (min-width: 1100px) {
+            /* 데스크탑 와이드: 거의 가로 스크롤 안 생기므로 hint 비활성화 */
+            .table-scroll::after { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -3571,7 +3779,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.7</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.8</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3631,6 +3839,9 @@
                 <span>공유</span>
             </button>
         </div>
+
+        <!-- V9.8: 활성 필터 칩 — 현재 적용된 month/game 필터를 시각적으로 표시 + 개별 해제 -->
+        <div class="filter-chips" id="filterChips" role="status" aria-live="polite" aria-label="활성 필터"></div>
 
         <div class="summary-bar" role="group" aria-label="요약 통계">
             <div class="summary-item">
@@ -3877,6 +4088,18 @@
                 </section>
 
                 <section class="help-card">
+                    <h3>⌨️ 단축키 & 팁 <span style="font-size:11px; color: var(--text-subtle); font-weight: var(--fw-medium);">(V9.8)</span></h3>
+                    <ul>
+                        <li><span class="kbd">/</span> — 월 필터로 빠른 포커스</li>
+                        <li><span class="kbd">Esc</span> — 열려있는 모달 닫기</li>
+                        <li><span class="kbd">Ctrl</span>+<span class="kbd">P</span> — 리더보드 인쇄 (전용 스타일)</li>
+                        <li>리더보드 <strong>행 어디든 클릭</strong> → 플레이어 모달</li>
+                        <li>날짜 / 게임 이름 클릭 → 세션 / 게임 모달</li>
+                        <li>스크롤 시 우측 하단 ↑ 버튼으로 맨 위로 이동</li>
+                    </ul>
+                </section>
+
+                <section class="help-card">
                     <h3>🏆 성취 배지</h3>
                     <p>플레이어 카드를 클릭하면 모달에서 확인 가능한 20개 자동 배지.</p>
                     <ul>
@@ -4029,6 +4252,13 @@
             <!-- iframe은 클릭 시점에 lazy 삽입 — 첫 클릭 전까지 네트워크 요청 없음 -->
         </div>
     </div>
+
+    <!-- V9.8: 스크롤 600px 이상 시 등장하는 "맨 위로" FAB -->
+    <button class="scroll-top-fab" id="scrollTopFab" type="button" title="맨 위로 (Home)" aria-label="페이지 맨 위로 이동">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 
     <script>
         'use strict';
@@ -5145,6 +5375,8 @@
             animateSummaryCounters();
             // V8.5: 자동 인사이트 캐러셀
             renderInsightsCarousel();
+            // V9.8: 활성 필터 칩
+            renderFilterChips();
             // V6: B. 최근 세션 요약 카드
             updateRecentSessionCard();
             updateOverallLeaderboard();
@@ -5158,6 +5390,10 @@
             updateHeatmap();
             // V8: 챔피언십 (ELO + 시즌 + 명예의 전당)
             updateChampionship();
+            // V9.8: 새 테이블에 overflow 감지 재바인딩
+            if (typeof window.__refreshTableOverflow === 'function') {
+                window.__refreshTableOverflow();
+            }
         }
 
         function updateStats() {
@@ -5331,7 +5567,26 @@
 
         function bindPlayerNameClicks(root) {
             root.querySelectorAll('.player-name[data-player]').forEach(el => {
-                el.addEventListener('click', () => openPlayerModal(el.dataset.player));
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPlayerModal(el.dataset.player);
+                });
+            });
+            // V9.8: 행 전체를 클릭해도 플레이어 모달 — UX affordance 확장.
+            // root는 <tbody> 자체 또는 wrapper div일 수 있어서 두 케이스 모두 처리.
+            const rows = root.matches && root.matches('tbody')
+                ? root.querySelectorAll(':scope > tr')
+                : root.querySelectorAll('tbody tr');
+            rows.forEach(tr => {
+                const nameEl = tr.querySelector('.player-name[data-player]');
+                if (!nameEl) return;
+                // 히스토리 테이블 행은 세션 모달이 이미 처리 → 중복 등록 피함
+                if (tr.closest('#historyTable')) return;
+                tr.addEventListener('click', (e) => {
+                    // 이미 다른 클릭 핸들러가 처리한 경우 무시
+                    if (e.target.closest('.player-name, .game-name, button, a, .fav-toggle, [data-session-date]')) return;
+                    openPlayerModal(nameEl.dataset.player);
+                });
             });
         }
 
@@ -8049,6 +8304,145 @@
 
             // 10) V9.2: Spotify 미니 플레이어 와이어업
             setupSpotifyPlayer();
+
+            // 11) V9.8: UX polish — FAB, 키보드 단축키, 표 overflow 감지
+            setupScrollTopFab();
+            setupKeyboardShortcuts();
+            setupTableOverflowDetector();
+        }
+
+        // ============================================================
+        // V9.8: UX polish helpers
+        // ============================================================
+
+        // 활성 필터 칩 렌더링 — updateDashboard()에서 호출됨
+        function renderFilterChips() {
+            const host = document.getElementById('filterChips');
+            if (!host) return;
+            const monthEl = document.getElementById('monthFilter');
+            const gameEl  = document.getElementById('gameFilter');
+            const monthVal = monthEl ? monthEl.value : '';
+            const gameVal  = gameEl  ? gameEl.value  : '';
+
+            const chips = [];
+            if (monthVal) {
+                const label = formatMonthLabel(monthVal);
+                chips.push(
+                    `<span class="filter-chip">` +
+                    `<span class="filter-chip__icon" aria-hidden="true">📅</span>` +
+                    `<span class="filter-chip__value">${escapeHtml(label)}</span>` +
+                    `<button type="button" class="filter-chip__clear" data-clear="month" aria-label="월 필터 해제" title="해제">×</button>` +
+                    `</span>`
+                );
+            }
+            if (gameVal) {
+                chips.push(
+                    `<span class="filter-chip">` +
+                    `<span class="filter-chip__icon" aria-hidden="true">🎮</span>` +
+                    `<span class="filter-chip__value">${escapeHtml(gameVal)}</span>` +
+                    `<button type="button" class="filter-chip__clear" data-clear="game" aria-label="게임 필터 해제" title="해제">×</button>` +
+                    `</span>`
+                );
+            }
+
+            if (chips.length === 0) {
+                host.innerHTML = '';
+                return;
+            }
+
+            // 라벨 + 칩들 + (필터 2개 이상일 때) "모두 해제"
+            const clearAll = chips.length >= 2
+                ? `<button type="button" class="filter-chip filter-chip--clear-all" data-clear="all" title="모든 필터 해제">모두 해제</button>`
+                : '';
+            host.innerHTML =
+                `<span class="filter-chips__label">필터:</span>` + chips.join('') + clearAll;
+
+            // 칩 클릭 핸들러 — 개별/전체 해제
+            host.querySelectorAll('[data-clear]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const what = btn.dataset.clear;
+                    if (what === 'month' || what === 'all') {
+                        if (monthEl) monthEl.value = '';
+                    }
+                    if (what === 'game' || what === 'all') {
+                        if (gameEl) gameEl.value = '';
+                    }
+                    updateDashboard();
+                });
+            });
+        }
+
+        // Scroll-to-top FAB — 600px 이상 스크롤 시 등장
+        function setupScrollTopFab() {
+            const fab = document.getElementById('scrollTopFab');
+            if (!fab) return;
+            const THRESHOLD = 600;
+            const update = () => {
+                if (window.scrollY > THRESHOLD) fab.classList.add('visible');
+                else fab.classList.remove('visible');
+            };
+            // 스크롤 이벤트는 passive로 (성능)
+            window.addEventListener('scroll', update, { passive: true });
+            update();  // 초기 상태
+
+            fab.addEventListener('click', () => {
+                // 모션 줄이기 설정 존중
+                const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+            });
+        }
+
+        // 키보드 단축키
+        // - "/" → 월 필터로 포커스 (입력 필드 활성화 시 무시)
+        // - "Home" → 맨 위로 (브라우저 기본동작 보강)
+        // - "Escape" → 열린 모달 닫기 (기존 핸들러 보강 — sessionModal 등 동일 모달 재사용)
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // 입력 중이면 단축키 무시 (한국어 IME 포함)
+                const tag = (e.target.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+                if (e.target.isContentEditable) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+                if (e.key === '/') {
+                    e.preventDefault();
+                    const monthSel = document.getElementById('monthFilter');
+                    if (monthSel) {
+                        monthSel.focus();
+                        // 시각적 피드백: 짧은 ring
+                        try {
+                            monthSel.style.boxShadow = '0 0 0 3px var(--primary-soft)';
+                            setTimeout(() => { monthSel.style.boxShadow = ''; }, 600);
+                        } catch {}
+                    }
+                }
+            });
+        }
+
+        // 표 가로 overflow 감지 — 좌우 fade hint를 has-overflow 클래스로 토글
+        function setupTableOverflowDetector() {
+            const check = () => {
+                document.querySelectorAll('.table-scroll').forEach(el => {
+                    const overflowing = el.scrollWidth > el.clientWidth + 1
+                        && el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+                    el.classList.toggle('has-overflow', overflowing);
+                });
+            };
+            // 초기 및 리사이즈/스크롤 시 재확인
+            window.addEventListener('resize', check, { passive: true });
+            // 각 스크롤 컨테이너 자체 스크롤도 감지
+            const bind = () => {
+                document.querySelectorAll('.table-scroll').forEach(el => {
+                    if (el.dataset.overflowBound) return;
+                    el.dataset.overflowBound = '1';
+                    el.addEventListener('scroll', check, { passive: true });
+                });
+            };
+            bind();
+            // 새 표는 dashboard 갱신 시 동적으로 생성되므로, MutationObserver 대신
+            // updateDashboard 끝에서 호출되도록 함수를 외부로 노출
+            window.__refreshTableOverflow = () => { bind(); check(); };
+            check();
         }
 
         // ============================================================

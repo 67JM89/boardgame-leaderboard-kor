@@ -62,6 +62,14 @@ boardgame-leaderboard-kor/
 - 🎲 **게임 프로필 모달** (V8.8): 어디든 게임명 클릭 → All-time 1위 + Top 5 + 월별 추세 + 최근 세션
 - 💎 **Tier 성취 4단계화** (V8.9): 진입 장벽 완화 — Tier 10/30/60/100 (legendary 신설)
 
+### ✨ V9 — Charm, Theme & UX
+- 🎉 **콘페티 + 별 강조** (V9.1): 새 성취 잠금해제 시 색종이 + 즐겨찾기 플레이어 별표
+- 🎵 **Spotify BGM 미니 플레이어** (V9.2~9.6): 매번 다른 큐레이션 플레이리스트 + 첫 인터랙션 자동 재생
+- 🔗 **공유 버튼 툴바 이동** (V9.3): theme 토글과 헷갈리지 않게
+- 🎨 **4-테마 스위처** (V9.5): Claude / 시스템 / 다크 / 라이트 팝오버
+- 🌅 **Claude 테마 정밀 보정** (V9.7): Anthropic 브랜드 — 크림 #F5F0E8 + 코랄 #CC785C + Fraunces serif 제목
+- 🧭 **UX polish** (V9.8): 활성 필터 칩 + 맨위로 FAB + 행 전체 클릭 + 키보드 단축키 (`/` 포커스) + 표 overflow fade hint
+
 ### 🔗 데이터 탐색 모델 (V8.8) / Navigation Graph
 
 3축 그래프 구조로 서로 자유롭게 점프 가능:
