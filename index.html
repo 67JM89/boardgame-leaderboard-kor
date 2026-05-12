@@ -9,7 +9,7 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.8">
+    <meta name="app-version" content="v9.9">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://open.spotify.com https://open.spotifycdn.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self' https://open.spotify.com; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -3750,6 +3750,75 @@
             line-height: 1;
         }
 
+        /* --- V9.9: 플레이어 라이브 검색 (toolbar 내부) --- */
+        .player-search {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            transition: border-color var(--dur-fast) var(--ease-out),
+                        box-shadow var(--dur-fast) var(--ease-out);
+            min-width: 200px;
+        }
+        .player-search:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+        .player-search__icon {
+            padding-left: 12px;
+            font-size: 13px;
+            color: var(--text-subtle);
+            line-height: 1;
+            pointer-events: none;
+        }
+        .player-search__input {
+            flex: 1;
+            min-width: 0;
+            padding: 9px 8px 9px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: var(--fs-base);
+            outline: none;
+        }
+        .player-search__input::placeholder { color: var(--text-subtle); }
+        /* 모바일 Safari: search input의 기본 × 아이콘은 우리가 구현한 것과 중복되므로 숨김 */
+        .player-search__input::-webkit-search-cancel-button { display: none; }
+        .player-search__input::-webkit-search-decoration { display: none; }
+        .player-search__clear {
+            background: transparent;
+            border: none;
+            color: var(--text-subtle);
+            font-size: 18px;
+            line-height: 1;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: var(--r-sm);
+            transition: color var(--dur-fast) var(--ease-out),
+                        background var(--dur-fast) var(--ease-out);
+        }
+        .player-search__clear:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+        }
+        /* 검색 매칭 행 강조 + 비매칭 행 hide */
+        .leaderboard-table tbody tr.search-hidden { display: none; }
+        .leaderboard-table tbody tr.search-match .player-name {
+            background: rgba(251, 191, 36, 0.22);
+            border-radius: 4px;
+            padding: 1px 4px;
+            margin: -1px -4px;
+        }
+        [data-theme="dark"] .leaderboard-table tbody tr.search-match .player-name {
+            background: rgba(251, 191, 36, 0.18);
+        }
+        @media (max-width: 600px) {
+            .player-search { width: 100%; min-width: 0; }
+        }
+
         /* --- 표 좌우 스크롤 페이드 hint (모바일 가독성) --- */
         .table-scroll {
             position: relative;
@@ -3779,7 +3848,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.8</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.9</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -3833,6 +3902,14 @@
             <select id="gameFilter" onchange="updateDashboard()" aria-label="게임 필터">
                 <option value="">🎮 모든 게임</option>
             </select>
+            <!-- V9.9: 플레이어 라이브 검색 -->
+            <div class="player-search">
+                <span class="player-search__icon" aria-hidden="true">🔍</span>
+                <input type="search" id="playerSearch" class="player-search__input"
+                       placeholder="플레이어 검색 ( / )" aria-label="플레이어 이름 검색" autocomplete="off">
+                <button type="button" class="player-search__clear" id="playerSearchClear"
+                        aria-label="검색어 지우기" title="지우기" hidden>×</button>
+            </div>
             <!-- V9.3: 공유 버튼 — 헤더에서 툴바로 이동 (theme 토글과 헷갈리지 않게) -->
             <button class="btn btn-share" id="shareBtn" type="button" title="현재 화면을 PNG로 저장 + 공유" aria-label="현재 화면을 PNG로 저장">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
@@ -4088,13 +4165,14 @@
                 </section>
 
                 <section class="help-card">
-                    <h3>⌨️ 단축키 & 팁 <span style="font-size:11px; color: var(--text-subtle); font-weight: var(--fw-medium);">(V9.8)</span></h3>
+                    <h3>⌨️ 단축키 & 팁 <span style="font-size:11px; color: var(--text-subtle); font-weight: var(--fw-medium);">(V9.9)</span></h3>
                     <ul>
-                        <li><span class="kbd">/</span> — 월 필터로 빠른 포커스</li>
-                        <li><span class="kbd">Esc</span> — 열려있는 모달 닫기</li>
+                        <li><span class="kbd">/</span> — 플레이어 검색창으로 빠른 포커스</li>
+                        <li><span class="kbd">Esc</span> — 모달 닫기 / 검색 해제</li>
                         <li><span class="kbd">Ctrl</span>+<span class="kbd">P</span> — 리더보드 인쇄 (전용 스타일)</li>
                         <li>리더보드 <strong>행 어디든 클릭</strong> → 플레이어 모달</li>
                         <li>날짜 / 게임 이름 클릭 → 세션 / 게임 모달</li>
+                        <li><strong>URL hash에 상태 보존</strong> — 탭/필터를 그대로 공유 가능 (V9.9)</li>
                         <li>스크롤 시 우측 하단 ↑ 버튼으로 맨 위로 이동</li>
                     </ul>
                 </section>
@@ -4994,6 +5072,12 @@
             buildCumulativeRankingSeries();
             initializeChartPlayers();
             updateDashboard();
+            // V9.9: URL hash가 있으면 상태 복원 (탭/필터)
+            // populateFilters 후에 호출해야 옵션 매칭이 가능함.
+            // restoreFromHash가 내부에서 updateDashboard / switchTab 호출.
+            if (typeof window.__restoreFromHash === 'function') {
+                window.__restoreFromHash();
+            }
             // V8.7: 새 배지 잠금해제 감지 + 토스트 (데이터 로드 1초 후 — 페이지 안정화 대기)
             setTimeout(() => detectAndShowNewAchievements(), 1000);
         }
@@ -5361,6 +5445,10 @@
             updateOverallLeaderboard();
             updateGameLeaderboards();
             updateMonthLeaderboards();
+            // V9.9: 정렬 후에도 검색 결과 유지
+            if (typeof window.__reapplyPlayerSearch === 'function') {
+                window.__reapplyPlayerSearch();
+            }
         }
 
         // ============================================================
@@ -5394,6 +5482,13 @@
             // V9.8: 새 테이블에 overflow 감지 재바인딩
             if (typeof window.__refreshTableOverflow === 'function') {
                 window.__refreshTableOverflow();
+            }
+            // V9.9: 검색 결과 재적용 + URL hash 동기화
+            if (typeof window.__reapplyPlayerSearch === 'function') {
+                window.__reapplyPlayerSearch();
+            }
+            if (typeof window.__syncHashState === 'function') {
+                window.__syncHashState();
             }
         }
 
@@ -5800,6 +5895,14 @@
             document.querySelectorAll('.tab-overflow__item').forEach(it => it.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
+            else {
+                // currentTarget이 없으면 (URL hash 복원 등) tab-button 중 매칭되는 것 active 처리
+                const btnByName = Array.from(document.querySelectorAll('.tab-button')).find(b => {
+                    const m = (b.getAttribute('onclick') || '').match(/switchTab\(event,\s*'([^']+)'\)/);
+                    return m && m[1] === tabName;
+                });
+                if (btnByName) btnByName.classList.add('active');
+            }
             if (tabName === 'trend') updateRankingTrendChart();
             if (tabName === 'h2h') updateH2H();           // V6: A
             if (tabName === 'heatmap') updateHeatmap();   // V6: C
@@ -5811,6 +5914,9 @@
             if (overflowBtn) overflowBtn.classList.toggle('active', analyticsTabs.includes(tabName));
             const overflowItem = document.querySelector('.tab-overflow__item[data-tab="' + tabName + '"]');
             if (overflowItem) overflowItem.classList.add('active');
+
+            // V9.9: URL hash 상태 갱신 (탭 전환 기록)
+            if (typeof window.__syncHashState === 'function') window.__syncHashState();
         }
 
         // V8.5: 오버플로우 메뉴 토글/닫기 + 메뉴 항목 선택
@@ -7248,9 +7354,11 @@
                 if (prevBtn) prevBtn.style.display = single ? 'none' : '';
                 if (nextBtn) nextBtn.style.display = single ? 'none' : '';
             }
-            // Hover pause
+            // Hover pause + V9.9: 키보드 포커스에도 pause (접근성)
             carousel.onmouseenter = () => { insightsHovered = true; };
             carousel.onmouseleave = () => { insightsHovered = false; };
+            carousel.onfocusin    = () => { insightsHovered = true; };
+            carousel.onfocusout   = () => { insightsHovered = false; };
             startInsightTimer();
         }
 
@@ -8310,6 +8418,11 @@
             setupScrollTopFab();
             setupKeyboardShortcuts();
             setupTableOverflowDetector();
+
+            // 12) V9.9: 라이브 검색, URL hash 상태
+            // (인사이트 캐러셀 hover/focus-pause는 renderInsightsCarousel 내부에 이미 통합됨)
+            setupPlayerSearch();
+            setupHashStateSync();
         }
 
         // ============================================================
@@ -8407,14 +8520,11 @@
 
                 if (e.key === '/') {
                     e.preventDefault();
-                    const monthSel = document.getElementById('monthFilter');
-                    if (monthSel) {
-                        monthSel.focus();
-                        // 시각적 피드백: 짧은 ring
-                        try {
-                            monthSel.style.boxShadow = '0 0 0 3px var(--primary-soft)';
-                            setTimeout(() => { monthSel.style.boxShadow = ''; }, 600);
-                        } catch {}
+                    // V9.9: 검색이 더 자주 쓰일 인터랙션 — / 단축키를 search box로 재할당
+                    const searchInput = document.getElementById('playerSearch');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
                     }
                 }
             });
@@ -8445,6 +8555,166 @@
             window.__refreshTableOverflow = () => { bind(); check(); };
             check();
         }
+
+        // ============================================================
+        // V9.9: 플레이어 라이브 검색 — 모든 leaderboard 표에서 즉시 필터
+        // ============================================================
+        let __searchQuery = '';
+        let __searchIME = false;  // IME composition 중에는 매칭 미적용 (한글 안전)
+
+        function applyPlayerSearch() {
+            const q = (__searchQuery || '').trim().toLowerCase();
+            const clear = document.getElementById('playerSearchClear');
+            if (clear) clear.hidden = q.length === 0;
+            // 모든 리더보드 표 본문 행을 토글
+            document.querySelectorAll('.leaderboard-table tbody tr').forEach(tr => {
+                const nameEl = tr.querySelector('.player-name[data-player]');
+                if (!nameEl) {
+                    tr.classList.remove('search-hidden', 'search-match');
+                    return;
+                }
+                const name = (nameEl.dataset.player || '').toLowerCase();
+                if (q === '') {
+                    tr.classList.remove('search-hidden', 'search-match');
+                } else if (name.includes(q)) {
+                    tr.classList.remove('search-hidden');
+                    tr.classList.add('search-match');
+                } else {
+                    tr.classList.add('search-hidden');
+                    tr.classList.remove('search-match');
+                }
+            });
+        }
+
+        function setupPlayerSearch() {
+            const input = document.getElementById('playerSearch');
+            const clear = document.getElementById('playerSearchClear');
+            if (!input) return;
+
+            const onInput = () => {
+                if (__searchIME) return;  // IME 조합 중엔 무시
+                __searchQuery = input.value;
+                applyPlayerSearch();
+            };
+            input.addEventListener('input', onInput);
+            // 한글 IME 안전 — composition 완료 후 한 번 더 적용
+            input.addEventListener('compositionstart', () => { __searchIME = true; });
+            input.addEventListener('compositionend', () => {
+                __searchIME = false;
+                __searchQuery = input.value;
+                applyPlayerSearch();
+            });
+            // Esc 누르면 검색 해제
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    input.value = '';
+                    __searchQuery = '';
+                    applyPlayerSearch();
+                    input.blur();
+                }
+            });
+            if (clear) clear.addEventListener('click', () => {
+                input.value = '';
+                __searchQuery = '';
+                applyPlayerSearch();
+                input.focus();
+            });
+
+            // updateDashboard가 새 row를 렌더하면 그때마다 검색을 다시 적용해야 함
+            window.__reapplyPlayerSearch = applyPlayerSearch;
+        }
+
+        // ============================================================
+        // V9.9: URL hash 상태 보존 — 탭/월/게임 필터를 #hash로 인코딩
+        // 형식: #tab=overall&month=2026-05&game=Catan
+        // → 새로고침/공유 시 동일한 화면이 복원됨
+        // ============================================================
+        function parseHashState() {
+            const hash = (window.location.hash || '').replace(/^#/, '');
+            if (!hash) return {};
+            const out = {};
+            hash.split('&').forEach(pair => {
+                const [k, v] = pair.split('=');
+                if (!k) return;
+                try { out[decodeURIComponent(k)] = v ? decodeURIComponent(v) : ''; }
+                catch { /* malformed — skip */ }
+            });
+            return out;
+        }
+
+        function currentHashState() {
+            // 활성 탭 추출
+            const activeTab = document.querySelector('.tab-content.active');
+            const tab = activeTab ? activeTab.id : 'overall';
+            const monthEl = document.getElementById('monthFilter');
+            const gameEl  = document.getElementById('gameFilter');
+            return {
+                tab,
+                month: monthEl ? monthEl.value : '',
+                game:  gameEl  ? gameEl.value  : ''
+            };
+        }
+
+        function writeHashState() {
+            const st = currentHashState();
+            const parts = [];
+            // 기본 탭(overall)은 생략 — URL 깔끔하게
+            if (st.tab && st.tab !== 'overall') parts.push('tab=' + encodeURIComponent(st.tab));
+            if (st.month) parts.push('month=' + encodeURIComponent(st.month));
+            if (st.game)  parts.push('game='  + encodeURIComponent(st.game));
+            const newHash = parts.length ? '#' + parts.join('&') : '';
+            const cur = window.location.hash || '';
+            if (cur === newHash) return;  // 중복 update 방지
+            // replaceState로 history 오염 없이 hash 갱신
+            try {
+                history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
+            } catch {
+                window.location.hash = newHash;
+            }
+        }
+
+        function restoreFromHash() {
+            const st = parseHashState();
+            const monthEl = document.getElementById('monthFilter');
+            const gameEl  = document.getElementById('gameFilter');
+            let touched = false;
+            if (st.month !== undefined && monthEl) {
+                // 옵션이 실제로 존재하는지 확인
+                const found = Array.from(monthEl.options).some(o => o.value === st.month);
+                if (found) { monthEl.value = st.month; touched = true; }
+            }
+            if (st.game !== undefined && gameEl) {
+                const found = Array.from(gameEl.options).some(o => o.value === st.game);
+                if (found) { gameEl.value = st.game; touched = true; }
+            }
+            if (touched) updateDashboard();
+            // 탭 복원 (필터 변경 후에 — 차트 등이 올바른 데이터로 그려지게)
+            if (st.tab && st.tab !== 'overall') {
+                const target = document.getElementById(st.tab);
+                if (target) switchTab(null, st.tab);
+            }
+        }
+
+        function setupHashStateSync() {
+            window.__syncHashState = writeHashState;
+            window.__restoreFromHash = restoreFromHash;
+            // 필터 변경 시에도 hash 갱신 — updateDashboard 끝에서 호출
+            // (이미 monthFilter/gameFilter의 onchange가 updateDashboard 호출 → 그 안에서 syncHash)
+            // 사용자가 직접 hash를 수정하면 (수동 또는 뒤로가기) → 다시 복원
+            window.addEventListener('hashchange', () => {
+                // 무한 루프 방지 — 우리가 쓴 hash와 다를 때만 복원
+                const cur = JSON.stringify(parseHashState());
+                const expected = JSON.stringify((() => {
+                    const s = currentHashState();
+                    if (s.tab === 'overall') delete s.tab;
+                    Object.keys(s).forEach(k => { if (!s[k]) delete s[k]; });
+                    return s;
+                })());
+                if (cur !== expected) restoreFromHash();
+            });
+        }
+
+        // (V9.9 인사이트 hover/focus-pause는 renderInsightsCarousel 내부 통합으로 별도 setup 불필요)
 
         // ============================================================
         // V9.5: Spotify 미니 플레이어 — 매번 다른 플레이리스트 (Mix) + 자동 열림
@@ -8591,12 +8861,9 @@
             });
             if (closeBtn) closeBtn.addEventListener('click', closePanel);
 
-            // V9.5+: 자동 열림 — dismiss 안 했으면 자동 펼침
-            let dismissed = false;
-            try { dismissed = sessionStorage.getItem(SPOTIFY_DISMISSED_KEY) === '1'; } catch {}
-            if (!dismissed) {
-                setTimeout(openPanel, 500);
-            }
+            // V9.9: 기본 접힘 — 사용자가 점수 보러 왔지 노래 들으러 온 게 아님.
+            // 🎵 버튼만 floating 상태로 두고, 클릭 시 펼쳐짐 + 재생.
+            // (이전 V9.5: 첫 방문 시 자동 펼침 → 침입적이라는 피드백으로 제거)
         }
 
         if (document.readyState === 'loading') {

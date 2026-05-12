@@ -69,6 +69,11 @@ boardgame-leaderboard-kor/
 - 🎨 **4-테마 스위처** (V9.5): Claude / 시스템 / 다크 / 라이트 팝오버
 - 🌅 **Claude 테마 정밀 보정** (V9.7): Anthropic 브랜드 — 크림 #F5F0E8 + 코랄 #CC785C + Fraunces serif 제목
 - 🧭 **UX polish** (V9.8): 활성 필터 칩 + 맨위로 FAB + 행 전체 클릭 + 키보드 단축키 (`/` 포커스) + 표 overflow fade hint
+- 🔍 **사용자 중심 개선** (V9.9):
+  - Spotify 기본 접힘 (자동 펼침 제거 — 첫인상 침입성 완화)
+  - **플레이어 라이브 검색** (toolbar에 입력 → 모든 리더보드 실시간 필터, 한글 IME 안전)
+  - **URL hash 상태 보존** (`#tab=h2h&month=2026-05&game=Catan` 형태로 공유·새로고침 시 컨텍스트 유지)
+  - 인사이트 캐러셀 — keyboard focus도 hover와 동일하게 pause
 
 ### 🔗 데이터 탐색 모델 (V8.8) / Navigation Graph
 
