@@ -985,6 +985,37 @@
             color: var(--text-muted);
             line-height: 1.55;
         }
+        /* ============== Reward Exchange Tab ============== */
+        .rw-h { margin: var(--sp-6) 0 var(--sp-3); font-size: var(--fs-lg); color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .rw-h:first-child { margin-top: 0; }
+        .rw-sub { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--sp-3); }
+        .rw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-3); }
+        .rw-earn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: var(--sp-4);
+            box-shadow: var(--shadow-xs);
+        }
+        .rw-earn__pt { font-size: var(--fs-2xl); font-weight: var(--fw-bold); color: var(--color-reward); letter-spacing: -0.02em; }
+        .rw-earn__label { font-size: var(--fs-sm); color: var(--text); font-weight: var(--fw-medium); margin-top: 2px; }
+        .rw-earn__note { font-size: var(--fs-xs); color: var(--text-subtle); margin-top: 2px; }
+        .rw-pt { font-weight: var(--fw-bold); color: var(--color-reward); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .rw-items { color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.6; }
+        .rw-ok { color: var(--success); font-weight: var(--fw-semibold); }
+        .rw-none { color: var(--text-subtle); }
+        .rw-need { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        .rw-max { color: var(--warning); font-weight: var(--fw-semibold); }
+        .rw-note {
+            margin-top: var(--sp-4);
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--bg-subtle);
+            border-radius: var(--r-sm);
+            font-size: var(--fs-xs);
+            color: var(--text-subtle);
+            line-height: 1.7;
+        }
+
         .rule-more-btn {
             margin-top: var(--sp-3);
             width: 100%;
@@ -4269,6 +4300,7 @@
                     <button class="tab-overflow__item" type="button" role="menuitem" data-tab="heatmap" onclick="switchTabFromOverflow('heatmap')">🔥 히트맵</button>
                 </div>
             </div>
+            <button class="tab-button" role="tab" onclick="switchTab(event, 'rewards')" title="포인트 적립 기준 및 교환 상품">🎁 리워드 교환</button>
             <button class="tab-button" role="tab" onclick="switchTab(event, 'rules')" title="보드게임 규칙 설명">📖 게임 규칙</button>
             <button class="tab-button tab-button--help" role="tab" onclick="switchTab(event, 'help')" title="대시보드 설명" aria-label="대시보드 설명">❓ 설명</button>
         </div>
@@ -4331,6 +4363,118 @@
                 </div>
             </div>
         </div>
+
+        <div id="rewards" class="tab-content" role="tabpanel">
+            <p class="rw-sub">클럽 활동으로 <strong>Reward Points</strong>를 적립하면 아래 상품으로 교환할 수 있습니다. 교환해도 <strong>리더보드 순위(Tier)는 떨어지지 않습니다.</strong></p>
+
+            <h3 class="rw-h">📌 포인트 적립 기준</h3>
+            <div class="rw-grid" id="rwEarn"></div>
+
+            <h3 class="rw-h">🎁 포인트 교환 상품</h3>
+            <div class="table-wrap"><div class="table-scroll"><table class="leaderboard-table" id="rwTierTable"></table></div></div>
+
+            <h3 class="rw-h">👥 플레이어별 교환 가능 현황</h3>
+            <p class="rw-sub">현재 Reward Points 기준으로 지금 바로 교환할 수 있는 최고 등급입니다.</p>
+            <div class="table-wrap"><div class="table-scroll"><table class="leaderboard-table" id="rwStatusTable"></table></div></div>
+
+            <div class="rw-note">
+                ※ 상품은 재고 상황에 따라 변경될 수 있습니다. 상품 교환 관련 문의는 HR팀으로 부탁드립니다.<br>
+                출처: HSM Club Point Rewards Program 안내 (2026-01-30)
+            </div>
+        </div>
+
+        <script>
+            // ===== 리워드 교환: 적립 기준 · 교환 상품 · 플레이어별 현황 =====
+            var REWARD_EARN = [
+                { pt: '+2', label: '주말 카드게임 클럽 참가', note: '' },
+                { pt: '최대 +3', label: '카드게임 승리', note: '게임 종류에 따라 상이' },
+                { pt: '+5', label: '러닝크루 참여', note: '' }
+            ];
+            var REWARD_TIERS = [
+                { pt: 5,   items: ['신라면 (4개입)'] },
+                { pt: 10,  items: ['김 세트 (12개입)', '냉동 왕교자 32oz', '떡볶이 밀키트 16.9oz'] },
+                { pt: 15,  items: ['참치캔 (4개입)', '햇반 (12개입)'] },
+                { pt: 25,  items: ['H Mart 텀블러 12oz'] },
+                { pt: 50,  items: ['H Mart 기프트카드 $50'] },
+                { pt: 100, items: ['스타벅스 기프트카드 $100'] }
+            ];
+
+            function rwEl(tag, cls, text) {
+                var e = document.createElement(tag);
+                if (cls) e.className = cls;
+                if (text != null) e.textContent = text;
+                return e;
+            }
+            function rwCell(row, cls, text) {
+                var td = rwEl('td', cls, text);
+                row.appendChild(td);
+                return td;
+            }
+            function rwHeader(table, labels) {
+                var thead = document.createElement('thead');
+                var tr = document.createElement('tr');
+                labels.forEach(function (l) { tr.appendChild(rwEl('th', null, l)); });
+                thead.appendChild(tr);
+                table.appendChild(thead);
+            }
+
+            function renderRewardExchange() {
+                // 1) 적립 기준 카드
+                var earn = document.getElementById('rwEarn');
+                if (earn && !earn.dataset.built) {
+                    REWARD_EARN.forEach(function (e) {
+                        var box = rwEl('div', 'rw-earn');
+                        box.appendChild(rwEl('div', 'rw-earn__pt', e.pt));
+                        box.appendChild(rwEl('div', 'rw-earn__label', e.label));
+                        if (e.note) box.appendChild(rwEl('div', 'rw-earn__note', '· ' + e.note));
+                        earn.appendChild(box);
+                    });
+                    earn.dataset.built = '1';
+                }
+                // 2) 교환 상품 표
+                var tt = document.getElementById('rwTierTable');
+                if (tt && !tt.dataset.built) {
+                    rwHeader(tt, ['필요 포인트', '교환 품목']);
+                    var tb = document.createElement('tbody');
+                    REWARD_TIERS.forEach(function (t) {
+                        var tr = document.createElement('tr');
+                        rwCell(tr, 'rw-pt', t.pt + '점');
+                        rwCell(tr, 'rw-items', t.items.join(' · '));
+                        tb.appendChild(tr);
+                    });
+                    tt.appendChild(tb);
+                    tt.dataset.built = '1';
+                }
+                // 3) 플레이어별 현황 (데이터 갱신마다 다시 그림)
+                var st = document.getElementById('rwStatusTable');
+                if (!st) return;
+                st.textContent = '';
+                rwHeader(st, ['플레이어', 'Reward', '지금 교환 가능', '다음 등급까지']);
+                var body = document.createElement('tbody');
+                var list = [];
+                try {
+                    list = sortedPlayers(filteredData).slice();
+                } catch (err) { list = []; }
+                list.sort(function (a, b) { return displayPoint(b.total) - displayPoint(a.total); });
+                list.forEach(function (p) {
+                    var rw = displayPoint(p.total);
+                    var best = null, next = null;
+                    REWARD_TIERS.forEach(function (t) {
+                        if (rw >= t.pt) best = t;
+                        else if (next === null) next = t;
+                    });
+                    var tr = document.createElement('tr');
+                    rwCell(tr, null, p.name);
+                    rwCell(tr, 'rw-pt', rw.toFixed(1));
+                    if (best) rwCell(tr, 'rw-ok', '✅ ' + best.pt + '점 — ' + best.items.join(' · '));
+                    else rwCell(tr, 'rw-none', '— 아직 없음');
+                    if (next) rwCell(tr, 'rw-need', next.pt + '점까지 ' + (next.pt - rw).toFixed(1) + '점');
+                    else rwCell(tr, 'rw-max', '🏆 최고 등급 달성');
+                    body.appendChild(tr);
+                });
+                st.appendChild(body);
+            }
+        </script>
 
         <div id="rules" class="tab-content" role="tabpanel">
             <p class="rules-intro">우리가 즐기는 보드게임의 규칙을 한눈에. 카드를 눌러 바로 이동하세요. <strong>🆕 표시</strong>는 새로 추가된 게임입니다.</p>
@@ -6487,6 +6631,8 @@
             updateHeatmap();
             // V8: 챔피언십 (ELO + 시즌 + 명예의 전당)
             updateChampionship();
+            // 리워드 교환 탭 (적립 기준·교환 상품·플레이어별 현황)
+            if (typeof renderRewardExchange === 'function') renderRewardExchange();
             // V9.8: 새 테이블에 overflow 감지 재바인딩
             if (typeof window.__refreshTableOverflow === 'function') {
                 window.__refreshTableOverflow();
