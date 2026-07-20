@@ -1016,6 +1016,50 @@
             line-height: 1.7;
         }
 
+        /* 우측 여백 고정 패널 — 컨테이너(1320px)와 겹치지 않는 폭에서만 노출 */
+        .rw-side { display: none; }
+        @media (min-width: 1800px) {
+            .rw-side {
+                display: block;
+                position: fixed;
+                top: 88px;
+                right: 16px;
+                width: 220px;
+                max-height: calc(100vh - 120px);
+                overflow-y: auto;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--r-lg);
+                box-shadow: var(--shadow-sm);
+                padding: var(--sp-4);
+                z-index: 40;
+            }
+        }
+        .rw-side__title {
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-bold);
+            color: var(--text);
+            margin-bottom: var(--sp-3);
+            padding-bottom: var(--sp-2);
+            border-bottom: 1px solid var(--border);
+        }
+        .rw-side__row { margin-bottom: var(--sp-3); }
+        .rw-side__pt {
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-bold);
+            color: var(--color-reward);
+            font-variant-numeric: tabular-nums;
+        }
+        .rw-side__items { font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.55; margin-top: 1px; }
+        .rw-side__note {
+            font-size: 10px;
+            color: var(--text-subtle);
+            border-top: 1px solid var(--border);
+            padding-top: var(--sp-2);
+            line-height: 1.5;
+        }
+        @media print { .rw-side { display: none !important; } }
+
         .rule-more-btn {
             margin-top: var(--sp-3);
             width: 100%;
@@ -4383,6 +4427,13 @@
             </div>
         </div>
 
+        <!-- 우측 여백 고정 패널: 포인트 교환 상품 (모든 탭에서 노출) -->
+        <aside class="rw-side" id="rwSide" aria-label="포인트 교환 상품">
+            <div class="rw-side__title">🎁 포인트 교환 상품</div>
+            <div id="rwSideList"></div>
+            <div class="rw-side__note">※ 재고에 따라 변경될 수 있습니다. 교환 문의는 HR팀.</div>
+        </aside>
+
         <script>
             // ===== 리워드 교환: 적립 기준 · 교환 상품 · 플레이어별 현황 =====
             var REWARD_EARN = [
@@ -4444,6 +4495,17 @@
                     });
                     tt.appendChild(tb);
                     tt.dataset.built = '1';
+                }
+                // 2-b) 우측 고정 패널 (같은 REWARD_TIERS 사용 — 표와 항상 일치)
+                var side = document.getElementById('rwSideList');
+                if (side && !side.dataset.built) {
+                    REWARD_TIERS.forEach(function (t) {
+                        var row = rwEl('div', 'rw-side__row');
+                        row.appendChild(rwEl('div', 'rw-side__pt', t.pt + '점'));
+                        row.appendChild(rwEl('div', 'rw-side__items', t.items.join(' · ')));
+                        side.appendChild(row);
+                    });
+                    side.dataset.built = '1';
                 }
                 // 3) 플레이어별 현황 (데이터 갱신마다 다시 그림)
                 var st = document.getElementById('rwStatusTable');
