@@ -3506,6 +3506,55 @@
             letter-spacing: 0.02em;
             vertical-align: middle;
         }
+        /* 버전 칩 → 클릭 가능(업데이트 내역 열기) */
+        .version-chip { cursor: pointer; transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
+        .version-chip:hover { background: var(--primary); color: var(--on-primary); }
+        .version-chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+        /* ===== 업데이트 내역(체인지로그) 오버레이 ===== */
+        .cl-overlay {
+            position: fixed; inset: 0; z-index: 2100;
+            background: rgba(15, 23, 42, 0.55);
+            -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+            display: none; align-items: center; justify-content: center;
+            padding: var(--sp-5);
+        }
+        .cl-overlay.active { display: flex; }
+        .cl-panel {
+            background: var(--surface); color: var(--text);
+            border: 1px solid var(--border); border-radius: var(--r-lg);
+            box-shadow: var(--shadow-xl);
+            width: 100%; max-width: 720px; max-height: calc(100vh - 2 * var(--sp-5));
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .cl-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: var(--sp-3); padding: var(--sp-4) var(--sp-5);
+            border-bottom: 1px solid var(--border); flex: 0 0 auto;
+        }
+        .cl-topbar h3 { margin: 0; font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+        .cl-current { margin-left: var(--sp-2); font-size: var(--fs-sm); color: var(--text-subtle); font-weight: var(--fw-medium); }
+        .cl-close {
+            border: none; background: transparent; color: var(--text-muted);
+            font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px; border-radius: var(--r-sm);
+        }
+        .cl-close:hover { color: var(--text); }
+        .cl-body { padding: var(--sp-5); overflow-y: auto; }
+        .cl-entry { padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); border-bottom: 1px dashed var(--border); }
+        .cl-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .cl-entry__head { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+        .cl-ver { font-family: var(--font-num); font-weight: var(--fw-bold); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+        .cl-badge { font-size: var(--fs-xs); font-weight: var(--fw-semibold); padding: 2px 8px; border-radius: var(--r-pill); text-transform: uppercase; letter-spacing: 0.03em; }
+        .cl-badge--major { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
+        .cl-badge--minor { background: var(--primary-soft); color: var(--primary); }
+        .cl-badge--patch { background: rgba(5, 150, 105, 0.12); color: var(--success); }
+        .cl-date { margin-left: auto; font-size: var(--fs-sm); color: var(--text-subtle); font-variant-numeric: tabular-nums; }
+        .cl-title { font-weight: var(--fw-semibold); margin-bottom: var(--sp-2); }
+        .cl-items { margin: 0; padding-left: var(--sp-5); }
+        .cl-items li { margin-bottom: var(--sp-1); color: var(--text-muted); font-size: var(--fs-base); line-height: 1.5; }
+        .cl-foot { margin-top: var(--sp-4); font-size: var(--fs-xs); color: var(--text-subtle); }
+        @media (max-width: 480px) { .cl-panel { max-height: calc(100vh - 2 * var(--sp-3)); } .cl-overlay { padding: var(--sp-3); } }
+        @media print { .cl-overlay { display: none !important; } }
 
         /* 업데이트 배너 */
         .update-banner {
@@ -4184,7 +4233,7 @@
             <div class="app-header__title">
                 <span class="app-logo" aria-hidden="true">🎲</span>
                 <div>
-                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" title="앱 버전">v9.9</span></h1>
+                    <h1>보드게임 리더보드<span class="version-chip" id="versionChip" role="button" tabindex="0" title="업데이트 내역 보기">v10.0.0</span></h1>
                     <p class="app-header__subtitle">플레이어의 포인트를 추적하고 게임 성적을 분석합니다</p>
                 </div>
             </div>
@@ -4433,6 +4482,123 @@
             <div id="rwSideList"></div>
             <div class="rw-side__note">※ 재고에 따라 변경될 수 있습니다. 교환 문의는 HR팀.</div>
         </aside>
+
+        <!-- 업데이트 내역(체인지로그) 오버레이 — 헤더 버전 칩 클릭 시 열림 (모든 탭 공통, 탭 컨테이너 밖 최상위) -->
+        <div id="changelog" class="cl-overlay" role="dialog" aria-modal="true" aria-label="업데이트 내역">
+            <div class="cl-panel">
+                <div class="cl-topbar">
+                    <h3>📋 업데이트 내역<span class="cl-current" id="clCurrent"></span></h3>
+                    <button class="cl-close" type="button" onclick="closeChangelog()" aria-label="닫기">&times;</button>
+                </div>
+                <div class="cl-body">
+                    <div id="clList"></div>
+                    <div class="cl-foot">Semantic Versioning (Major · Minor · Patch) · v9.9.0 이전 이력은 GitHub 커밋 기록 참고</div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // ===== 업데이트 내역(SemVer) — V9.9 이어 소급 재구성, 최신이 배열 맨 앞 =====
+            var CHANGELOG = [
+                {
+                    version: '10.0.0', date: '2026-07-20', type: 'major',
+                    title: '리워드 교환 탭 + 우측 상시 교환 상품 패널',
+                    items: [
+                        '🎁 리워드 교환 탭 신설 — 포인트 적립 기준, 교환 등급표(5·10·15·25·50·100점), 플레이어별 교환 가능 현황',
+                        '넓은 화면 우측 여백에 포인트 교환 상품 고정 패널 상시 노출(모든 탭)',
+                        '교환 상품을 한 곳(REWARD_TIERS)에서만 정의 — 탭 표와 우측 패널 불일치 원천 차단'
+                    ]
+                },
+                {
+                    version: '9.10.0', date: '2026-07-15', type: 'minor',
+                    title: '게임 규칙 탭 + 상세 가이드',
+                    items: [
+                        '📖 게임 규칙 탭 신설 — 12종 게임 카드(인라인 SVG 일러스트, 저작권·CSP 안전)',
+                        '"더 자세히 보기" 전체화면 상세 가이드 — 게임 전환 + 풀 가이드',
+                        '신규 게임 Camel Up · Sabobatage 추가',
+                        'Camel Up 상세 규칙 정밀화(인원별 셋업 · 베팅 카드 · 플레이 순서 · 턴 액션 · 승리 조건) + 베팅 도구 컴포넌트 이미지',
+                        '공개 안내문 문구 정제'
+                    ]
+                },
+                {
+                    version: '9.9.0', date: '2026-05-12', type: 'minor',
+                    title: '사용자 중심 4대 개선',
+                    items: [
+                        '검색 · 딥링크 · Spotify 기본 접근 정중화 · 접근성 polish',
+                        '(동일자) 필터 칩 · 맨 위로 FAB · 행 전체 클릭 UX 개선, 플레이어 모달 막대그래프 버그 수정'
+                    ]
+                }
+            ];
+
+            (function () {
+                function clEl(tag, cls, text) {
+                    var e = document.createElement(tag);
+                    if (cls) e.className = cls;
+                    if (text != null) e.textContent = text;
+                    return e;
+                }
+                var TYPE_LABEL = { major: 'Major', minor: 'Minor', patch: 'Patch' };
+
+                function renderChangelog() {
+                    var list = document.getElementById('clList');
+                    if (!list || list.dataset.built === '1') return;
+                    CHANGELOG.forEach(function (e) {
+                        var entry = clEl('div', 'cl-entry');
+                        var head = clEl('div', 'cl-entry__head');
+                        head.appendChild(clEl('span', 'cl-ver', 'v' + e.version));
+                        head.appendChild(clEl('span', 'cl-badge cl-badge--' + e.type, TYPE_LABEL[e.type] || e.type));
+                        head.appendChild(clEl('span', 'cl-date', e.date));
+                        entry.appendChild(head);
+                        if (e.title) entry.appendChild(clEl('div', 'cl-title', e.title));
+                        var ul = clEl('ul', 'cl-items');
+                        (e.items || []).forEach(function (it) { ul.appendChild(clEl('li', null, it)); });
+                        entry.appendChild(ul);
+                        list.appendChild(entry);
+                    });
+                    list.dataset.built = '1';
+                }
+
+                window.openChangelog = function () {
+                    renderChangelog();
+                    var ov = document.getElementById('changelog');
+                    if (!ov) return;
+                    ov.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                };
+                window.closeChangelog = function () {
+                    var ov = document.getElementById('changelog');
+                    if (!ov) return;
+                    ov.classList.remove('active');
+                    document.body.style.overflow = '';
+                };
+
+                // 헤더 버전 칩: 현재 버전 표기 + 클릭/키보드로 내역 열기
+                var chip = document.getElementById('versionChip');
+                var cur = CHANGELOG[0];
+                if (chip && cur) {
+                    chip.textContent = 'v' + cur.version;
+                    chip.title = 'v' + cur.version + ' · ' + cur.date + ' · 클릭하면 업데이트 내역';
+                    chip.setAttribute('role', 'button');
+                    chip.setAttribute('tabindex', '0');
+                    chip.addEventListener('click', window.openChangelog);
+                    chip.addEventListener('keydown', function (ev) {
+                        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); window.openChangelog(); }
+                    });
+                }
+                var curEl = document.getElementById('clCurrent');
+                if (curEl && cur) curEl.textContent = '최신 v' + cur.version + ' · ' + cur.date;
+
+                // 닫기: 배경 클릭 + Esc
+                var ov = document.getElementById('changelog');
+                if (ov) ov.addEventListener('click', function (e) { if (e.target === ov) window.closeChangelog(); });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        var o = document.getElementById('changelog');
+                        if (o && o.classList.contains('active')) window.closeChangelog();
+                    }
+                });
+            })();
+        </script>
 
         <script>
             // ===== 리워드 교환: 적립 기준 · 교환 상품 · 플레이어별 현황 =====
