@@ -9,7 +9,8 @@
     <meta property="og:title" content="보드게임 리더보드">
     <meta property="og:description" content="보드게임 모임의 점수를 추적하고 리더보드를 확인하세요.">
     <meta property="og:type" content="website">
-    <meta name="app-version" content="v9.9">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="app-version" content="v10.0.0">
     <!-- Content Security Policy: 외부 리소스 출처 화이트리스트 -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://open.spotify.com https://open.spotifycdn.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: https://i.scdn.co; connect-src 'self' https://open.spotify.com; frame-src https://open.spotify.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -4587,6 +4588,8 @@
                 }
                 var curEl = document.getElementById('clCurrent');
                 if (curEl && cur) curEl.textContent = '최신 v' + cur.version + ' · ' + cur.date;
+                var av = document.querySelector('meta[name="app-version"]');
+                if (av && cur) av.setAttribute('content', 'v' + cur.version);
 
                 // 닫기: 배경 클릭 + Esc
                 var ov = document.getElementById('changelog');
