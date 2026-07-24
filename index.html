@@ -4226,9 +4226,93 @@
             /* 데스크탑 와이드: 거의 가로 스크롤 안 생기므로 hint 비활성화 */
             .table-scroll::after { display: none; }
         }
+        /* ===== 사이트 진입 비밀번호 오버레이 (가림막) ===== */
+        .site-gate {
+            position: fixed; inset: 0; z-index: 2147483000;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg); padding: var(--sp-5);
+        }
+        .site-gate.gate-unlocked { display: none; }
+        .site-gate__card {
+            width: 100%; max-width: 360px; box-sizing: border-box;
+            background: var(--surface); color: var(--text);
+            border: 1px solid var(--border); border-radius: var(--r-lg);
+            box-shadow: var(--shadow-lg); padding: var(--sp-7) var(--sp-6); text-align: center;
+        }
+        .site-gate__logo { font-size: 40px; line-height: 1; margin-bottom: var(--sp-3); }
+        .site-gate__title { font-size: var(--fs-xl); font-weight: var(--fw-bold); margin: 0 0 var(--sp-2); }
+        .site-gate__sub { font-size: var(--fs-base); color: var(--text-muted); margin: 0 0 var(--sp-5); }
+        .site-gate__input {
+            width: 100%; box-sizing: border-box; padding: 12px 14px;
+            font-size: var(--fs-lg); text-align: center; letter-spacing: 0.3em; font-variant-numeric: tabular-nums;
+            border: 1px solid var(--border-strong); border-radius: var(--r-md);
+            background: var(--surface-2); color: var(--text); margin-bottom: var(--sp-3);
+        }
+        .site-gate__input:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+        .site-gate__btn {
+            width: 100%; padding: 12px 14px; font-size: var(--fs-md); font-weight: var(--fw-semibold);
+            border: none; border-radius: var(--r-md); cursor: pointer; background: var(--primary); color: var(--on-primary);
+        }
+        .site-gate__btn:hover { background: var(--primary-hover); }
+        .site-gate__err { min-height: 18px; margin-top: var(--sp-3); font-size: var(--fs-sm); color: var(--danger); }
+        .site-gate.gate-shake .site-gate__card { animation: gateShake 0.3s; }
+        @keyframes gateShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+        @media print { .site-gate { display: none !important; } }
     </style>
 </head>
 <body>
+    <!-- 사이트 진입 비밀번호 (가림막 — 아는 사람만 입장, 데이터 파일 직접접근은 막지 못함) -->
+    <div id="siteGate" class="site-gate" role="dialog" aria-modal="true" aria-label="비밀번호 입력">
+        <div class="site-gate__card">
+            <div class="site-gate__logo" aria-hidden="true">🎲</div>
+            <h1 class="site-gate__title">보드게임 리더보드</h1>
+            <p class="site-gate__sub">비밀번호를 입력하세요</p>
+            <input id="siteGateInput" class="site-gate__input" type="password" inputmode="numeric"
+                   autocomplete="off" aria-label="비밀번호" maxlength="20">
+            <button id="siteGateBtn" class="site-gate__btn" type="button">입장</button>
+            <div id="siteGateErr" class="site-gate__err" role="alert"></div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var KEY = 'bg_gate_ok_v1';
+            var HASH = '74e9f3d8efbda803994e08efba32440782235900ee20c261ff17b60e69a3d347';
+            var gate = document.getElementById('siteGate');
+            function reveal() { if (gate) gate.classList.add('gate-unlocked'); }
+            try { if (localStorage.getItem(KEY) === '1') reveal(); } catch (e) {}
+            function toHex(buf) {
+                return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+                    return ('0' + b.toString(16)).slice(-2);
+                }).join('');
+            }
+            async function check() {
+                var input = document.getElementById('siteGateInput');
+                var err = document.getElementById('siteGateErr');
+                var val = ((input && input.value) || '').trim();
+                if (!val) return;
+                try {
+                    var digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+                    if (toHex(digest) === HASH) {
+                        try { localStorage.setItem(KEY, '1'); } catch (e) {}
+                        if (err) err.textContent = '';
+                        reveal();
+                    } else {
+                        if (err) err.textContent = '비밀번호가 올바르지 않습니다';
+                        if (input) { input.value = ''; input.focus(); }
+                        if (gate) { gate.classList.add('gate-shake'); setTimeout(function () { gate.classList.remove('gate-shake'); }, 320); }
+                    }
+                } catch (e) {
+                    if (err) err.textContent = '오류가 발생했습니다. 새로고침 후 다시 시도하세요.';
+                }
+            }
+            var btn = document.getElementById('siteGateBtn');
+            var inp = document.getElementById('siteGateInput');
+            if (btn) btn.addEventListener('click', check);
+            if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
+            if (gate && !gate.classList.contains('gate-unlocked') && inp) { setTimeout(function () { inp.focus(); }, 50); }
+        })();
+    </script>
+
     <div class="container">
         <header class="app-header">
             <div class="app-header__title">
